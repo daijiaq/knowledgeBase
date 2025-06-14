@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
-//¶¨ÒåÂ·ÓÉ¹æÔò
+//å®šä¹‰è·¯ç”±è§„åˆ™
 const routes = [
     {
         path: '/', 
@@ -24,19 +24,19 @@ const routes = [
     }
 ]
 
-// 3. ´´½¨Â·ÓÉÊµÀı
+// 3. åˆ›å»ºè·¯ç”±å®ä¾‹
 const router = createRouter({
-    history: createWebHistory(), // Ê¹ÓÃ HTML5 History Ä£Ê½
+    history: createWebHistory(), // ä½¿ç”¨ HTML5 History æ¨¡å¼
     routes,
 })
 
-// È«¾ÖÇ°ÖÃÊØÎÀ
+// å…¨å±€å‰ç½®å®ˆå«
 router.beforeEach((to, from, next) => {
-  const isAuthenticated = localStorage.getItem('token') // Àı£º¼ì²éµÇÂ¼×´Ì¬
+  const isAuthenticated = localStorage.getItem('token') // ä¾‹ï¼šæ£€æŸ¥ç™»å½•çŠ¶æ€
   if (to.meta.requiresAuth && !isAuthenticated) {
-    next('/login') // Ìø×ªµ½µÇÂ¼Ò³
+    next('/login') // è·³è½¬åˆ°ç™»å½•é¡µ
   } else {
-    next() // ·ÅĞĞ
+    next() // æ”¾è¡Œ
   }
 })
 

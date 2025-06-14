@@ -6,7 +6,7 @@ const instance = axios.create({
   headers: { 'Content-Type': 'application/json' }
 })
 
-// ÇëÇóÀ¹½ØÆ÷
+// è¯·æ±‚æ‹¦æˆª
 instance.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token')
@@ -20,14 +20,14 @@ instance.interceptors.request.use(
   }
 )
 
-// ÏìÓ¦À¹½ØÆ÷
+// å“åº”æ‹¦æˆª
 instance.interceptors.response.use(
   (response) => {
     return response.data 
   },
   (error) => {
     if (error.response?.status === 401) {
-      alert('µÇÂ¼ÒÑ¹ıÆÚ£¬ÇëÖØĞÂµÇÂ¼')
+      alert('ç™»å½•å·²è¿‡æœŸï¼Œè¯·é‡æ–°ç™»å½•')
       window.location.href = '/login'
     }
     return Promise.reject(error)

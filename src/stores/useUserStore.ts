@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 export const useUserStore = defineStore('user', () => {
-  // ÊÇ·ñÒÑµÇÂ¼
+  // æ˜¯å¦ç™»å½•
   const logined = ref(false)
 
   return {

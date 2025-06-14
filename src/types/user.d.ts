@@ -1,17 +1,17 @@
 /**
- * 用户注册
+ * 鐢ㄦ埛娉ㄥ唽
  */
 interface userRegister {
   /**
-   * 用户名称
+   * 鐢ㄦ埛鍚嶇О
    */
   username: string
   /**
-   * 邮箱
+   * 閭
    */
   email: string
   /**
-   * 密码
+   * 瀵嗙爜
    */
   password: string
 }
