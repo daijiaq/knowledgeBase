@@ -6,7 +6,6 @@
   <div>
     这是文档页面
    </div>
-   <!-- <Editor/> -->
 </template>
 
 <style scoped>
