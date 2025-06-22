@@ -11,9 +11,13 @@
   "dependencies": {
     "@tiptap/extension-bullet-list": "^2.22.2",
     "@tiptap/extension-color": "^2.1.8",
+    "@tiptap/extension-highlight": "^2.22.3",
+    "@tiptap/extension-link": "^2.22.3",
     "@tiptap/extension-list-item": "^2.1.8",
     "@tiptap/extension-ordered-list": "^2.22.2",
+    "@tiptap/extension-text-align": "^2.22.3",
     "@tiptap/extension-text-style": "^2.1.8",
+    "@tiptap/extension-underline": "^2.22.3",
     "@tiptap/pm": "^2.22.2",
     "@tiptap/starter-kit": "^2.1.8",
     "@tiptap/vue-3": "^2.22.2",
