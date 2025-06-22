@@ -20,7 +20,14 @@ const routes = [
     }, 
     {
         path: '/knowledgeBase',
-         component: () => import('../pages/knowledgeBase.vue')
+         component: () => import('../pages/knowledgeBase.vue'),
+        children: [
+        {
+          path: "",
+          name: "KnowledgeBaseMain",
+          component: () => import("../components/knowledgeBaseMain.vue"),
+        }
+      ]
     }
 ]
 
