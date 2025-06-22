@@ -13,7 +13,7 @@
   color: rgba(255, 255, 255, 0.87);
   background-color: #242424;
 
-  font-synthesis: none;
+  /* font-synthesis: none; */
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -51,17 +51,14 @@ button {
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  background-color: #1a1a1a;
   cursor: pointer;
   transition: border-color 0.25s;
 }
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
+/* button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
-}
+} */
+
 
 .card {
   padding: 2em;
@@ -69,11 +66,18 @@ button:focus-visible {
 
 #app {
   /* max-width: 1280px; */
+<<<<<<< HEAD:src/style.css
   margin: 0 auto;
   /* padding: 2rem; */
   text-align: center;
   height: 100%;
+=======
+  /* margin: 0 auto; */
+  padding: 2rem;
+  /* text-align: center; */
+>>>>>>> 6188aa5e9c87e36c774188fa10ae4f0ff6680b89:src/public/style.css
 }
+
 
 @media (prefers-color-scheme: light) {
   :root {
@@ -82,8 +86,5 @@ button:focus-visible {
   }
   a:hover {
     color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
   }
 }
