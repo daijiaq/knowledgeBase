@@ -4,11 +4,11 @@ import { createRouter, createWebHistory } from 'vue-router'
 const routes = [
     {
         path: '/', 
-         component: () => import('../pages/register.vue')
+         component: () => import('../pages/login.vue')
     },
     {
         path: '/register',
-         component: () => import('../pages/register.vue')
+         component: () => import('../pages/login.vue')
     }, 
     {
         path: '/login', 
@@ -20,7 +20,14 @@ const routes = [
     }, 
     {
         path: '/knowledgeBase',
-         component: () => import('../pages/knowledgeBase.vue')
+         component: () => import('../pages/knowledgeBase.vue'),
+        children: [
+        {
+          path: "",
+          name: "KnowledgeBaseMain",
+          component: () => import("../components/knowledgeBaseMain.vue"),
+        }
+      ]
     }
 ]
 
