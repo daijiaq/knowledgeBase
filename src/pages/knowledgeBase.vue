@@ -46,6 +46,7 @@ const handleClose = (key: string, keyPath: string[]) => {
             class="menu"
             @open="handleOpen"
             @close="handleClose"
+            active-text-color="rgba(140, 122, 230)"
           > <el-sub-menu index="1">
               <template #title>
                 <el-icon>

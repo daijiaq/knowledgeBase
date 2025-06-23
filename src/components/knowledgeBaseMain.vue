@@ -1,15 +1,15 @@
 <script setup lang="ts">
 import {
   Document,
-  Timer,
-  MoreFilled
 } from "@element-plus/icons-vue";
-
-
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { reactive, ref } from 'vue'
+import { useKnowledgeBaseStore } from "../stores/knowledgeBase";
+const knowledgeBaseStore = useKnowledgeBaseStore()
+// 创建知识库的规则定义
 const dialogFormVisible = ref(false)
+const isEditMode = ref(false) 
 const formLabelWidth = '140px'
-
 const form = reactive({
   name: '',
   desc: '',
@@ -24,8 +24,54 @@ const rules = reactive({
     { max: 50, message: '知识库描述不能大于50个字', trigger: 'blur' },
   ]
 }
-
 )
+
+// 打开编辑弹框
+const openEditDialog = () => {
+  isEditMode.value = true
+  dialogFormVisible.value = true
+}
+// 打开新建弹框
+const openCreateDialog = () => {
+  isEditMode.value = false
+  resetForm()
+  dialogFormVisible.value = true
+}
+// 重置表单
+const resetForm = () => {
+  form.name = ''
+  form.desc = ''
+}
+// 提交表单
+const submitForm = () => {
+  if (isEditMode.value) {
+    // 执行编辑逻辑 调接口时补充
+      ElMessage.success('编辑成功')
+  } else {
+    // 执行新建逻辑 调接口时补充
+    ElMessage.success('创建成功')
+  }
+  dialogFormVisible.value = false
+}
+// 删除知识库-弹框
+const openDeleteModal = () => {
+  ElMessageBox.confirm(
+    '确定要删除该知识库吗？',
+    '警告',
+    {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+    }
+  )
+    .then(() => {
+      ElMessage({
+        type: 'success',
+        message: '删除成功',
+      })
+    })
+}
+
 
 </script>
 
@@ -41,89 +87,23 @@ const rules = reactive({
                <div>管理你的知识资产，让思维更有序</div>
             </div>
         </div>
-        <div class="addNewButton" @click="dialogFormVisible = true">
+        <div class="addNewButton" @click=openCreateDialog>
             <div>+ 新建知识库</div>
         </div>
       </div>
       <div class="dataBaseContainer">
-        <div class="dataBaseCard">
-            <div class="cardLine"></div>
-            <div class="cardIcon">
-                <el-icon color="#6366f1" size="25px"><Document /></el-icon>
-            </div>
-             <div class="moreContainer">
-                   <!-- 知识库编辑下拉框 -->
-                 <el-dropdown placement="bottom">
-                <el-icon class="getMore" color="#9ca3af"><MoreFilled /></el-icon>
-                 <template #dropdown>
-                   <el-dropdown-menu>
-                     <el-dropdown-item>删除</el-dropdown-item>
-                     <el-dropdown-item>编辑</el-dropdown-item>
-                   </el-dropdown-menu>
-                 </template>
-               </el-dropdown>
-            </div>
-            <div class="cardName">前端知识库</div>
-            <div class="cardDes">这是文化知识库的描述的v拿到了v你说的vv快速注册v农村撒娇的率 v你是当局看不上的v价格多少无关v但是辽宁省vv女生都v你</div>
-            <div class="cardOther">
-                <div class="leftText">
-                     <el-icon color="#9ca3af" size="16px"><Document /></el-icon>
-                    <p class="docNum"> 15篇文档</p>
-                </div>
-               <div class="rightTime">
-                 <el-icon color="#9ca3af" size="16px"><Timer /></el-icon>
-                <p class="time"> 2025-06-21</p>
-               </div>
-            </div>
-        </div>
-          <div class="dataBaseCard">
-            <div class="cardLine"></div>
-            <div class="cardIcon">
-                <el-icon color="#6366f1" size="25px"><Document /></el-icon>
-            </div>
-             <div class="moreContainer">
-                <el-icon class="getMore" color="#9ca3af"><MoreFilled /></el-icon>
-            </div>
-            <div class="cardName">后台知识库</div>
-            <div class="cardDes">这是文化知识库的描述</div>
-             <div class="cardOther">
-                <div class="leftText">
-                     <el-icon color="#9ca3af" size="16px"><Document /></el-icon>
-                    <p class="docNum"> 15篇文档</p>
-                </div>
-               <div class="rightTime">
-                 <el-icon color="#9ca3af" size="16px"><Timer /></el-icon>
-                <p class="time"> 2025-06-21</p>
-               </div>
-            </div>
-        </div>
-          <div class="dataBaseCard">
-            <div class="cardLine"></div>
-            <div class="cardIcon">
-                <el-icon color="#6366f1" size="25px"><Document /></el-icon>
-            </div>
-            <div class="moreContainer">
-                <el-icon class="getMore" color="#9ca3af"><MoreFilled /></el-icon>
-            </div>
-            <div class="cardName">安卓知识库</div>
-            <div class="cardDes">这是文化知识是那些卡死才把四百财富被分成库的描述</div>
-             <div class="cardOther">
-                <div class="leftText">
-                     <el-icon color="#9ca3af" size="16px"><Document /></el-icon>
-                    <p class="docNum"> 15篇文档</p>
-                </div>
-               <div class="rightTime">
-                 <el-icon color="#9ca3af" size="16px"><Timer /></el-icon>
-                <p class="time"> 2025-06-21</p>
-               </div>
-            </div>
-
-            
-        </div>
-  
-        
+            <knowledgeBaseCard
+                v-for="(item, index) in knowledgeBaseStore.cardList"
+                :key="index"
+                :title="item.title"
+                :description="item.description"
+                :doc-count="item.docCount"
+                :update-time="item.updateTime"
+                @edit="openEditDialog"
+                @delete="openDeleteModal"
+            />
            <div class="addNewCard">
-            <div class="detailContainer" @click="dialogFormVisible=true">
+            <div class="detailContainer" @click=openCreateDialog>
                 <div class="add">+</div>
                 <div class="addDes">创建知识库</div>
                 <div class="addDesDetail">创建一个新的知识库来组织您的内容</div>
@@ -136,7 +116,7 @@ const rules = reactive({
 
 
    <!-- 新建知识库弹出层 -->
-  <el-dialog v-model="dialogFormVisible" title="新建知识库" width="500">
+  <el-dialog v-model="dialogFormVisible"   :title="isEditMode ? '编辑知识库' : '新建知识库'"  width="500">
     <el-form :model="form"  :rules="rules">
       <el-form-item label="知识库名称" :label-width="formLabelWidth" prop="name">
         <el-input v-model="form.name" autocomplete="off" />
@@ -154,7 +134,7 @@ const rules = reactive({
     <template #footer>
       <div class="dialog-footer">
         <el-button @click="dialogFormVisible = false">取消</el-button>
-        <el-button type="primary"  @click="dialogFormVisible = false">
+        <el-button type="primary"  @click=submitForm>
           确定
         </el-button>
       </div>
@@ -243,110 +223,7 @@ const rules = reactive({
         flex-wrap: wrap;
         gap: 20px;
         justify-content: flex-start ; 
-        .dataBaseCard{
-            position: relative;
-             flex: 0 0 calc(33.333% - 14px);
-            height: 250px;
-            text-align: left;
-            background-color: #fff;
-            border-radius: 20px;
-            overflow: hidden;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.8);
-            transition: all 0.3s ease;
-            cursor: pointer;
-             &:hover {
-                transform: translateY(-8px);
-                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-                .cardLine{
-                    opacity: 1;
-                }
-            }
-            .cardLine{
-                position: absolute;
-                top: 0;
-                left: 0;
-                right: 0;
-                height: 4px;
-                background: linear-gradient(
-                  90deg,
-                  var(--primary-color),
-                  var(--primary-light)
-                );
-                opacity: 0;
-                transition: opacity 0.3s ease;
-            }
-            .cardIcon{
-                margin: 21px 24px 0;
-               width: 48px;
-                height: 48px;
-                background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
-                border-radius: 12px;
-                display: flex;    
-                align-items: center;
-                justify-content: center;
-            }
-            .moreContainer{
-                width: 32px;
-                height: 32px;
-                border-radius: 8px;
-                 position: absolute;
-                top: 35px;
-                right: 28px;
-                display: flex;
-               align-items: center;
-               justify-content: center;
-                &:hover{
-                    background: rgb(230, 230, 250, 0.3);
-                }
-                
-            }
-          
-            .cardName{
-                padding: 0 24px 0;;
-                margin: 13px 0 0;
-                font-size: 20px;
-                font-weight: 700;
-                line-height: 1.3;
-            }
-            .cardDes{
-                padding: 0 24px 16px;;
-                color: #6b7280;
-                font-size: 14px;
-                margin-top: 12px;
-                height: 42px;
-             display: -webkit-box;
-            -webkit-box-orient: vertical;
-            -webkit-line-clamp: 2;
-            line-clamp: 2; 
-            overflow: hidden;
-
-            }
-            .cardOther{
-                padding: 16px 24px 24px;
-                margin-top: 32px;
-                border-top: 1px solid rgb(107, 114, 128, 0.2);
-                width: 100%;
-                height: 60px;
-                 display: flex;
-                justify-content: space-between;
-                align-items: center; 
-                .leftText, .rightTime {
-                   display: flex;
-                   align-items: center;
-                   gap: 8px; /* 图标与文字的间距 */
-                    .docNum{
-                       color: #9ca3af;
-                       font-size: 13px;
-                   }
-                   .time{
-                       color: #9ca3af;
-                       font-size: 13px;
-                   }
-                } 
-             
-            }
-        }
+      
         .addNewCard{
               display: flex;
             justify-content: center; 
@@ -407,6 +284,10 @@ const rules = reactive({
     background:linear-gradient(135deg, var(--primary-color), var(--primary-light));
     color: #fff;
 }
-    
-
+::v-deep .el-icon{
+  font-size: 18px !important;
+}    
+::v-deep .el-button+.el-button{
+  border: none;
+}
 </style>
