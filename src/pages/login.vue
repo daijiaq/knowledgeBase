@@ -261,7 +261,7 @@ const handleSubmit = async () => {
           if (isLogin.value) {
             localStorage.setItem("token", "dummy-token");
             ElMessage.success("登录成功");
-            router.push("/home/knowledge");
+            router.push("/knowledgeBase");
           } else {
             ElMessage.success("注册成功，请登录");
             isLogin.value = true;

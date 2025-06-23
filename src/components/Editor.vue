@@ -100,10 +100,30 @@
             <button @click="editor.chain().focus().toggleUnderline().run()" :class="{ 'is-active': editor.isActive('underline') }">
                 <span class="iconfont icon-font-color"></span>
             </button>
-            <button @click="editor.chain().focus().setColor('#958DF1').run()"
-                :class="{ 'is-active': editor.isActive('textStyle', { color: '#958DF1' }) }">
-                <span class="iconfont icon-24zitiyanse"></span>
-            </button>
+            <el-dropdown placement="top-end" size="small">
+                <button>
+                    <span class="iconfont icon-24zitiyanse"></span>
+                </button>
+            <template #dropdown>
+                <el-dropdown-menu>
+                    <el-dropdown-item>
+                        <button  @click="editor.chain().focus().unsetColor().run()"
+                            class="color-picker"
+                            :style="{backgroundColor : '#2D2D2D'}"
+                        >
+                        </button>
+                    </el-dropdown-item>
+                    <el-dropdown-item v-for="color in fontColors" :key="color">
+                        <button  @click="editor.chain().focus().setColor(color).run()"
+                            class="color-picker"
+                            :style="{backgroundColor : color}"
+                        >
+                        </button>
+                    </el-dropdown-item>
+                    
+                </el-dropdown-menu>
+            </template>
+            </el-dropdown>
             <el-dropdown placement="top-end" size="small">
                 <button>
                     <span class="iconfont icon-19beijingyanse"></span>
@@ -117,14 +137,39 @@
                         class="color-picker"
                     ></button>
                 </el-dropdown-item>
+                <el-dropdown-item>
+                    <button 
+                        :style="{ backgroundColor: '#ffffff' }" 
+                        @click="editor.chain().focus().unsetHighlight().run()"
+                        class="color-picker"
+                    ></button>
+                </el-dropdown-item>
                 </el-dropdown-menu>
             </template>
             </el-dropdown>
-            
+            <el-dropdown placement="top-end" size="small">
+                <button><el-icon size="18" style="padding-top: 6px;"><ChatSquare /></el-icon></button>
+            <template #dropdown>
+                <el-dropdown-menu>
+                    <el-dropdown-item @click="addComment">
+                        添加评论
+                    </el-dropdown-item>
+                    <el-dropdown-item @click="removeComment">
+                        删除评论
+                    </el-dropdown-item>
+                </el-dropdown-menu>
+            </template>
+            </el-dropdown>
         </div>
         <!-- <button @click="saveText">保存</button>
         <button @click="onw">回显</button> -->
-        <editor-content :editor="editor" class="editor-content"/>
+        <editor-content :editor="editor" class="editor-content" @click="getComment"/>
+        <!-- 评论输入弹窗（简化示例，实际可使用模态框） -->
+        <div v-if="showCommentInput" class="comment-input">
+            <input v-model="commentContent" placeholder="输入评论内容" />
+            <button @click="confirmComment">确认</button>
+            <button @click="cancelComment">取消</button>
+        </div>
     </div>
 </template>
 
@@ -138,13 +183,21 @@ import Highlight from '@tiptap/extension-highlight'
 import TextAlign from '@tiptap/extension-text-align'
 import Link from '@tiptap/extension-link'
 import Underline from '@tiptap/extension-underline'
+import { Comment } from '../utils/comment-extension' // 引入自定义评论扩展
 import { useEditor, EditorContent , Editor } from '@tiptap/vue-3'
 import { onBeforeUnmount , ref } from 'vue'
+import { nanoid } from 'nanoid'
+import { ChatSquare } from '@element-plus/icons-vue'
 
-// 预设颜色列表（可自定义）
-const highlightColors = ref(['#E0F7FA', '#FFF3E0', '#FFF8E1', '#F0F4C3', '#FFE0B2','#EDE7F6','#ffffff'])
+// 预设背景颜色列表
+const highlightColors = ref(['#E0F7FA', '#FFF3E0', '#FFF8E1', '#F0F4C3', '#FFE0B2','#EDE7F6'])
+// 预设背景颜色列表
+const fontColors = ref(['#A8D8EA', '#D8BFD8', '#8B7E74','#958DF1', '#9CA3AF'])
 // 当前对齐状态（初始左对齐）
 const currentAlignment = ref('left') 
+const showCommentInput = ref(false) // 控制评论输入框显示
+const commentContent = ref('')      // 评论内容输入
+let selectedRange = null            // 保存用户选中的文本范围
 
 const editor = useEditor({
     extensions: [
@@ -162,6 +215,7 @@ const editor = useEditor({
         }),
         StarterKit,
         Underline,
+        Comment
     ],
     content: `<h2>Heading</h2>
         <p style="text-align: center">first paragraph</p>
@@ -169,10 +223,12 @@ const editor = useEditor({
     onUpdate({ editor }) {
         //自动获取数据内容
         const json = editor.getJSON()
-        console.log(json)
+        const html = editor.getHTML()
+        console.log(json,html)
     },
 })
 
+//建立链接
 function setLink() {
     const previousUrl = editor.value.getAttributes('link').href
     const url = window.prompt('URL', previousUrl)
@@ -207,6 +263,7 @@ function saveText(){
     //手动获取文本内容
     console.log(editor.value.getJSON());
 }
+//回显示例api
 function onw(){
     editor.value.commands.setContent({
     "type": "doc",
@@ -253,6 +310,69 @@ function onw(){
     ]
 })
 }
+
+// 添加评论按钮点击事件
+const addComment = () => {
+    
+    const { from, to } = editor.value.state.selection
+    console.log(from,to);
+
+  
+    if (from === to) {
+        alert('请先选中文本！')
+        return
+    }
+    selectedRange = { from, to } // 保存选中范围
+    showCommentInput.value = true // 显示输入框
+}
+ 
+// 确认评论（保存到编辑器）
+const confirmComment = () => {
+  if (!commentContent.value.trim()) return
+ 
+  // 生成评论属性
+  const attributes = {
+    id: nanoid(),
+  }
+  
+  // 应用 Mark 到选中范围
+  editor.value.chain()
+    .focus()
+    .setMark('comment', attributes) // 添加评论 Mark
+    .run()
+ 
+  // 重置状态
+  showCommentInput.value = false
+  commentContent.value = ''
+  selectedRange = null
+}
+ 
+// 取消评论输入
+const cancelComment = () => {
+  showCommentInput.value = false
+  commentContent.value = ''
+  selectedRange = null
+}
+
+//获取评论
+const getComment = (event) => {
+    const { target } = event
+    if (!target.classList.contains('tiptap-comment')) return
+    // 获取被点击的 comment Mark 的属性
+    const commentId = target.getAttribute('id')
+    alert(`评论id是${commentId}`);
+}
+
+
+// 删除当前选中范围的评论（示例函数）
+const removeComment = () => {
+  editor.value.chain()
+    .focus()
+    .unsetMark('comment') // 移除 comment Mark
+    .run()
+}
+
+
 onBeforeUnmount(() => {
     this.editor.destroy()
 })
@@ -277,6 +397,7 @@ onBeforeUnmount(() => {
 .button-group {
     button {
     /* 默认样式（未激活时） */
+    margin: 1px;
     padding: 4px;
     color: #333;
     border-radius: 10px;
@@ -340,10 +461,22 @@ onBeforeUnmount(() => {
       color: #8A82E8;
     }
   }
-    
+  .tiptap-comment {
+        /* 评论文本样式（如添加下划线或背景色） */
+        text-decoration: underline;
+        text-decoration-color: #2196f3;
+        cursor: pointer;
+    }
 }
+
 .editor-content {
     margin-top: 20px;
     height: 200px;
+}
+ 
+.comment-input {
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px solid #ddd;
 }
 </style>
