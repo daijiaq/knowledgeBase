@@ -4,8 +4,6 @@ import CollaborativeEditor from "../components/CollaborativeEditor.vue";
 
 <template>
   <div>这是文档页面</div>
-  <!-- <Editor /> -->
-  <CollaborativeEditor> </CollaborativeEditor>
 </template>
 
 <style scoped></style>
