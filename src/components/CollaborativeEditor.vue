@@ -432,7 +432,10 @@ onBeforeUnmount(() => {
 <style scoped>
 /* 协同编辑器容器样式 */
 .collaborative-editor {
+  display: flex;
+  flex-direction: column;
   max-width: 900px;
+  height: 100%;
   margin: 0 auto;
   padding: 20px;
   border: 1px solid #e5e7eb;
@@ -565,6 +568,7 @@ onBeforeUnmount(() => {
 
 /* 编辑器容器样式 */
 .editor-container {
+  flex: 1;
   /* border: 1px solid #d1d5db; */
   border-radius: 6px;
   overflow: hidden;

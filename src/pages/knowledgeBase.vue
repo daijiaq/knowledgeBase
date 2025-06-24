@@ -146,11 +146,14 @@ const baseUrl = ref('/knowledgeBase')
     }
   }
   .el-container {
-    height: 100%;
+    height: calc(100vh - 65px);
   }
   .aside {
     border-right: 1px solid #f3f4f6;
     box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  }
+  .main{
+    height: 100%;
   }
   :deep(.el-main) {
     padding: 0 !important; 
