@@ -224,12 +224,7 @@
           @click="getComment"
         />
       </div>
-      <!-- 评论输入弹窗（简化示例，实际可使用模态框） -->
-      <div v-show="showCommentInput" class="comment-input">
-          <input v-model="commentContent" placeholder="输入评论内容" />
-          <button @click="confirmComment">确认</button>
-          <button @click="cancelComment">取消</button>
-      </div>
+      
 </template>
 
 <script setup>
@@ -301,17 +296,23 @@ const internalEditor = useEditor({
   content: `<h2>Heading</h2>
         <p style="text-align: center">first paragraph</p>
         <p style="text-align: right">second paragraph</p>`,
-  onUpdate({ editor }) {
+  onUpdate({ editor,transaction }) {
     //自动获取数据内容
     const json = editor.getJSON();
     console.log(json);
+    if (transaction.docChanged) {
+      //文档变更细节
+      console.log(transaction);
+  }
   },
 });
+
 
 // 使用计算属性来决定使用哪个编辑器实例
 const editor = computed(() => {
   return props.externalEditor || internalEditor.value;
 });
+
 
 //建立链接
 function setLink() {
@@ -407,7 +408,8 @@ const addComment = () => {
    editor.value.state.doc.nodesBetween(from, to, (node, pos) => {
    // 仅处理行内文本节点（Mark 作用于行内元素）
    if (node.isText) {
-      // 当前文本节点的起始位置（在文档中的绝对位置rgb(82, 15, 15)    const nodeStart = pos;
+      // 当前文本节点的起始位置（在文档中的绝对位置rgb(82, 15, 15)    
+      const nodeStart = pos;
       // 当前文本节点的结束位置
       const nodeEnd = pos + node.nodeSize;
 
@@ -511,10 +513,8 @@ onBeforeUnmount(() => {
 
 <style lang="scss">
 .container {
-  width: 60%;
+  width: 80%;
   margin: 0 auto;
-  height: 80%;
-
   .color-picker {
     width: 10px;
     height: 10px;
@@ -604,9 +604,5 @@ onBeforeUnmount(() => {
   padding: 5px;
 }
 
-.comment-input {
-  margin-top: 10px;
-  padding: 10px;
-  border: 1px solid #ddd;
-}
+
 </style>

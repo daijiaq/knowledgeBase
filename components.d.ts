@@ -9,6 +9,7 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     CollaborativeEditor: typeof import('./src/components/CollaborativeEditor.vue')['default']
+    Comment: typeof import('./src/components/Comment.vue')['default']
     Editor: typeof import('./src/components/Editor.vue')['default']
     ElAside: typeof import('element-plus/es')['ElAside']
     ElButton: typeof import('element-plus/es')['ElButton']
@@ -25,6 +26,10 @@ declare module 'vue' {
     ElMain: typeof import('element-plus/es')['ElMain']
     ElMenu: typeof import('element-plus/es')['ElMenu']
     ElMenuItem: typeof import('element-plus/es')['ElMenuItem']
+    ElOption: typeof import('element-plus/es')['ElOption']
+    ElRadio: typeof import('element-plus/es')['ElRadio']
+    ElRadioGroup: typeof import('element-plus/es')['ElRadioGroup']
+    ElSelect: typeof import('element-plus/es')['ElSelect']
     ElSubMenu: typeof import('element-plus/es')['ElSubMenu']
     KnowledgeBaseCard: typeof import('./src/components/knowledgeBaseCard.vue')['default']
     KnowledgeBaseMain: typeof import('./src/components/knowledgeBaseMain.vue')['default']

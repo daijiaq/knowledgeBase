@@ -1,7 +1,7 @@
 <template>
   <div class="collaborative-editor">
-    <!-- 协同编辑器标题 -->
-    <h2 class="editor-title">协同富文本编辑器</h2>
+    <!-- 协同编辑器标题
+    <h2 class="editor-title">协同富文本编辑器</h2> -->
 
     <!-- 连接状态指示器 -->
     <div class="connection-status">
@@ -165,7 +165,7 @@
     </div>
 
     <!-- 协同信息面板 -->
-    <div class="collaboration-info">
+    <!-- <div class="collaboration-info">
       <div class="info-section">
         <h4>协同状态</h4>
         <p>房间ID: {{ props.roomId }}</p>
@@ -185,7 +185,7 @@
           <li>自动保存和同步更改</li>
         </ul>
       </div>
-    </div>
+    </div>-->
   </div>
 </template>
 
@@ -433,7 +433,8 @@ onBeforeUnmount(() => {
 /* 协同编辑器容器样式 */
 .collaborative-editor {
   max-width: 900px;
-  margin: 0 auto;
+  /* margin: 0 auto; */
+  height: 90%;
   padding: 20px;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
