@@ -15,10 +15,6 @@ const routes = [
         component: () => import('../pages/login.vue')
     }, 
     {
-        path: '/document',
-         component: () => import('../pages/document.vue')
-    }, 
-    {
         path: '/knowledgeBase',
          component: () => import('../pages/knowledgeBase.vue'),
         children: [

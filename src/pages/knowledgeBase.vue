@@ -14,10 +14,12 @@ const router = useRouter()
 
 
 const handleOpen = (key: string, keyPath: string[]) => {
-  console.log(key, keyPath);
+  console.log('打开');
+  
 };
 const handleClose = (key: string, keyPath: string[]) => {
-  console.log(key, keyPath);
+  console.log('折叠');
+  
 };
 const baseUrl = ref('/knowledgeBase')
 </script>
