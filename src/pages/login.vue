@@ -68,7 +68,7 @@
           :rules="rules"
           class="login-form"
         >
-          <div class="form-group">
+          <div class="form-group" v-if="!isLogin">
             <div class="input-icon">
               <svg
                 viewBox="0 0 24 24"
@@ -95,6 +95,42 @@
               <el-input
                 v-model="formData.username"
                 placeholder="请输入用户名"
+                size="large"
+                class="custom-input"
+              />
+            </el-form-item>
+          </div>
+
+          <div class="form-group">
+            <div class="input-icon">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0z"
+                  stroke="currentColor"
+                  stroke-width="2"
+                />
+                <path
+                  d="M12 16v4"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                />
+                <path
+                  d="M8 20h8"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                />
+              </svg>
+            </div>
+            <el-form-item prop="email">
+              <el-input
+                v-model="formData.email"
+                placeholder="请输入邮箱"
                 size="large"
                 class="custom-input"
               />
@@ -197,85 +233,102 @@ import { ref, reactive } from "vue";
 import { useRouter } from "vue-router";
 import type { FormInstance, FormRules } from "element-plus";
 import { ElMessage } from "element-plus";
+import { userLogin, userRegister } from "../api/user";
 
 const router = useRouter();
-const isLogin = ref(true);
-const loading = ref(false);
-const formRef = ref<FormInstance>();
+const isLogin = ref(true)
+const loading = ref(false)
+const formRef = ref<FormInstance>()
 
 const formData = reactive({
   username: "",
+  email: "",
   password: "",
   confirmPassword: "",
-});
+})
 
 const validatePass = (_rule: any, value: string, callback: any) => {
   if (value === "") {
-    callback(new Error("请输入密码"));
+    callback(new Error("请输入密码"))
+  } else if (value.length < 6 || value.length > 12) {
+    callback(new Error("密码长度应为 6-12 位"));
+  } else if (/[\u4e00-\u9fa5]/.test(value)) {
+    callback(new Error("密码不能包含中文")) 
   } else {
-    if (formData.confirmPassword !== "") {
-      formRef.value?.validateField("confirmPassword");
+    if (!isLogin.value && formData.confirmPassword !== "") {
+      formRef.value?.validateField("confirmPassword") 
     }
-    callback();
+    callback() 
   }
-};
+} 
 
 const validatePass2 = (_rule: any, value: string, callback: any) => {
   if (value === "") {
-    callback(new Error("请再次输入密码"));
+    callback(new Error("请再次输入密码")) 
   } else if (value !== formData.password) {
-    callback(new Error("两次输入密码不一致!"));
+    callback(new Error("两次输入密码不一致!")) 
   } else {
-    callback();
+    callback() 
   }
-};
+} 
 
 const rules = reactive<FormRules>({
   username: [
     { required: true, message: "请输入用户名", trigger: "blur" },
     { min: 3, max: 20, message: "长度在 3 到 20 个字符", trigger: "blur" },
   ],
-  password: [
-    { required: true, validator: validatePass, trigger: "blur" },
-    { min: 6, message: "密码长度不能小于6位", trigger: "blur" },
+  email: [
+    { required: true, message: "请输入邮箱", trigger: "blur" },
+    { type: "email", message: "请输入正确的邮箱格式", trigger: ["blur", "change"] },
   ],
+  password: [{ required: true, validator: validatePass, trigger: "blur" }],
   confirmPassword: [
     { required: true, validator: validatePass2, trigger: "blur" },
   ],
-});
+})
 
 const setLoginMode = (mode: boolean) => {
-  isLogin.value = mode;
-  formRef.value?.resetFields();
-};
+  isLogin.value = mode 
+  formRef.value?.resetFields() 
+} 
 
 const handleSubmit = async () => {
-  if (!formRef.value) return;
-
-  loading.value = true;
+  if (!formRef.value) return
+  loading.value = true
 
   try {
-    await formRef.value.validate((valid) => {
-      if (valid) {
-        setTimeout(() => {
-          if (isLogin.value) {
-            localStorage.setItem("token", "dummy-token");
-            ElMessage.success("登录成功");
-            router.push("/home/knowledge");
-          } else {
-            ElMessage.success("注册成功，请登录");
-            isLogin.value = true;
-          }
-          loading.value = false;
-        }, 1000);
-      } else {
-        loading.value = false;
+    await formRef.value.validate()
+    if (isLogin.value) {
+      // 登录
+      const res = await userLogin(formData.email, formData.password)
+      localStorage.setItem("token", res.token || "")
+      ElMessage.success("登录成功")
+      router.push("/home/knowledge")
+    } else {
+      // 注册
+      await userRegister(
+        formData.username,
+        formData.email,
+        formData.password
+      )
+      ElMessage.success("注册成功，请登录")
+      isLogin.value = true
+    }
+  } catch (error: any) {
+    // 如果是表单校验错误，则显示具体的校验信息
+    if (error && !error.isAxiosError) {
+      const errorFields = Object.values(error)
+      if (errorFields.length > 0) {
+        const firstError: any = errorFields[0]
+        if (firstError?.[0]?.message) {
+          ElMessage.error(firstError[0].message)
+        }
       }
-    });
-  } catch {
-    loading.value = false;
+    }
+  } finally {
+    loading.value = false
   }
-};
+}
 </script>
 
 <style scoped lang="scss">
@@ -523,7 +576,7 @@ const handleSubmit = async () => {
 
           .submit-btn {
             outline: none;
-            color: #667eea;
+            color: black;
             width: 100%;
             height: 56px;
             border-radius: 16px;
