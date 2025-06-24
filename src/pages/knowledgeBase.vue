@@ -26,7 +26,7 @@ const baseUrl = ref('/knowledgeBase')
 
 <template>
   <div class="common-layout">
-    <el-container>
+    <el-container style="height: 100%;">
       <el-header
         class="header"
         height="65px"
