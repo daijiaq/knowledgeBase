@@ -410,9 +410,8 @@ const destroyCollaboration = () => {
 };
 
 //获取评论
-const getComment = (event) => {
+const getComment = (event:any) => {
   const { target } = event;
-  console.log(11111111111111111);
   if (!target.classList.contains("tiptap-comment")) return;
   // 获取被点击的 comment Mark 的属性
   const commentId = target.getAttribute("id");
@@ -566,7 +565,7 @@ onBeforeUnmount(() => {
 
 /* 编辑器容器样式 */
 .editor-container {
-  border: 1px solid #d1d5db;
+  /* border: 1px solid #d1d5db; */
   border-radius: 6px;
   overflow: hidden;
   margin-bottom: 16px;

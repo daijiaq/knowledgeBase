@@ -1,235 +1,235 @@
 <template>
-  <div v-if="editor" class="container">
-    <div class="button-group">
-      <button
-        @click="editor.chain().focus().undo().run()"
-        :disabled="!editor.can().chain().focus().undo().run()"
-      >
-        <span class="iconfont icon-25chehui"></span>
-      </button>
-      <button
-        @click="editor.chain().focus().redo().run()"
-        :disabled="!editor.can().chain().focus().redo().run()"
-      >
-        <span class="iconfont icon-26quxiaochehui"></span>
-      </button>
-      <button
-        @click="editor.chain().focus().toggleBold().run()"
-        :disabled="!editor.can().chain().focus().toggleBold().run()"
-        :class="{ 'is-active': editor.isActive('bold') }"
-      >
-        <span class="iconfont icon-bold"></span>
-      </button>
-      <button
-        @click="editor.chain().focus().toggleItalic().run()"
-        :disabled="!editor.can().chain().focus().toggleItalic().run()"
-        :class="{ 'is-active': editor.isActive('italic') }"
-      >
-        <span class="iconfont icon-italic"></span>
-      </button>
-      <button
-        @click="editor.chain().focus().toggleStrike().run()"
-        :disabled="!editor.can().chain().focus().toggleStrike().run()"
-        :class="{ 'is-active': editor.isActive('strike') }"
-      >
-        <span class="iconfont icon-strikethrough"></span>
-      </button>
-      <button
-        @click="editor.chain().focus().toggleCode().run()"
-        :disabled="!editor.can().chain().focus().toggleCode().run()"
-        :class="{ 'is-active': editor.isActive('code') }"
-      >
-        <span class="iconfont icon-code-view"></span>
-      </button>
-      <button
-        @click="editor.chain().focus().setParagraph().run()"
-        :class="{ 'is-active': editor.isActive('paragraph') }"
-      >
-        <span class="iconfont icon-duanla"></span>
-      </button>
-      <button
-        @click="editor.chain().focus().toggleHeading({ level: 1 }).run()"
-        :class="{ 'is-active': editor.isActive('heading', { level: 1 }) }"
-      >
-        <span class="iconfont icon-13biaoti1"></span>
-      </button>
-      <button
-        @click="editor.chain().focus().toggleHeading({ level: 2 }).run()"
-        :class="{ 'is-active': editor.isActive('heading', { level: 2 }) }"
-      >
-        <span class="iconfont icon-14biaoti2"></span>
-      </button>
-      <button
-        @click="editor.chain().focus().toggleHeading({ level: 3 }).run()"
-        :class="{ 'is-active': editor.isActive('heading', { level: 3 }) }"
-      >
-        <span class="iconfont icon-15biaoti3"></span>
-      </button>
-      <button
-        @click="editor.chain().focus().toggleHeading({ level: 4 }).run()"
-        :class="{ 'is-active': editor.isActive('heading', { level: 4 }) }"
-      >
-        <span class="iconfont icon-16biaoti4"></span>
-      </button>
-      <button
-        @click="editor.chain().focus().toggleHeading({ level: 5 }).run()"
-        :class="{ 'is-active': editor.isActive('heading', { level: 5 }) }"
-      >
-        <span class="iconfont icon-17biaoti5"></span>
-      </button>
-      <button
-        @click="editor.chain().focus().toggleHeading({ level: 6 }).run()"
-        :class="{ 'is-active': editor.isActive('heading', { level: 6 }) }"
-      >
-        <span class="iconfont icon-18biaoti6"></span>
-      </button>
-      <button
-        @click="editor.chain().focus().toggleBulletList().run()"
-        :class="{ 'is-active': editor.isActive('bulletList') }"
-      >
-        <span class="iconfont icon-list-unordered"></span>
-      </button>
-      <button
-        @click="editor.chain().focus().toggleOrderedList().run()"
-        :class="{ 'is-active': editor.isActive('orderedList') }"
-      >
-        <span class="iconfont icon-list-ordered"></span>
-      </button>
-      <button
-        @click="editor.chain().focus().toggleCodeBlock().run()"
-        :class="{ 'is-active': editor.isActive('codeBlock') }"
-      >
-        <span class="iconfont icon-daimakuaicodeblock"></span>
-      </button>
-      <button
-        @click="editor.chain().focus().toggleBlockquote().run()"
-        :class="{ 'is-active': editor.isActive('blockquote') }"
-      >
-        <span class="iconfont icon-double-quotes-l"></span>
-      </button>
-      <button @click="editor.chain().focus().setHorizontalRule().run()">
-        <span class="iconfont icon-split-cells-vertical"></span>
-      </button>
-      <button @click="editor.chain().focus().setHardBreak().run()">
-        <span class="iconfont icon-text-wrap"></span>
-      </button>
-      <button
-        @click="editor.chain().focus().setTextAlign('left').run()"
-        :class="{ 'is-active': editor.isActive({ textAlign: 'left' }) }"
-      >
-        <span class="iconfont icon-align-left"></span>
-      </button>
-      <button
-        @click="editor.chain().focus().setTextAlign('center').run()"
-        :class="{ 'is-active': editor.isActive({ textAlign: 'center' }) }"
-      >
-        <span class="iconfont icon-align-center"></span>
-      </button>
-      <button
-        @click="editor.chain().focus().setTextAlign('right').run()"
-        :class="{ 'is-active': editor.isActive({ textAlign: 'right' }) }"
-      >
-        <span class="iconfont icon-align-right"></span>
-      </button>
-      <button
-        @click="editor.chain().focus().setTextAlign('justify').run()"
-        :class="{ 'is-active': editor.isActive({ textAlign: 'justify' }) }"
-      >
-        <span class="iconfont icon-align-justify"></span>
-      </button>
-      <button
-        @click="setLink"
-        :class="{ 'is-active': editor.isActive('link') }"
-      >
-        <span class="iconfont icon-link"></span>
-      </button>
-      <button
-        @click="editor.chain().focus().unsetLink().run()"
-        :disabled="!editor.isActive('link')"
-      >
-        <span class="iconfont icon-link-unlink"></span>
-      </button>
-      <button
-        @click="editor.chain().focus().toggleUnderline().run()"
-        :class="{ 'is-active': editor.isActive('underline') }"
-      >
-        <span class="iconfont icon-font-color"></span>
-      </button>
-      <el-dropdown placement="top-end" size="small">
-        <button>
-          <span class="iconfont icon-24zitiyanse"></span>
-        </button>
-        <template #dropdown>
-          <el-dropdown-menu>
-            <el-dropdown-item>
-              <button
-                @click="editor.chain().focus().unsetColor().run()"
-                class="color-picker"
-                :style="{ backgroundColor: '#2D2D2D' }"
-              ></button>
-            </el-dropdown-item>
-            <el-dropdown-item v-for="color in fontColors" :key="color">
-              <button
-                @click="editor.chain().focus().setColor(color).run()"
-                class="color-picker"
-                :style="{ backgroundColor: color }"
-              ></button>
-            </el-dropdown-item>
-          </el-dropdown-menu>
-        </template>
-      </el-dropdown>
-      <el-dropdown placement="top-end" size="small">
-        <button>
-          <span class="iconfont icon-19beijingyanse"></span>
-        </button>
-        <template #dropdown>
-          <el-dropdown-menu>
-            <el-dropdown-item v-for="color in highlightColors" :key="color">
-              <button
-                :style="{ backgroundColor: color }"
-                @click="editor.chain().focus().setHighlight({ color }).run()"
-                class="color-picker"
-              ></button>
-            </el-dropdown-item>
-            <el-dropdown-item>
-              <button
-                :style="{ backgroundColor: '#ffffff' }"
-                @click="editor.chain().focus().unsetHighlight().run()"
-                class="color-picker"
-              ></button>
-            </el-dropdown-item>
-          </el-dropdown-menu>
-        </template>
-      </el-dropdown>
-      <el-dropdown placement="top-end" size="small">
-        <button>
-          <el-icon size="18" style="padding-top: 6px"><ChatSquare /></el-icon>
-        </button>
-        <template #dropdown>
-          <el-dropdown-menu>
-            <el-dropdown-item @click="addComment"> 添加评论 </el-dropdown-item>
-            <el-dropdown-item @click="removeComment">
-              删除评论
-            </el-dropdown-item>
-          </el-dropdown-menu>
-        </template>
-      </el-dropdown>
-    </div>
-    <!-- <button @click="saveText">保存</button>
-        <button @click="onw">回显</button> -->
-    <editor-content
-      v-if="showEditorContent"
-      :editor="editor"
-      class="editor-content"
-      @click="getComment"
-    />
-    <!-- 评论输入弹窗（简化示例，实际可使用模态框） -->
-    <div v-if="showCommentInput" class="comment-input">
-      <input v-model="commentContent" placeholder="输入评论内容" />
-      <button @click="confirmComment">确认</button>
-      <button @click="cancelComment">取消</button>
-    </div>
-  </div>
+    <div v-if="editor" class="container">
+        <div class="button-group">
+          <button
+            @click="editor.chain().focus().undo().run()"
+            :disabled="!editor.can().chain().focus().undo().run()"
+          >
+            <span class="iconfont icon-25chehui"></span>
+          </button>
+          <button
+            @click="editor.chain().focus().redo().run()"
+            :disabled="!editor.can().chain().focus().redo().run()"
+          >
+            <span class="iconfont icon-26quxiaochehui"></span>
+          </button>
+          <button
+            @click="editor.chain().focus().toggleBold().run()"
+            :disabled="!editor.can().chain().focus().toggleBold().run()"
+            :class="{ 'is-active': editor.isActive('bold') }"
+          >
+            <span class="iconfont icon-bold"></span>
+          </button>
+          <button
+            @click="editor.chain().focus().toggleItalic().run()"
+            :disabled="!editor.can().chain().focus().toggleItalic().run()"
+            :class="{ 'is-active': editor.isActive('italic') }"
+          >
+            <span class="iconfont icon-italic"></span>
+          </button>
+          <button
+            @click="editor.chain().focus().toggleStrike().run()"
+            :disabled="!editor.can().chain().focus().toggleStrike().run()"
+            :class="{ 'is-active': editor.isActive('strike') }"
+          >
+            <span class="iconfont icon-strikethrough"></span>
+          </button>
+          <button
+            @click="editor.chain().focus().toggleCode().run()"
+            :disabled="!editor.can().chain().focus().toggleCode().run()"
+            :class="{ 'is-active': editor.isActive('code') }"
+          >
+            <span class="iconfont icon-code-view"></span>
+          </button>
+          <button
+            @click="editor.chain().focus().setParagraph().run()"
+            :class="{ 'is-active': editor.isActive('paragraph') }"
+          >
+            <span class="iconfont icon-duanla"></span>
+          </button>
+          <button
+            @click="editor.chain().focus().toggleHeading({ level: 1 }).run()"
+            :class="{ 'is-active': editor.isActive('heading', { level: 1 }) }"
+          >
+            <span class="iconfont icon-13biaoti1"></span>
+          </button>
+          <button
+            @click="editor.chain().focus().toggleHeading({ level: 2 }).run()"
+            :class="{ 'is-active': editor.isActive('heading', { level: 2 }) }"
+          >
+            <span class="iconfont icon-14biaoti2"></span>
+          </button>
+          <button
+            @click="editor.chain().focus().toggleHeading({ level: 3 }).run()"
+            :class="{ 'is-active': editor.isActive('heading', { level: 3 }) }"
+          >
+            <span class="iconfont icon-15biaoti3"></span>
+          </button>
+          <button
+            @click="editor.chain().focus().toggleHeading({ level: 4 }).run()"
+            :class="{ 'is-active': editor.isActive('heading', { level: 4 }) }"
+          >
+            <span class="iconfont icon-16biaoti4"></span>
+          </button>
+          <button
+            @click="editor.chain().focus().toggleHeading({ level: 5 }).run()"
+            :class="{ 'is-active': editor.isActive('heading', { level: 5 }) }"
+          >
+            <span class="iconfont icon-17biaoti5"></span>
+          </button>
+          <button
+            @click="editor.chain().focus().toggleHeading({ level: 6 }).run()"
+            :class="{ 'is-active': editor.isActive('heading', { level: 6 }) }"
+          >
+            <span class="iconfont icon-18biaoti6"></span>
+          </button>
+          <button
+            @click="editor.chain().focus().toggleBulletList().run()"
+            :class="{ 'is-active': editor.isActive('bulletList') }"
+          >
+            <span class="iconfont icon-list-unordered"></span>
+          </button>
+          <button
+            @click="editor.chain().focus().toggleOrderedList().run()"
+            :class="{ 'is-active': editor.isActive('orderedList') }"
+          >
+            <span class="iconfont icon-list-ordered"></span>
+          </button>
+          <button
+            @click="editor.chain().focus().toggleCodeBlock().run()"
+            :class="{ 'is-active': editor.isActive('codeBlock') }"
+          >
+            <span class="iconfont icon-daimakuaicodeblock"></span>
+          </button>
+          <button
+            @click="editor.chain().focus().toggleBlockquote().run()"
+            :class="{ 'is-active': editor.isActive('blockquote') }"
+          >
+            <span class="iconfont icon-double-quotes-l"></span>
+          </button>
+          <button @click="editor.chain().focus().setHorizontalRule().run()">
+            <span class="iconfont icon-split-cells-vertical"></span>
+          </button>
+          <button @click="editor.chain().focus().setHardBreak().run()">
+            <span class="iconfont icon-text-wrap"></span>
+          </button>
+          <button
+            @click="editor.chain().focus().setTextAlign('left').run()"
+            :class="{ 'is-active': editor.isActive({ textAlign: 'left' }) }"
+          >
+            <span class="iconfont icon-align-left"></span>
+          </button>
+          <button
+            @click="editor.chain().focus().setTextAlign('center').run()"
+            :class="{ 'is-active': editor.isActive({ textAlign: 'center' }) }"
+          >
+            <span class="iconfont icon-align-center"></span>
+          </button>
+          <button
+            @click="editor.chain().focus().setTextAlign('right').run()"
+            :class="{ 'is-active': editor.isActive({ textAlign: 'right' }) }"
+          >
+            <span class="iconfont icon-align-right"></span>
+          </button>
+          <button
+            @click="editor.chain().focus().setTextAlign('justify').run()"
+            :class="{ 'is-active': editor.isActive({ textAlign: 'justify' }) }"
+          >
+            <span class="iconfont icon-align-justify"></span>
+          </button>
+          <button
+            @click="setLink"
+            :class="{ 'is-active': editor.isActive('link') }"
+          >
+            <span class="iconfont icon-link"></span>
+          </button>
+          <button
+            @click="editor.chain().focus().unsetLink().run()"
+            :disabled="!editor.isActive('link')"
+          >
+            <span class="iconfont icon-link-unlink"></span>
+          </button>
+          <button
+            @click="editor.chain().focus().toggleUnderline().run()"
+            :class="{ 'is-active': editor.isActive('underline') }"
+          >
+            <span class="iconfont icon-font-color"></span>
+          </button>
+          <el-dropdown placement="top-end" size="small">
+            <button>
+              <span class="iconfont icon-24zitiyanse"></span>
+            </button>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item>
+                  <button
+                    @click="editor.chain().focus().unsetColor().run()"
+                    class="color-picker"
+                    :style="{ backgroundColor: '#2D2D2D' }"
+                  ></button>
+                </el-dropdown-item>
+                <el-dropdown-item v-for="color in fontColors" :key="color">
+                  <button
+                    @click="editor.chain().focus().setColor(color).run()"
+                    class="color-picker"
+                    :style="{ backgroundColor: color }"
+                  ></button>
+                </el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
+          <el-dropdown placement="top-end" size="small">
+            <button>
+              <span class="iconfont icon-19beijingyanse"></span>
+            </button>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item v-for="color in highlightColors" :key="color">
+                  <button
+                    :style="{ backgroundColor: color }"
+                    @click="editor.chain().focus().setHighlight({ color }).run()"
+                    class="color-picker"
+                  ></button>
+                </el-dropdown-item>
+                <el-dropdown-item>
+                  <button
+                    :style="{ backgroundColor: '#ffffff' }"
+                    @click="editor.chain().focus().unsetHighlight().run()"
+                    class="color-picker"
+                  ></button>
+                </el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
+          <el-dropdown placement="top-end" size="small">
+            <button>
+              <el-icon size="18" style="padding-top: 6px"><ChatSquare /></el-icon>
+            </button>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item @click="addComment"> 添加评论 </el-dropdown-item>
+                <el-dropdown-item @click="removeComment">
+                  删除评论
+                </el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
+        </div>
+        <!-- <button @click="saveText">保存</button>
+            <button @click="onw">回显</button> -->
+        <editor-content
+          v-if="showEditorContent"
+          :editor="editor"
+          class="editor-content"
+          @click="getComment"
+        />
+      </div>
+      <!-- 评论输入弹窗（简化示例，实际可使用模态框） -->
+      <div v-show="showCommentInput" class="comment-input">
+          <input v-model="commentContent" placeholder="输入评论内容" />
+          <button @click="confirmComment">确认</button>
+          <button @click="cancelComment">取消</button>
+      </div>
 </template>
 
 <script setup>
@@ -339,7 +339,7 @@ function setLink() {
     .run();
 }
 
-function saveText() {
+/* function saveText() {
   //手动获取文本内容
   console.log(editor.value.getJSON());
 }
@@ -388,8 +388,9 @@ function onw() {
       },
     ],
   });
-}
+} */
 
+let text_id = null;
 // 添加评论按钮点击事件
 const addComment = () => {
   const { from, to } = editor.value.state.selection;
@@ -399,8 +400,61 @@ const addComment = () => {
     alert("请先选中文本！");
     return;
   }
+  const markInfo = [];
+
+   // 遍历选区范围内的所有节点和文本区间
+   //以便判断文本是否已被评论过
+   editor.value.state.doc.nodesBetween(from, to, (node, pos) => {
+   // 仅处理行内文本节点（Mark 作用于行内元素）
+   if (node.isText) {
+      // 当前文本节点的起始位置（在文档中的绝对位置rgb(82, 15, 15)    const nodeStart = pos;
+      // 当前文本节点的结束位置
+      const nodeEnd = pos + node.nodeSize;
+
+      // 文本内容的实际起始和结束位置（在选区中的相对位置）
+      const textStart = Math.max(from, nodeStart);
+      const textEnd = Math.min(to, nodeEnd);
+
+      // 文本在节点内的偏移量（用于截取实际选中的文本片段）
+      const offsetInNode = textStart - nodeStart;
+      const lengthInNode = textEnd - textStart;
+      const selectedText = node.text?.slice(offsetInNode, offsetInNode + lengthInNode);
+
+      // 获取当前文本片段的 Mark（可能多个）
+      const marks = node.marks; // 该文本节点的所有 Mark（全局 Mark，可能覆盖整个节点）
+
+      // 注意：若 Mark 仅作用于文本的一部分（如部分加粗），需结合位置进一步判断
+      // 此处简化为获取整个文本节点的 Mark（实际需根据选区细化）
+      if (marks.length > 0) {
+         markInfo.push({
+            text: selectedText,
+            marks: marks.map(mark => ({
+              name: mark.type.name, // Mark 名称（如 'bold'、'link'）
+              attrs: mark.attrs, // Mark 的属性（如链接的 'href'）
+            })),
+         });
+      }
+   }
+   });
+
+  console.log(markInfo);
+  console.log(markInfo[0]?.name,markInfo[0]?.text.length);
+  
+  if(markInfo.length === 1 && markInfo[0]?.text.length === to - from){
+    markInfo[0].marks.map(mark=>{
+      console.log(mark.name === 'comment');
+      if(mark.name === 'comment'){
+        text_id = mark.attrs.id;
+      }
+    })   
+  }
+
+  
+   
+
   selectedRange = { from, to }; // 保存选中范围
   showCommentInput.value = true; // 显示输入框
+
 };
 
 // 确认评论（保存到编辑器）
@@ -409,7 +463,7 @@ const confirmComment = () => {
 
   // 生成评论属性
   const attributes = {
-    id: nanoid(),
+    id: text_id || nanoid(),
   };
 
   // 应用 Mark 到选中范围
@@ -437,8 +491,8 @@ const getComment = (event) => {
   const { target } = event;
   if (!target.classList.contains("tiptap-comment")) return;
   // 获取被点击的 comment Mark 的属性
-  const commentId = target.getAttribute("id");
-  alert(`评论id是${commentId}`);
+  const textId = target.getAttribute("id");
+  alert(`文本id是${textId}`);
 };
 
 // 删除当前选中范围的评论（示例函数）
@@ -545,8 +599,9 @@ onBeforeUnmount(() => {
 }
 
 .editor-content {
-  margin-top: 20px;
+  // margin-top: 20px;
   height: 200px;
+  padding: 5px;
 }
 
 .comment-input {
