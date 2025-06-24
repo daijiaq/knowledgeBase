@@ -1,8 +1,9 @@
 import axios from 'axios'
+import { ElMessage } from 'element-plus'
 
 const instance = axios.create({
-  baseURL: 'https://127.0.0.1:3300', 
-  timeout: 5000, 
+  baseURL: 'http://127.0.0.1:3300',
+  timeout: 5000,
   headers: { 'Content-Type': 'application/json' }
 })
 
@@ -16,20 +17,27 @@ instance.interceptors.request.use(
     return config
   },
   (error) => {
+    ElMessage.error('请求发送失败')
     return Promise.reject(error)
   }
 )
 
-// 响应拦截
+// 响应拦截：统一处理 code
 instance.interceptors.response.use(
   (response) => {
-    return response.data 
+    const res = response.data
+
+    // code 为 200 表示业务成功
+    if (res.code === 200) {
+      return res.data
+    } else {
+      // 业务失败，显示错误信息
+      ElMessage.error(res.message || '业务错误')
+      return Promise.reject(res)
+    }
   },
   (error) => {
-    if (error.response?.status === 401) {
-      alert('登录已过期，请重新登录')
-      window.location.href = '/login'
-    }
+    ElMessage.error('请求失败，请检查网络或稍后重试')
     return Promise.reject(error)
   }
 )

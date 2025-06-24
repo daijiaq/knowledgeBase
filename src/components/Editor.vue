@@ -515,6 +515,9 @@ onBeforeUnmount(() => {
 .container {
   width: 80%;
   margin: 0 auto;
+  // height: 80%;
+  height: auto;
+
   .color-picker {
     width: 10px;
     height: 10px;

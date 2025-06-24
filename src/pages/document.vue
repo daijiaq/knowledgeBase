@@ -192,8 +192,7 @@
     </div>
 
     <!-- 主内容区 -->
-    <h1>这是一个编辑器</h1>
-    <!-- <CollaborativeEditor/> -->
+    <CollaborativeEditor :shareDoc="shareDoc"/>
 
     <!-- 新建文档对话框 -->
     <el-dialog v-model="showNewDocDialog" title="新建文档" width="400px">
@@ -280,12 +279,13 @@ console.log('文档id',route.params.documentId);
 const sidebarCollapsed = ref(false);
 const searchQuery = ref("");
 const currentDocId = ref(1);
-const viewMode = ref("edit");
-const content = ref("# 欢迎使用文档编辑器\n\n开始编写您的内容...");
-const saving = ref(false);
-const currentHeading = ref("p");
 const showNewDocDialog = ref(false);
 const showShareDialog = ref(false);
+
+//打开分享界面
+const shareDoc = ()=>{
+  showShareDialog.value = true
+}
 
 // 表单数据
 const newDocForm = reactive({
@@ -328,12 +328,7 @@ const documents = ref([
   { id: 5, title: "项目实战", type: "folder", parentId: 0 },
 ]);
 
-const collaborators = ref([
-  { id: 1, name: "张三", avatar: "https://via.placeholder.com/32" },
-  { id: 2, name: "李四", avatar: "https://via.placeholder.com/32" },
-]);
-
-// 计算属性
+// 找当前文档
 const currentDoc = computed(() => {
   return documents.value.find((doc) => doc.id === currentDocId.value);
 });
@@ -349,39 +344,6 @@ const folders = computed(() => {
   return documents.value.filter((doc) => doc.type === "folder");
 });
 
-const wordCount = computed(() => {
-  return content.value.replace(/\s/g, "").length;
-});
-
-const saveStatus = computed(() => {
-  if (saving.value) return "保存中...";
-  return "已保存";
-});
-
-const renderedContent = computed(() => {
-  // 简单的 Markdown 渲染
-  let html = content.value;
-
-  // 标题
-  html = html.replace(/^### (.*$)/gim, "<h3>$1</h3>");
-  html = html.replace(/^## (.*$)/gim, "<h2>$1</h2>");
-  html = html.replace(/^# (.*$)/gim, "<h1>$1</h1>");
-
-  // 粗体和斜体
-  html = html.replace(/\*\*(.*)\*\*/gim, "<strong>$1</strong>");
-  html = html.replace(/\*(.*)\*/gim, "<em>$1</em>");
-
-  // 链接
-  html = html.replace(
-    /\[([^\]]+)\]\(([^)]+)\)/gim,
-    '<a href="$2" target="_blank">$1</a>'
-  );
-
-  // 换行
-  html = html.replace(/\n/gim, "<br>");
-
-  return html;
-});
 
 // 方法
 const toggleSidebar = () => {
@@ -394,173 +356,7 @@ const goBack = () => {
 
 const selectDoc = (doc: any) => {
   currentDocId.value = doc.id;
-  if (doc.content) {
-    content.value = doc.content;
-  }
-};
-
-const handleInput = () => {
-  // 自动保存逻辑
-};
-
-const handleKeydown = (event: KeyboardEvent) => {
-  // 快捷键支持
-  if (event.ctrlKey || event.metaKey) {
-    switch (event.key) {
-      case "b":
-        event.preventDefault();
-        formatText("bold");
-        break;
-      case "i":
-        event.preventDefault();
-        formatText("italic");
-        break;
-      case "u":
-        event.preventDefault();
-        formatText("underline");
-        break;
-      case "s":
-        event.preventDefault();
-        saveDocument();
-        break;
-    }
-  }
-};
-
-const formatText = (format: string) => {
-  const textarea = editorRef.value;
-  if (!textarea) return;
-
-  const start = textarea.selectionStart;
-  const end = textarea.selectionEnd;
-  const selectedText = content.value.substring(start, end);
-
-  let formattedText = "";
-  switch (format) {
-    case "bold":
-      formattedText = `**${selectedText}**`;
-      break;
-    case "italic":
-      formattedText = `*${selectedText}*`;
-      break;
-    case "underline":
-      formattedText = `<u>${selectedText}</u>`;
-      break;
-    case "strikethrough":
-      formattedText = `~~${selectedText}~~`;
-      break;
-  }
-
-  content.value =
-    content.value.substring(0, start) +
-    formattedText +
-    content.value.substring(end);
-
-  nextTick(() => {
-    textarea.focus();
-    textarea.setSelectionRange(
-      start + formattedText.length,
-      start + formattedText.length
-    );
-  });
-};
-
-const isFormatActive = (format: string) => {
-  // 简单的格式检测
-  const textarea = editorRef.value;
-  if (!textarea) return false;
-
-  const start = textarea.selectionStart;
-  const end = textarea.selectionEnd;
-  const selectedText = content.value.substring(start, end);
-
-  switch (format) {
-    case "bold":
-      return selectedText.includes("**");
-    case "italic":
-      return selectedText.includes("*") && !selectedText.includes("**");
-    case "underline":
-      return selectedText.includes("<u>");
-    case "strikethrough":
-      return selectedText.includes("~~");
-    default:
-      return false;
-  }
-};
-
-const insertLink = () => {
-  const textarea = editorRef.value;
-  if (!textarea) return;
-
-  const start = textarea.selectionStart;
-  const linkText = "[链接文本](https://example.com)";
-
-  content.value =
-    content.value.substring(0, start) +
-    linkText +
-    content.value.substring(start);
-
-  nextTick(() => {
-    textarea.focus();
-    textarea.setSelectionRange(start + 1, start + 5); // 选中"链接文本"
-  });
-};
-
-const insertImage = () => {
-  const textarea = editorRef.value;
-  if (!textarea) return;
-
-  const start = textarea.selectionStart;
-  const imageText = "![图片描述](https://example.com/image.jpg)";
-
-  content.value =
-    content.value.substring(0, start) +
-    imageText +
-    content.value.substring(start);
-
-  nextTick(() => {
-    textarea.focus();
-    textarea.setSelectionRange(
-      start + imageText.length,
-      start + imageText.length
-    );
-  });
-};
-
-const insertTable = () => {
-  const textarea = editorRef.value;
-  if (!textarea) return;
-
-  const start = textarea.selectionStart;
-  const tableText =
-    "\n| 列1 | 列2 | 列3 |\n|-----|-----|-----|\n| 内容1 | 内容2 | 内容3 |\n| 内容4 | 内容5 | 内容6 |\n";
-
-  content.value =
-    content.value.substring(0, start) +
-    tableText +
-    content.value.substring(start);
-
-  nextTick(() => {
-    textarea.focus();
-    textarea.setSelectionRange(
-      start + tableText.length,
-      start + tableText.length
-    );
-  });
-};
-
-const saveDocument = async () => {
-  saving.value = true;
-
-  try {
-    // 模拟保存
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    ElMessage.success("文档保存成功");
-  } catch (error) {
-    ElMessage.error("保存失败");
-  } finally {
-    saving.value = false;
-  }
+  
 };
 
 const createNewDoc = () => {
@@ -629,7 +425,7 @@ onMounted(() => {
 <style scoped lang="scss">
 .document-container {
   display: flex;
-  height: 100vh;
+  height: 100%;
   background: var(--background-color);
 }
 
