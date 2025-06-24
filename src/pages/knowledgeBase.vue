@@ -1,10 +1,17 @@
 <script setup lang="ts">
+import {ref} from 'vue'
+import { useRouter } from 'vue-router';
 import {
   ArrowDown,
   Location,
   Folder,
   Reading,
 } from "@element-plus/icons-vue";
+import { useUserStore } from '../stores/useUserStore';
+
+const {logined,username} = useUserStore()
+const router = useRouter()
+
 
 const handleOpen = (key: string, keyPath: string[]) => {
   console.log(key, keyPath);
@@ -12,6 +19,7 @@ const handleOpen = (key: string, keyPath: string[]) => {
 const handleClose = (key: string, keyPath: string[]) => {
   console.log(key, keyPath);
 };
+const baseUrl = ref('/knowledgeBase')
 </script>
 
 <template>
@@ -21,11 +29,11 @@ const handleClose = (key: string, keyPath: string[]) => {
         class="header"
         height="65px"
       >
-        <div class="header-logo">知识库系统</div>
+        <div class="header-logo" @click="router.replace('/knowledgeBase/knowledgeBaseMain')" >知识库系统</div>
         <div class="header-userInfo">
           <el-dropdown>
             <span class="user-dropdown">
-              测试用户
+              {{ username }}
               <el-icon><arrow-down /></el-icon>
             </span>
             <template #dropdown>
@@ -46,22 +54,24 @@ const handleClose = (key: string, keyPath: string[]) => {
             class="menu"
             @open="handleOpen"
             @close="handleClose"
-          > <el-sub-menu index="1">
+            active-text-color="rgba(140, 122, 230)"
+            router
+          > <el-sub-menu :index="`${baseUrl}/1`">
               <template #title>
                 <el-icon>
                   <Reading />
                 </el-icon>
                 <span>知识库</span>
               </template>
-              <el-menu-item index="1-1">
+              <el-menu-item :index="`${baseUrl}/1/1-1`">
                <el-icon><Folder /></el-icon>
                 <span>历史</span>
               </el-menu-item>
-              <el-menu-item index="1-2">
+              <el-menu-item :index="`${baseUrl}/1/1-2`">
               <el-icon><Folder /></el-icon>
                 <span>科技</span>
               </el-menu-item>
-              <el-menu-item index="1-3">
+              <el-menu-item :index="`${baseUrl}/1/1-3`">
              <el-icon><Folder /></el-icon>
                 <span>文化</span>
               </el-menu-item>
@@ -88,6 +98,7 @@ const handleClose = (key: string, keyPath: string[]) => {
     box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
     border-bottom: 1px solid #f3f4f6;
     .header-logo {
+      cursor: pointer;
       font-size: 24px;
       font-weight: bold;
       // 文字颜色渐变

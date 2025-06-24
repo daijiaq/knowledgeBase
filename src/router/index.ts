@@ -19,9 +19,21 @@ const routes = [
          component: () => import('../pages/knowledgeBase.vue'),
         children: [
         {
-          path: "",
+          path: "KnowledgeBaseMain",
           name: "KnowledgeBaseMain",
           component: () => import("../components/knowledgeBaseMain.vue"),
+        },
+        {
+          path: ":knowledgeBaseId/:documentId?",
+          component: () => import('../pages/document.vue')
+        },
+        {
+          path:"",
+          redirect: '/KnowledgeBase/KnowledgeBaseMain'
+        },
+        {
+          path:'*',
+          redirect: '/KnowledgeBase/KnowledgeBaseMain'
         }
       ]
     }
