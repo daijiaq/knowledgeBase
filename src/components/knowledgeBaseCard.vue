@@ -1,14 +1,11 @@
 <script setup lang="ts">
 import { Document, Timer, MoreFilled } from '@element-plus/icons-vue'
-import { defineProps, defineEmits } from 'vue'
-
 const props = defineProps<{
   title: string
   description: string
   docCount: number
   updateTime: string
 }>()
-
 const emits = defineEmits<{
   (e: 'edit'): void
   (e: 'delete'): void

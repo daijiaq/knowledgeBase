@@ -1,17 +1,39 @@
 <script setup lang="ts">
 import {
   ArrowDown,
-  Location,
   Folder,
   Reading,
 } from "@element-plus/icons-vue";
-
+import { ElMessage } from "element-plus";
+import { useRouter } from 'vue-router'
+import {useUserStore} from "../stores/useUserStore"
+import { useKnowledgeBaseStore } from "../stores/useKnowledgeBaseStore";
+import { onMounted } from "vue";
+const router = useRouter()
+const userStore = useUserStore()
+const knowledgeBaseStore = useKnowledgeBaseStore()
 const handleOpen = (key: string, keyPath: string[]) => {
   console.log(key, keyPath);
 };
 const handleClose = (key: string, keyPath: string[]) => {
   console.log(key, keyPath);
 };
+
+const logOut = ()=>{
+  localStorage.removeItem("token")
+  userStore.logined = false
+  ElMessage.success("已退出登录")
+  router.push('/login')
+}
+// 获取所有知识库（获取可访问的知识库）
+onMounted(async()=>{
+  await knowledgeBaseStore.getAllKBs()
+})
+// 点击某个知识库会跳转到文档页[浏览器显示因为CollaborativeEditor发生错误影响路径的回退，后续再回来改]
+const goToDocument = async (knowledgeBaseId: number)=>{
+  router.push('/document')
+  await knowledgeBaseStore.openAndRecordRecentAccess(knowledgeBaseId)
+}
 </script>
 
 <template>
@@ -30,7 +52,7 @@ const handleClose = (key: string, keyPath: string[]) => {
             </span>
             <template #dropdown>
               <el-dropdown-menu>
-                <el-dropdown-item>退出登录</el-dropdown-item>
+                <el-dropdown-item @click="logOut">退出登录</el-dropdown-item>
               </el-dropdown-menu>
             </template>
           </el-dropdown>
@@ -54,17 +76,14 @@ const handleClose = (key: string, keyPath: string[]) => {
                 </el-icon>
                 <span>知识库</span>
               </template>
-              <el-menu-item index="1-1">
-               <el-icon><Folder /></el-icon>
-                <span>历史</span>
-              </el-menu-item>
-              <el-menu-item index="1-2">
-              <el-icon><Folder /></el-icon>
-                <span>科技</span>
-              </el-menu-item>
-              <el-menu-item index="1-3">
-             <el-icon><Folder /></el-icon>
-                <span>文化</span>
+            <el-menu-item
+                v-for="(item, index) in knowledgeBaseStore.knowledgeBaseList"
+                :key="item.id"
+                :index="`1-${index + 1}`"
+                @click="goToDocument(item.id)"
+              >
+                <el-icon><Folder /></el-icon>
+                <span>{{ item.name }}</span>
               </el-menu-item>
             </el-sub-menu>
           </el-menu>
