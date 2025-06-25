@@ -114,6 +114,7 @@
             </el-button>
             <template #dropdown>
               <el-dropdown-menu>
+                <el-dropdown-item @click="shareDoc">添加协作人</el-dropdown-item>
                 <el-dropdown-item>导入文档</el-dropdown-item>
                 <el-dropdown-item>导出知识库</el-dropdown-item>
                 <el-dropdown-item>模板库</el-dropdown-item>
@@ -226,7 +227,7 @@
     </el-dialog>
 
     <!-- 分享对话框 -->
-    <el-dialog v-model="showShareDialog" title="分享文档" width="500px">
+    <el-dialog v-model="showShareDialog" title="分享知识库" width="500px">
       <div class="share-content">
         <div class="share-section">
           <h4>邀请协作者</h4>
