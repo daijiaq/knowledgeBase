@@ -45,6 +45,7 @@ export interface createKnowledgeBase {
 export interface allKnowledgeBaseRes {
     data: allKnowledgeBase[]
     code: number
+    message: string
 }
 export interface allKnowledgeBase {
     /**

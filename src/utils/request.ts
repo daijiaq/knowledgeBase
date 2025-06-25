@@ -29,7 +29,7 @@ instance.interceptors.response.use(
 
     // code 为 200 表示业务成功
     if (res.code === 200) {
-      return res.data
+      return res
     } else {
       // 业务失败，显示错误信息
       ElMessage.error(res.message || '业务错误')
