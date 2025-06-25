@@ -3,7 +3,7 @@ import * as Y from "yjs";
 
 const server = new WebSocketServer({ port: 1234 });
 
-// console.log("Y.js WebSocket 服务器已启动，端口: 1234");
+console.log("Y.js WebSocket 服务器已启动，端口: 1234");
 
 // 存储文档实例
 const docs = new Map();

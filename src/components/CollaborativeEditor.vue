@@ -6,11 +6,14 @@
     <!-- 连接状态指示器 -->
     <div class="connection-status">
       <div class="status-indicator">
-        <span class="status-dot" :class="{
+        <span
+          class="status-dot"
+          :class="{
             connected: connectionStatus === 'connected',
             connecting: connectionStatus === 'connecting',
             disconnected: connectionStatus === 'disconnected',
-          }"></span>
+          }"
+        ></span>
         <span class="status-text">
           {{ getStatusText() }}
         </span>
@@ -161,7 +164,11 @@
 
     <!-- 编辑器容器 -->
     <div class="editor-container">
-      <editor-content :editor="editor" class="editor-content" @click="getComment"/>
+      <editor-content
+        :editor="editor"
+        class="editor-content"
+        @click="getComment"
+      />
     </div>
 
     <!-- 协同信息面板 -->
@@ -204,8 +211,8 @@ import Link from "@tiptap/extension-link";
 import Underline from "@tiptap/extension-underline";
 import * as Y from "yjs";
 import { WebsocketProvider } from "y-websocket";
-import { Comment } from '../utils/comment-extension'
-import EventBus from '../utils/event-bus'
+import { Comment } from "../utils/comment-extension";
+import EventBus from "../utils/event-bus";
 
 // 定义组件的 props
 interface Props {
@@ -222,7 +229,8 @@ type ConnectionStatus = "connecting" | "connected" | "disconnected";
 
 // 使用 defineProps
 const props = withDefaults(defineProps<Props>(), {
-  websocketUrl: "ws://localhost:1234",
+  // websocketUrl: "ws://localhost:1234",
+  websocketUrl: "ws://192.168.31.119:1234",
   roomId: "collaborative-document",
   userName: "匿名用户",
 });
@@ -357,7 +365,7 @@ const editor = useEditor({
         color: userColor.value,
       },
     }),
-    Comment
+    Comment,
   ],
   content: "",
   editorProps: {
@@ -420,14 +428,14 @@ const destroyCollaboration = () => {
 };
 
 //获取评论
-const getComment = (event:any) => {
+const getComment = (event: any) => {
   const { target } = event;
   if (!target.classList.contains("tiptap-comment")) return;
   // 获取被点击的 comment Mark 的属性
   const textId = target.getAttribute("id");
-  EventBus.emit('getComment', {
+  EventBus.emit("getComment", {
     text_id: textId,
-  })
+  });
 };
 
 // 生命周期钩子
@@ -455,7 +463,6 @@ onBeforeUnmount(() => {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   background-color: white;
 }
-
 
 /* 连接状态指示器样式 */
 .connection-status {
