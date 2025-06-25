@@ -172,18 +172,21 @@
     </div>
 
     <!-- 协同信息面板 -->
-    <!-- <div class="collaboration-info">
+    <div class="collaboration-info">
       <div class="info-section">
-        <h4>协同状态</h4>
+        <!-- <h4>协同状态</h4>
         <p>房间ID: {{ props.roomId }}</p>
-        <p>用户ID: {{ userId }}</p>
+        <p>用户ID: {{ userId }}</p> -->
         <p>
           光标颜色:
-          <span class="color-preview" :style="{ backgroundColor: userColor }"></span>
+          <span
+            class="color-preview"
+            :style="{ backgroundColor: userColor }"
+          ></span>
         </p>
       </div>
 
-      <div class="info-section">
+      <!-- <div class="info-section">
         <h4>使用说明</h4>
         <ul>
           <li>多个用户可以同时编辑同一文档</li>
@@ -191,8 +194,8 @@
           <li>支持撤销/重做等协同操作</li>
           <li>自动保存和同步更改</li>
         </ul>
-      </div>
-    </div>-->
+      </div> -->
+    </div>
   </div>
 </template>
 
@@ -643,23 +646,26 @@ onBeforeUnmount(() => {
   grid-template-columns: 1fr 1fr;
   gap: 20px;
   padding: 16px;
-  background-color: #f8fafc;
-  border: 1px solid #e2e8f0;
+  /* background-color: #f8fafc; 
+  /* border: 1px solid #e2e8f0; 
   border-radius: 6px;
   margin-top: 16px;
-}
+} */
 
+/*
 .info-section h4 {
   margin: 0 0 12px 0;
   font-size: 1rem;
   font-weight: 600;
   color: #374151;
 }
+*/
 
 .info-section p {
   margin: 6px 0;
   font-size: 14px;
   color: #6b7280;
+  text-align: end;
 }
 
 .info-section ul {
@@ -681,7 +687,7 @@ onBeforeUnmount(() => {
   border: 1px solid #d1d5db;
   vertical-align: middle;
   margin-left: 4px;
-} */
+}
 
 /* 响应式设计 */
 @media (max-width: 768px) {
