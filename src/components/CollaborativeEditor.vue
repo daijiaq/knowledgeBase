@@ -205,6 +205,7 @@ import Underline from "@tiptap/extension-underline";
 import * as Y from "yjs";
 import { WebsocketProvider } from "y-websocket";
 import { Comment } from '../utils/comment-extension'
+import EventBus from '../utils/event-bus'
 
 // 定义组件的 props
 interface Props {
@@ -358,12 +359,21 @@ const editor = useEditor({
     }),
     Comment
   ],
-  content: "<p>开始协同编辑...</p>",
+  content: "",
   editorProps: {
     attributes: {
       class: "prose focus:outline-none",
       "data-placeholder": "开始协同编辑...",
     },
+  },
+  onUpdate({ editor, transaction }) {
+    //自动获取数据内容
+    const json = editor.getJSON();
+    console.log(json);
+    if (transaction.docChanged) {
+      //文档变更细节
+      console.log(transaction);
+    }
   },
 });
 
@@ -414,8 +424,10 @@ const getComment = (event:any) => {
   const { target } = event;
   if (!target.classList.contains("tiptap-comment")) return;
   // 获取被点击的 comment Mark 的属性
-  const commentId = target.getAttribute("id");
-  alert(`评论id是${commentId}`);
+  const textId = target.getAttribute("id");
+  EventBus.emit('getComment', {
+    text_id: textId,
+  })
 };
 
 // 生命周期钩子
@@ -434,9 +446,9 @@ onBeforeUnmount(() => {
 .collaborative-editor {
   display: flex;
   flex-direction: column;
-  max-width: 900px;
+  max-width: 890px;
   height: 100%;
-  margin: 0 auto;
+  /* margin: 0 auto; */
   padding: 20px;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
@@ -444,14 +456,6 @@ onBeforeUnmount(() => {
   background-color: white;
 }
 
-/* 编辑器标题样式 */
-.editor-title {
-  margin: 0 0 20px 0;
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: #374151;
-  text-align: center;
-}
 
 /* 连接状态指示器样式 */
 .connection-status {
@@ -516,7 +520,7 @@ onBeforeUnmount(() => {
 }
 
 /* 工具栏样式 */
-.toolbar {
+/* .toolbar {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
@@ -564,7 +568,7 @@ onBeforeUnmount(() => {
   opacity: 0.5;
   cursor: not-allowed;
   background-color: #f9fafb;
-}
+} */
 
 /* 编辑器容器样式 */
 .editor-container {
@@ -577,9 +581,9 @@ onBeforeUnmount(() => {
 }
 
 .editor-content {
-  min-height: 400px;
-  max-height: 700px;
+  height: 100%;
   overflow-y: auto;
+  scrollbar-width: none;
 }
 
 /* 编辑器内容样式 */
@@ -627,7 +631,7 @@ onBeforeUnmount(() => {
 }
 
 /* 协同信息面板样式 */
-.collaboration-info {
+/* .collaboration-info {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
@@ -670,7 +674,7 @@ onBeforeUnmount(() => {
   border: 1px solid #d1d5db;
   vertical-align: middle;
   margin-left: 4px;
-}
+} */
 
 /* 响应式设计 */
 @media (max-width: 768px) {
