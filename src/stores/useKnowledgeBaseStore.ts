@@ -15,6 +15,8 @@ export const useKnowledgeBaseStore = defineStore('knowledgeBase', () => {
     const res = await getAllKBsApi()
     console.log(res);
    knowledgeBaseList.value = res.data
+  //  console.log(knowledgeBaseList.value);
+   
   }
 
   //点击某个知识库去往对应文档页面（同时记录最近访问）

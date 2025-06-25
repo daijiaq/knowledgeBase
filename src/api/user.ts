@@ -2,7 +2,7 @@ import request from '../utils/request'
 // 登录
 export const userLogin = (email: string, password: string) => {
     return request({
-        url: '/api/users/login',
+        url: '/users/login',
         method: 'POST',
         data: { email, password }
     })
@@ -10,7 +10,7 @@ export const userLogin = (email: string, password: string) => {
 // 注册
 export const userRegister = (username: string, email: string, password: string) => {
     return request({
-        url: '/api/users/register',
+        url: '/users/register',
         method: 'POST',
         data: { username, email, password }
     })
