@@ -1,19 +1,16 @@
 <template>
   <div class="collaborative-editor">
-    <!-- 协同编辑器标题 -->
-    <h2 class="editor-title">协同富文本编辑器</h2>
+    <!-- 协同编辑器标题
+    <h2 class="editor-title">协同富文本编辑器</h2> -->
 
     <!-- 连接状态指示器 -->
     <div class="connection-status">
       <div class="status-indicator">
-        <span
-          class="status-dot"
-          :class="{
+        <span class="status-dot" :class="{
             connected: connectionStatus === 'connected',
             connecting: connectionStatus === 'connecting',
             disconnected: connectionStatus === 'disconnected',
-          }"
-        ></span>
+          }"></span>
         <span class="status-text">
           {{ getStatusText() }}
         </span>
@@ -164,21 +161,18 @@
 
     <!-- 编辑器容器 -->
     <div class="editor-container">
-      <editor-content :editor="editor" class="editor-content" />
+      <editor-content :editor="editor" class="editor-content" @click="getComment"/>
     </div>
 
     <!-- 协同信息面板 -->
-    <div class="collaboration-info">
+    <!-- <div class="collaboration-info">
       <div class="info-section">
         <h4>协同状态</h4>
         <p>房间ID: {{ props.roomId }}</p>
         <p>用户ID: {{ userId }}</p>
         <p>
           光标颜色:
-          <span
-            class="color-preview"
-            :style="{ backgroundColor: userColor }"
-          ></span>
+          <span class="color-preview" :style="{ backgroundColor: userColor }"></span>
         </p>
       </div>
 
@@ -191,7 +185,7 @@
           <li>自动保存和同步更改</li>
         </ul>
       </div>
-    </div>
+    </div>-->
   </div>
 </template>
 
@@ -210,6 +204,7 @@ import Link from "@tiptap/extension-link";
 import Underline from "@tiptap/extension-underline";
 import * as Y from "yjs";
 import { WebsocketProvider } from "y-websocket";
+import { Comment } from '../utils/comment-extension'
 
 // 定义组件的 props
 interface Props {
@@ -361,6 +356,7 @@ const editor = useEditor({
         color: userColor.value,
       },
     }),
+    Comment
   ],
   content: "<p>开始协同编辑...</p>",
   editorProps: {
@@ -413,6 +409,15 @@ const destroyCollaboration = () => {
   }
 };
 
+//获取评论
+const getComment = (event:any) => {
+  const { target } = event;
+  if (!target.classList.contains("tiptap-comment")) return;
+  // 获取被点击的 comment Mark 的属性
+  const commentId = target.getAttribute("id");
+  alert(`评论id是${commentId}`);
+};
+
 // 生命周期钩子
 onMounted(() => {
   console.log("协同编辑器已挂载");
@@ -427,7 +432,10 @@ onBeforeUnmount(() => {
 <style scoped>
 /* 协同编辑器容器样式 */
 .collaborative-editor {
+  display: flex;
+  flex-direction: column;
   max-width: 900px;
+  height: 100%;
   margin: 0 auto;
   padding: 20px;
   border: 1px solid #e5e7eb;
@@ -560,7 +568,8 @@ onBeforeUnmount(() => {
 
 /* 编辑器容器样式 */
 .editor-container {
-  border: 1px solid #d1d5db;
+  flex: 1;
+  /* border: 1px solid #d1d5db; */
   border-radius: 6px;
   overflow: hidden;
   margin-bottom: 16px;

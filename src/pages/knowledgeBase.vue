@@ -11,12 +11,15 @@ import { useKnowledgeBaseStore } from "../stores/useKnowledgeBaseStore";
 import { onMounted } from "vue";
 const router = useRouter()
 const userStore = useUserStore()
+const {logined,username} = useUserStore()
 const knowledgeBaseStore = useKnowledgeBaseStore()
 const handleOpen = (key: string, keyPath: string[]) => {
-  console.log(key, keyPath);
+  console.log('打开');
+  
 };
 const handleClose = (key: string, keyPath: string[]) => {
-  console.log(key, keyPath);
+  console.log('折叠');
+  
 };
 
 const logOut = ()=>{
@@ -38,16 +41,16 @@ const goToDocument = async (knowledgeBaseId: number)=>{
 
 <template>
   <div class="common-layout">
-    <el-container>
+    <el-container style="height: 100%;">
       <el-header
         class="header"
         height="65px"
       >
-        <div class="header-logo">知识库系统</div>
+        <div class="header-logo" @click="router.replace('/knowledgeBase/knowledgeBaseMain')" >知识库系统</div>
         <div class="header-userInfo">
           <el-dropdown>
             <span class="user-dropdown">
-              测试用户
+              {{ username }}
               <el-icon><arrow-down /></el-icon>
             </span>
             <template #dropdown>
@@ -69,6 +72,7 @@ const goToDocument = async (knowledgeBaseId: number)=>{
             @open="handleOpen"
             @close="handleClose"
             active-text-color="rgba(140, 122, 230)"
+            router
           > <el-sub-menu index="1">
               <template #title>
                 <el-icon>
@@ -108,6 +112,7 @@ const goToDocument = async (knowledgeBaseId: number)=>{
     box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
     border-bottom: 1px solid #f3f4f6;
     .header-logo {
+      cursor: pointer;
       font-size: 24px;
       font-weight: bold;
       // 文字颜色渐变
@@ -153,11 +158,14 @@ const goToDocument = async (knowledgeBaseId: number)=>{
     }
   }
   .el-container {
-    height: 100%;
+    height: calc(100vh - 65px);
   }
   .aside {
     border-right: 1px solid #f3f4f6;
     box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  }
+  .main{
+    height: 100%;
   }
   :deep(.el-main) {
     padding: 0 !important; 

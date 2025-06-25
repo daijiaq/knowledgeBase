@@ -2,8 +2,10 @@
 import { Document } from "@element-plus/icons-vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { reactive, ref } from "vue";
+import { useRouter } from "vue-router";
 import { useKnowledgeBaseStore } from "../stores/useKnowledgeBaseStore";
 const knowledgeBaseStore = useKnowledgeBaseStore();
+const router = useRouter()
 // 创建知识库的规则定义
 const dialogFormVisible = ref(false);
 const isEditMode = ref(false);
@@ -108,6 +110,7 @@ const openDeleteModal = () => {
         :update-time="item.updateTime"
         @edit="openEditDialog"
         @delete="openDeleteModal"
+        @click="router.push('/knowledgeBase/1')"
       />
       <div class="addNewCard">
         <div

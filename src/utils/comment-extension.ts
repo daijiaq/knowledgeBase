@@ -30,6 +30,7 @@ export const Comment = Mark.create({
       { 
         ...HTMLAttributes,
         class: 'tiptap-comment', // 自定义类名（用于样式）
+        'data-comment-id': HTMLAttributes.id, // 关键：加上 data-comment-id
       },
       0, // 0 表示插入子内容（即被评论的文本）
     ]
