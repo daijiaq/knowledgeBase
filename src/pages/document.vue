@@ -193,6 +193,7 @@
 
     <!-- 主内容区 -->
     <CollaborativeEditor :shareDoc="shareDoc"/>
+    <Comment />
 
     <!-- 新建文档对话框 -->
     <el-dialog v-model="showNewDocDialog" title="新建文档" width="400px">

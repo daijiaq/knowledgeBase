@@ -242,6 +242,7 @@ import { useEditor, EditorContent, Editor } from "@tiptap/vue-3";
 import { onBeforeUnmount, ref, computed } from "vue";
 import { nanoid } from "nanoid";
 import { ChatSquare } from "@element-plus/icons-vue";
+import EventBus from '../utils/event-bus'
 
 // 定义组件 props
 const props = defineProps({
@@ -398,7 +399,7 @@ const addComment = () => {
   console.log(from, to);
 
   if (from === to) {
-    alert("请先选中文本！");
+    ElMessage.info('未选中文本！')
     return;
   }
   const markInfo = [];
@@ -448,26 +449,27 @@ const addComment = () => {
       if(mark.name === 'comment'){
         text_id = mark.attrs.id;
       }
-    })   
+    })
   }
 
   
    
 
   selectedRange = { from, to }; // 保存选中范围
-  showCommentInput.value = true; // 显示输入框
+  //显示评论框
+  EventBus.emit('showCommentInput',true);
 
 };
 
 // 确认评论（保存到编辑器）
 const confirmComment = () => {
-  if (!commentContent.value.trim()) return;
-
   // 生成评论属性
   const attributes = {
     id: text_id || nanoid(),
   };
 
+  console.log(attributes);
+  
   // 应用 Mark 到选中范围
   editor.value
     .chain()
@@ -476,17 +478,17 @@ const confirmComment = () => {
     .run();
 
   // 重置状态
-  showCommentInput.value = false;
-  commentContent.value = "";
   selectedRange = null;
 };
 
-// 取消评论输入
-const cancelComment = () => {
-  showCommentInput.value = false;
-  commentContent.value = "";
-  selectedRange = null;
-};
+EventBus.on('confirmComment',(val)=>{
+  if(val){
+      confirmComment();
+  }else{
+    selectedRange = null;
+  }
+})
+
 
 //获取评论
 const getComment = (event) => {
@@ -494,7 +496,9 @@ const getComment = (event) => {
   if (!target.classList.contains("tiptap-comment")) return;
   // 获取被点击的 comment Mark 的属性
   const textId = target.getAttribute("id");
-  alert(`文本id是${textId}`);
+  EventBus.emit('getComment',{
+    text_id: textId,
+  })
 };
 
 // 删除当前选中范围的评论（示例函数）
@@ -508,6 +512,7 @@ const removeComment = () => {
 
 onBeforeUnmount(() => {
   this.editor.destroy();
+  EventBus.all.clear();
 });
 </script>
 
@@ -582,6 +587,7 @@ onBeforeUnmount(() => {
   }
   blockquote {
     border-left: 3px solid #e0e0e0;
+    color: #595959;
     margin: 1.5rem 0;
     padding-left: 1rem;
   }
