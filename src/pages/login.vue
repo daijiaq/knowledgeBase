@@ -304,7 +304,7 @@ const handleSubmit = async () => {
       const res = await userLogin(formData.email, formData.password)
       localStorage.setItem("token", res.data.token || "")
       useStore.logined = true
-      useStore.username = res.data.username || '未知用户'
+      localStorage.setItem("username", res.data.username || '未知用户'  )
       ElMessage.success("登录成功")
       router.push('/knowledgeBase/KnowledgeBaseMain')
     } else {
@@ -505,7 +505,7 @@ const handleSubmit = async () => {
           z-index: 1;
 
           &.active {
-            color: black;
+            color:white;
           }
         }
       }
@@ -579,7 +579,7 @@ const handleSubmit = async () => {
 
           .submit-btn {
             outline: none;
-            color: black;
+            color: white;
             width: 100%;
             height: 56px;
             border-radius: 16px;

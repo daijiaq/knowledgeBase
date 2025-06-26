@@ -31,8 +31,10 @@ declare module 'vue' {
     ElRadioGroup: typeof import('element-plus/es')['ElRadioGroup']
     ElSelect: typeof import('element-plus/es')['ElSelect']
     ElSubMenu: typeof import('element-plus/es')['ElSubMenu']
+    ElTooltip: typeof import('element-plus/es')['ElTooltip']
     KnowledgeBaseCard: typeof import('./src/components/knowledgeBaseCard.vue')['default']
     KnowledgeBaseMain: typeof import('./src/components/knowledgeBaseMain.vue')['default']
+    MoreActions: typeof import('./src/components/MoreActions.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
   }

@@ -3,6 +3,11 @@ import { ref } from 'vue'
 import { createKBsApi, getAllKBsApi, getKBsContentApi, getKBsRecentApi } from "../api/knowledgeBase"
 import type { createKnowledgeBaseRes, allKnowledgeBase } from "../types/knowledgeBase"
 export const useKnowledgeBaseStore = defineStore('knowledgeBase', () => {
+  // 知识库列表(目录树那边的所有知识库)
+  const knowledgeBaseList = ref<allKnowledgeBase[]>([])
+  // 最近访问的知识库列表
+  const recentKBsList = ref<allKnowledgeBase[]>([]);
+  
   // 创建知识库
   const createKBs = async (name: string, description: string): Promise<createKnowledgeBaseRes> => {
     const res = await createKBsApi(name, description)
@@ -19,7 +24,6 @@ export const useKnowledgeBaseStore = defineStore('knowledgeBase', () => {
   // 获取所有知识库（获取可访问的知识库）
   const getAllKBs = async () => {
     const res = await getAllKBsApi()
-    console.log(res);
    knowledgeBaseList.value = res.data
   }
 
@@ -33,43 +37,10 @@ export const useKnowledgeBaseStore = defineStore('knowledgeBase', () => {
     const res = await getKBsRecentApi(limit)
     recentKBsList.value = res.data
   }
-  // 知识库列表(目录树那边的所有知识库)
-  const knowledgeBaseList = ref<allKnowledgeBase[]>([])
-  // 最近访问的知识库列表
-  const recentKBsList = ref<allKnowledgeBase[]>([])
-  // 模拟最近访问的知识库列表，后续改成使用recentKBsList
-  const cardList = ref([
-    {
-      title: '前端知识库',
-      description: '这是文化知识库的描述的v拿到了...',
-      docCount: 15,
-      updateTime: '2025-06-21'
-    },
-    {
-      title: '后台知识库',
-      description: '这是文化知识库的描述',
-      docCount: 15,
-      updateTime: '2025-06-21'
-    },
-    {
-      title: '安卓知识库',
-      description: '这是文化知识是那些卡死才把...',
-      docCount: 15,
-      updateTime: '2025-06-21'
-    },
-    {
-      title: '安卓知识库',
-      description: '这是文化知识是那些卡死才把...',
-      docCount: 15,
-      updateTime: '2025-06-21'
-    }
-
-  ])
 
 
   return {
     knowledgeBaseList,
-    cardList,
     recentKBsList,
     createKBs,
     getAllKBs,

@@ -4,20 +4,36 @@ import {
   Folder,
   Reading,
 } from "@element-plus/icons-vue";
-import { ElMessage } from "element-plus";
 import { useRouter } from 'vue-router'
 import {useUserStore} from "../stores/useUserStore"
 import { useKnowledgeBaseStore } from "../stores/useKnowledgeBaseStore";
-import { onMounted } from "vue";
+import { onMounted, ref, reactive } from "vue";
+import MoreActions from '../components/MoreActions.vue'
+import { deleteKBsApi, editKBsApi } from '../api/knowledgeBase'
+import { ElMessage, ElMessageBox } from "element-plus";
+import { storeToRefs } from "pinia";
+const knowledgeBaseStore = useKnowledgeBaseStore()
+interface KnowledgeBaseCard {
+  id: number
+  name: string
+  description: string
+}
+// 最近访问列表
+const { recentKBsList } = storeToRefs(knowledgeBaseStore) as {
+  recentKBsList: import('vue').Ref<KnowledgeBaseCard[]>
+};
+//所有知识库列表
+const { knowledgeBaseList } = storeToRefs(knowledgeBaseStore) as {
+  knowledgeBaseList: import('vue').Ref<KnowledgeBaseCard[]>
+}
 const router = useRouter()
 const userStore = useUserStore()
-const {logined,username} = useUserStore()
-const knowledgeBaseStore = useKnowledgeBaseStore()
-const handleOpen = (key: string, keyPath: string[]) => {
+const username = localStorage.getItem("username") || "用户";
+const handleOpen = () => {
   console.log('打开');
   
 };
-const handleClose = (key: string, keyPath: string[]) => {
+const handleClose = () => {
   console.log('折叠');
   
 };
@@ -31,11 +47,72 @@ const logOut = ()=>{
 // 获取所有知识库（获取可访问的知识库）
 onMounted(async()=>{
   await knowledgeBaseStore.getAllKBs()
+  await knowledgeBaseStore.getRecentKBs(5)
 })
 
 const goToDocument = async (knowledgeBaseId: number)=>{
   router.push(`/knowledgeBase/${knowledgeBaseId}`)
   await knowledgeBaseStore.openAndRecordRecentAccess(knowledgeBaseId)
+}
+
+const dialogFormVisible = ref(false)
+const editingId = ref<number | null>(null)
+const form = reactive({
+  name: '',
+  desc: ''
+})
+//编辑
+function openEditDialog(id: number) {
+  console.log('父组件收到编辑事件，id:', id) // 测试用
+  const kb = knowledgeBaseStore.knowledgeBaseList.find(item => item.id === id)
+  if (kb) {
+    editingId.value = id
+    form.name = kb.name
+    form.desc = kb.description
+    dialogFormVisible.value = true
+  }
+}
+
+// 提交编辑
+async function submitForm() {
+  if (!editingId.value) return
+  await editKBsApi(editingId.value, form.name, form.desc)
+  ElMessage.success('编辑成功')
+  dialogFormVisible.value = false
+  // 更新知识库列表
+  await knowledgeBaseStore.getRecentKBs(5)
+}
+
+//删除知识库-弹框
+const openDeleteModal = (knowledgeBaseId: number) => {
+  ElMessageBox.confirm("确定要删除该知识库吗？此操作不可恢复", "警告", {
+    confirmButtonText: "确定",
+    cancelButtonText: "取消",
+    type: "warning",
+  }).then(async () => {
+    try {
+        await deleteKBsApi(knowledgeBaseId) 
+        ElMessage.success("删除成功")
+        // 从recentKBsList中移除已删除的知识库
+        // 最近访问删除
+        const index1 = recentKBsList.value.findIndex((kb: { id: number; }) => kb.id === knowledgeBaseId)
+        const index2 = knowledgeBaseList.value.findIndex((kb: { id: number; }) => kb.id === knowledgeBaseId)
+        if (index1 !== -1) {
+          recentKBsList.value.splice(index1, 1);
+        }
+        if (index2 !== -1) {
+          knowledgeBaseList.value.splice(index2, 1);
+        }
+    } catch (error: any) {
+      ElMessage.error(error.message)
+      console.error("删除知识库出错:", error) 
+    }
+  }) 
+} 
+
+const handleLogoClick = async () => {
+  await knowledgeBaseStore.getRecentKBs(5)
+  router.replace('/knowledgeBase/KnowledgeBaseMain')
 }
 </script>
 
@@ -46,7 +123,10 @@ const goToDocument = async (knowledgeBaseId: number)=>{
         class="header"
         height="65px"
       >
-        <div class="header-logo" @click="router.replace('/knowledgeBase/knowledgeBaseMain')" >知识库系统</div>
+        <div
+          class="header-logo"
+          @click="handleLogoClick"
+        >知识库系统</div>
         <div class="header-userInfo">
           <el-dropdown>
             <span class="user-dropdown">
@@ -81,27 +161,71 @@ const goToDocument = async (knowledgeBaseId: number)=>{
                 <span>知识库</span>
               </template>
             <el-menu-item
-                v-for="(item, index) in knowledgeBaseStore.knowledgeBaseList"
-                :key="item.id"
-                :index="`1-${index + 1}`"
-                @click="goToDocument(item.id)"
-              >
+              v-for="(item, index) in knowledgeBaseStore.knowledgeBaseList"
+              :key="item.id"
+              :index="`1-${index + 1}`"
+              @click="goToDocument(item.id)"
+              style="display: flex; align-items: center;"
+            >
+              <div style="display: flex; align-items: center; flex: 1;">
                 <el-icon><Folder /></el-icon>
-                <span>{{ item.name }}</span>
-              </el-menu-item>
+                <el-tooltip :content="item.name" placement="top">
+                  <span
+                    style="
+                      margin-left: 8px;
+                      max-width: 64px;
+                      display: inline-block;
+                      overflow: hidden;
+                      text-overflow: ellipsis;
+                      white-space: nowrap;
+                      vertical-align: middle;
+                    "
+                  >
+                    {{ item.name.length > 4 ? item.name.slice(0, 4) + '...' : item.name }}
+                  </span>
+                </el-tooltip>
+              </div>
+              <div style="margin-left: auto;" @click.stop>
+                <MoreActions :id="item.id" @edit="openEditDialog" @delete="openDeleteModal" />
+              </div>
+            </el-menu-item>
             </el-sub-menu>
           </el-menu>
         </el-aside>
         <el-main class="main">
-          <router-view></router-view>
+          <router-view @edit="openEditDialog" @delete = "openDeleteModal"></router-view>
         </el-main>
       </el-container>
     </el-container>
+    <!-- 统一的编辑弹窗 -->
+    <el-dialog
+      v-model="dialogFormVisible"
+      title="编辑知识库"
+      width="500px"
+    >
+      <el-form :model="form">
+        <el-form-item label="知识库名称">
+          <el-input v-model="form.name" autocomplete="off" placeholder="请输入知识库名称" />
+        </el-form-item>
+        <el-form-item label="知识库描述">
+          <el-input v-model="form.desc" type="textarea" placeholder="请输入知识库描述" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="dialogFormVisible = false">取消</el-button>
+        <el-button type="primary" @click="submitForm">确定</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 
 <style scoped lang="scss">
+
+:deep(.el-tooltip__trigger:focus-visible) {
+  outline: unset;
+}
+
 .common-layout {
   height: 100%;
   .header {
