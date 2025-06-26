@@ -184,6 +184,13 @@
             :style="{ backgroundColor: userColor }"
           ></span>
         </p>
+        <el-button
+          type="success"
+          class="aiSummarize"
+          color="#7a72e0"
+          @click="aiClick = true"
+          >AI总结全文</el-button
+        >
       </div>
 
       <!-- <div class="info-section">
@@ -197,6 +204,17 @@
       </div> -->
     </div>
   </div>
+  <el-aside width="300px" v-if="aiClick">
+    <div class="aiContent">
+      <el-icon class="aiClose" color="#7a72e0" @click="aiClick = false"
+        ><Close
+      /></el-icon>
+      <p class="aiTitle">AI总结:</p>
+      <p>
+        来财来财来财来财来财来财来财来财来财来财来财来财来财来财来财来财来财来财来财来财
+      </p>
+    </div>
+  </el-aside>
 </template>
 
 <script setup lang="ts">
@@ -216,6 +234,9 @@ import * as Y from "yjs";
 import { WebsocketProvider } from "y-websocket";
 import { Comment } from "../utils/comment-extension";
 import EventBus from "../utils/event-bus";
+import { Close } from "@element-plus/icons-vue";
+
+let aiClick = ref(false);
 
 // 定义组件的 props
 interface Props {
@@ -322,7 +343,7 @@ const initializeCollaboration = () => {
 
   // 监听用户连接状态变化
   provider.awareness.on("change", () => {
-    onlineUsers.value = provider?.awareness.getStates().size;
+    onlineUsers.value = provider?.awareness.getStates().size ?? 0;
   });
 
   // 设置当前用户信息
@@ -686,6 +707,12 @@ onBeforeUnmount(() => {
   margin-top: 16px;
 } */
 
+.info-section {
+  display: flex;
+  flex-direction: column;
+  align-items: end;
+}
+
 /*
 .info-section h4 {
   margin: 0 0 12px 0;
@@ -700,6 +727,11 @@ onBeforeUnmount(() => {
   font-size: 14px;
   color: #6b7280;
   text-align: end;
+}
+
+.info-section .aiSummarize {
+  margin-top: 12px;
+  color: #fff;
 }
 
 .info-section ul {
@@ -721,6 +753,30 @@ onBeforeUnmount(() => {
   border: 1px solid #d1d5db;
   vertical-align: middle;
   margin-left: 4px;
+}
+
+.aiContent {
+  font-size: 16px;
+  line-height: normal;
+  padding: 16px 16px;
+  text-wrap: wrap;
+  background-color: white;
+  border-radius: 6px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.aiClose {
+  align-self: flex-end;
+  color: #7a72e0;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.aiTitle {
+  color: #7a72e0;
+  font-size: 18px;
 }
 
 /* 响应式设计 */
