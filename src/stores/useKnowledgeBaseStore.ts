@@ -15,8 +15,6 @@ export const useKnowledgeBaseStore = defineStore('knowledgeBase', () => {
     const res = await getAllKBsApi()
     console.log(res);
    knowledgeBaseList.value = res.data
-  //  console.log(knowledgeBaseList.value);
-   
   }
 
   //点击某个知识库去往对应文档页面（同时记录最近访问）
@@ -32,7 +30,7 @@ export const useKnowledgeBaseStore = defineStore('knowledgeBase', () => {
   // 知识库列表(目录树那边的所有知识库)
   const knowledgeBaseList = ref<allKnowledgeBase[]>([])
   // 最近访问的知识库列表
-  const recentKBsList = ref([])
+  const recentKBsList = ref<allKnowledgeBase[]>([])
   // 模拟最近访问的知识库列表，后续改成使用recentKBsList
   const cardList = ref([
     {
