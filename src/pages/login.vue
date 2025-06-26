@@ -301,9 +301,9 @@ const handleSubmit = async () => {
     if (isLogin.value) {
       // 登录
       const res = await userLogin(formData.email, formData.password)
-      localStorage.setItem("token", res.token || "")
+      localStorage.setItem("token", res.data.token || "")
       ElMessage.success("登录成功")
-      router.push("/home/knowledge")
+      router.push('/knowledgeBase/KnowledgeBaseMain')
     } else {
       // 注册
       await userRegister(
