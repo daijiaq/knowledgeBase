@@ -234,7 +234,8 @@ import { useRouter } from "vue-router";
 import type { FormInstance, FormRules } from "element-plus";
 import { ElMessage } from "element-plus";
 import { userLogin, userRegister } from "../api/user";
-
+import { useUserStore } from "../stores/useUserStore";
+const useStore= useUserStore()
 const router = useRouter();
 const isLogin = ref(true)
 const loading = ref(false)
@@ -302,6 +303,8 @@ const handleSubmit = async () => {
       // 登录
       const res = await userLogin(formData.email, formData.password)
       localStorage.setItem("token", res.data.token || "")
+      useStore.logined = true
+      useStore.username = res.data.username || '未知用户'
       ElMessage.success("登录成功")
       router.push('/knowledgeBase/KnowledgeBaseMain')
     } else {
