@@ -32,9 +32,9 @@ const logOut = ()=>{
 onMounted(async()=>{
   await knowledgeBaseStore.getAllKBs()
 })
-// 点击某个知识库会跳转到文档页[浏览器显示因为CollaborativeEditor发生错误影响路径的回退，后续再回来改]
+
 const goToDocument = async (knowledgeBaseId: number)=>{
-  router.push('/document')
+  router.push('/knowledgeBase/knowledgeBaseMain')
   await knowledgeBaseStore.openAndRecordRecentAccess(knowledgeBaseId)
 }
 </script>

@@ -91,5 +91,5 @@ export interface KnowledgeBaseContentRes {
 }
 
 /**
- * 获取最近访问的知识库
+ * 获取最近访问的知识库——————和获取所有知识库（获取可访问的知识库）一样
  */

@@ -31,10 +31,11 @@ export const getKBsContentApi = (knowledgeBaseId: number):Promise<KnowledgeBaseC
     })
 }
 
-// 获取最近访问的知识库【类型定义因为接口原因还没写，明天记得补充】
-export const getKBsRecentApi = (limit: number) => {
+// 获取最近访问的知识库
+export const getKBsRecentApi = (limit?: number):Promise<allKnowledgeBaseRes> => {
+    const finalLimit = limit ?? 5
     return request({
-        url: `/knowledgeBase/recent?limit=${limit}`,
+        url: `/knowledgeBase/recent?limit=${finalLimit}`,
         method: 'GET'
     })
 }

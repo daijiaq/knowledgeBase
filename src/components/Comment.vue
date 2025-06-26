@@ -16,7 +16,7 @@
                     <CloseBold />
                 </el-icon>
             </div>
-            <div class="comment-content" v-for="comment of getCommentContent">
+            <div class="comment-content" v-for="(comment,index) of getCommentContent" :key="index">
                 <h3>Total</h3>
                 <div class="text">{{ comment.text }}</div>
                 <div class="content">{{ comment.content }}</div>
@@ -30,17 +30,22 @@ import { ref , onBeforeUnmount ,reactive } from 'vue'
 import EventBus from '../utils/event-bus'
 import { CloseBold } from '@element-plus/icons-vue'
  
-const commentContent = ref('')
-const showCommentInput = ref(false);
-const showCommentContent = ref(false);
-const getCommentContent = ref([])
+interface CommentItem {
+    text: string;
+    content: string;
+}
 
-EventBus.on('showCommentInput',(val)=>{
+const commentContent = ref<string>('')
+const showCommentInput = ref<boolean>(false);
+const showCommentContent = ref<boolean>(false);
+const getCommentContent = ref<CommentItem[]>([])
+
+EventBus.on('showCommentInput', ((val: boolean) => {
     showCommentInput.value = val;
     showCommentContent.value = false;
-})
+} ) as any);
 
-EventBus.on('getComment',(val)=>{
+EventBus.on('getComment', ((val: any) => {
     showCommentInput.value = false;
     showCommentContent.value = true;
     getCommentContent.value = [
@@ -65,7 +70,7 @@ EventBus.on('getComment',(val)=>{
             content: "生活总爱把期待摔成碎片，但光的特质是：碎了便成了千万个小太阳。那些被揉皱的希望、被击散的勇气，终会在某个涟漪里，重新聚成照亮前路的光。"
         }
     ]
-})
+}) as any);
 
 const confirmComment = () => {
     if (!commentContent.value.trim()) return;

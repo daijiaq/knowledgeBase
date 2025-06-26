@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Document } from "@element-plus/icons-vue";
 import { ElMessage, ElMessageBox } from "element-plus";
-import { reactive, ref } from "vue";
+import { onMounted, reactive, ref } from "vue";
 import { useRouter } from "vue-router";
 import { useKnowledgeBaseStore } from "../stores/useKnowledgeBaseStore";
 const knowledgeBaseStore = useKnowledgeBaseStore();
@@ -74,6 +74,10 @@ const openDeleteModal = () => {
     });
   });
 };
+// 渲染最近访问的知识库[接口不直接返回文档数量、最近访问时间、后续确定好再来补充逻辑]
+onMounted(async()=>{
+ await knowledgeBaseStore.getRecentKBs(8)
+})
 </script>
 
 <template>
