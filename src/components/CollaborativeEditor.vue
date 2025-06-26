@@ -2,14 +2,11 @@
   <div class="collaborative-editor">
     <div class="connection-status">
       <div class="status-indicator">
-        <span
-          class="status-dot"
-          :class="{
+        <span class="status-dot" :class="{
             connected: connectionStatus === 'connected',
             connecting: connectionStatus === 'connecting',
             disconnected: connectionStatus === 'disconnected',
-          }"
-        ></span>
+          }"></span>
         <span class="status-text">
           {{ getStatusText() }}
         </span>
@@ -27,11 +24,7 @@
 
     <!-- 编辑器容器 -->
     <div class="editor-container">
-      <editor-content
-        :editor="editor"
-        class="editor-content"
-        @click="getComment"
-      />
+      <editor-content :editor="editor" class="editor-content" @click="getComment" />
     </div>
 
     <!-- 协同信息面板 -->
@@ -42,26 +35,23 @@
         <p>用户ID: {{ userId }}</p> -->
         <p>
           光标颜色:
-          <span
-            class="color-preview"
-            :style="{ backgroundColor: userColor }"
-          ></span>
+          <span class="color-preview" :style="{ backgroundColor: userColor }"></span>
         </p>
-        <el-button
-          type="success"
-          class="aiSummarize"
-          color="#7a72e0"
-          @click="aiClick = true"
-          >AI总结全文</el-button
-        >
+        <div class="editor-tool">
+          <span class="update-time">更新于2025-6-25 13:45<span style="color:#7a72e0;cursor: pointer;">&nbsp;回退版本</span></span>
+          <div class="button-box">
+            <el-button type="success" color="#7a72e0" @click="aiClick = true">AI总结全文</el-button>
+            <el-button type="success" color="#7a72e0">保存</el-button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
   <el-aside width="300px" v-if="aiClick">
     <div class="aiContent">
-      <el-icon class="aiClose" color="#7a72e0" @click="aiClick = false"
-        ><Close
-      /></el-icon>
+      <el-icon class="aiClose" color="#7a72e0" @click="aiClick = false">
+        <Close />
+      </el-icon>
       <p class="aiTitle">AI总结:</p>
       <p>财来财来财来财来财来财来财来财来财来财来财来财来财来财</p>
     </div>
@@ -585,9 +575,22 @@ onBeforeUnmount(() => {
   text-align: end;
 }
 
-.info-section .aiSummarize {
+.button-box {
+  float: right;
+}
+.info-section .button-box button {
   margin-top: 12px;
   color: #fff;
+  float: right;
+  margin-left: 5px;
+}
+
+.info-section .editor-tool{
+  width: 100%;
+}
+.info-section .editor-tool .update-time{
+  line-height: 58px;
+  color: gray;
 }
 
 .info-section ul {

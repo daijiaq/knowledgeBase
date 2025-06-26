@@ -209,7 +209,7 @@
               <el-dropdown-menu>
                 <el-dropdown-item @click="addComment"> 添加评论 </el-dropdown-item>
                 <el-dropdown-item @click="removeComment">
-                  删除评论
+                  取消延续
                 </el-dropdown-item>
               </el-dropdown-menu>
             </template>
@@ -299,12 +299,12 @@ const internalEditor = useEditor({
         <p style="text-align: right">second paragraph</p>`,
   onUpdate({ editor,transaction }) {
     //自动获取数据内容
-    const json = editor.getJSON();
-    console.log(json);
-    if (transaction.docChanged) {
+    /* const json = editor.getJSON();
+    console.log(json); */
+/*     if (transaction.docChanged) {
       //文档变更细节
       console.log(transaction);
-  }
+  } */
   },
 });
 
@@ -328,7 +328,6 @@ function setLink() {
   // empty
   if (url === "") {
     editor.value.chain().focus().extendMarkRange("link").unsetLink().run();
-
     return;
   }
 
@@ -439,9 +438,6 @@ const addComment = () => {
       }
    }
    });
-
-  console.log(markInfo);
-  console.log(markInfo[0]?.name,markInfo[0]?.text.length);
   
   if(markInfo.length === 1 && markInfo[0]?.text.length === to - from){
     markInfo[0].marks.map(mark=>{
@@ -451,9 +447,6 @@ const addComment = () => {
       }
     })
   }
-
-  
-   
 
   selectedRange = { from, to }; // 保存选中范围
   //显示评论框
@@ -468,9 +461,7 @@ const confirmComment = () => {
     id: text_id || nanoid(),
   };
 
-  console.log(attributes);
-  
-  // 应用 Mark 到选中范围
+  // 只给选区添加 comment mark，不影响其它 mark
   editor.value
     .chain()
     .focus()
@@ -503,13 +494,17 @@ const getComment = (event) => {
 
 // 删除当前选中范围的评论（示例函数）
 const removeComment = () => {
-  editor.value
+  const { from, to } = editor.value.state.selection;
+  if(from === to){
+    editor.value
     .chain()
     .focus()
     .unsetMark("comment") // 移除 comment Mark
     .run();
+  }else{
+      ElMessage.info('请在评论区中选择自己所写评论删除噢~');
+  }
 };
-
 
 
 onBeforeUnmount(() => {

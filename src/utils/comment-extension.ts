@@ -3,7 +3,7 @@ import { Mark } from '@tiptap/core'
 
 export const Comment = Mark.create({
   name: 'comment', // Mark 名称（唯一标识）
-
+  excludes:'', //允许与其他mark共存
   // 定义 Mark 的属性（存储评论数据）
   addAttributes() {
     return {
