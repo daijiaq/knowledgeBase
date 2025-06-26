@@ -232,8 +232,8 @@ type ConnectionStatus = "connecting" | "connected" | "disconnected";
 
 // 使用 defineProps
 const props = withDefaults(defineProps<Props>(), {
-  // websocketUrl: "ws://localhost:1234",
-  websocketUrl: "ws://192.168.31.119:1234",
+  websocketUrl: "ws://localhost:1234",
+  // websocketUrl: "ws://192.168.31.119:1234",
   roomId: "collaborative-document",
   userName: "匿名用户",
 });
