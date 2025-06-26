@@ -1,9 +1,5 @@
 <template>
   <div class="collaborative-editor">
-    <!-- 协同编辑器标题
-    <h2 class="editor-title">协同富文本编辑器</h2> -->
-
-    <!-- 连接状态指示器 -->
     <div class="connection-status">
       <div class="status-indicator">
         <span
@@ -26,139 +22,6 @@
     </div>
 
     <!-- 协同编辑工具栏 -->
-    <!-- <div class="toolbar" v-if="editor"> -->
-    <!-- 基础格式化按钮 
-      <div class="toolbar-group">
-        <button
-          @click="editor.chain().focus().toggleBold().run()"
-          :class="{ 'is-active': editor.isActive('bold') }"
-          class="toolbar-btn"
-          title="粗体"
-        >
-          <strong>B</strong>
-        </button>
-
-        <button
-          @click="editor.chain().focus().toggleItalic().run()"
-          :class="{ 'is-active': editor.isActive('italic') }"
-          class="toolbar-btn"
-          title="斜体"
-        >
-          <em>I</em>
-        </button>
-
-        <button
-          @click="editor.chain().focus().toggleStrike().run()"
-          :class="{ 'is-active': editor.isActive('strike') }"
-          class="toolbar-btn"
-          title="删除线"
-        >
-          <s>S</s>
-        </button>
-      </div>
-
-      标题级别按钮 
-      <div class="toolbar-group">
-        <button
-          @click="editor.chain().focus().toggleHeading({ level: 1 }).run()"
-          :class="{ 'is-active': editor.isActive('heading', { level: 1 }) }"
-          class="toolbar-btn"
-          title="一级标题"
-        >
-          H1
-        </button>
-
-        <button
-          @click="editor.chain().focus().toggleHeading({ level: 2 }).run()"
-          :class="{ 'is-active': editor.isActive('heading', { level: 2 }) }"
-          class="toolbar-btn"
-          title="二级标题"
-        >
-          H2
-        </button>
-
-        <button
-          @click="editor.chain().focus().toggleHeading({ level: 3 }).run()"
-          :class="{ 'is-active': editor.isActive('heading', { level: 3 }) }"
-          class="toolbar-btn"
-          title="三级标题"
-        >
-          H3
-        </button>
-      </div>
-
-       列表按钮 
-      <div class="toolbar-group">
-        <button
-          @click="editor.chain().focus().toggleBulletList().run()"
-          :class="{ 'is-active': editor.isActive('bulletList') }"
-          class="toolbar-btn"
-          title="无序列表"
-        >
-          •
-        </button>
-
-        <button
-          @click="editor.chain().focus().toggleOrderedList().run()"
-          :class="{ 'is-active': editor.isActive('orderedList') }"
-          class="toolbar-btn"
-          title="有序列表"
-        >
-          1.
-        </button>
-      </div>
-
-      其他功能按钮 
-      <div class="toolbar-group">
-        <button
-          @click="editor.chain().focus().toggleBlockquote().run()"
-          :class="{ 'is-active': editor.isActive('blockquote') }"
-          class="toolbar-btn"
-          title="引用"
-        >
-          "
-        </button>
-
-        <button
-          @click="editor.chain().focus().toggleCode().run()"
-          :class="{ 'is-active': editor.isActive('code') }"
-          class="toolbar-btn"
-          title="行内代码"
-        >
-          &lt;/&gt;
-        </button>
-
-        <button
-          @click="editor.chain().focus().toggleCodeBlock().run()"
-          :class="{ 'is-active': editor.isActive('codeBlock') }"
-          class="toolbar-btn"
-          title="代码块"
-        >
-          { }
-        </button>
-      </div>
-
-       协同功能按钮 
-      <div class="toolbar-group">
-        <button
-          @click="reconnectWebSocket"
-          :disabled="connectionStatus === 'connecting'"
-          class="toolbar-btn"
-          title="重新连接"
-        >
-          🔄
-        </button>
-
-        <button
-          @click="changeUserColor"
-          class="toolbar-btn"
-          title="更换光标颜色"
-        >
-          🎨
-        </button>
-      </div>
-         </div>-->
-
     <!-- 使用 Editor 组件，传入协同编辑器实例，不显示其内容区域 -->
     <Editor :external-editor="editor" :show-editor-content="false" />
 
@@ -192,16 +55,6 @@
           >AI总结全文</el-button
         >
       </div>
-
-      <!-- <div class="info-section">
-        <h4>使用说明</h4>
-        <ul>
-          <li>多个用户可以同时编辑同一文档</li>
-          <li>实时看到其他用户的光标位置和编辑内容</li>
-          <li>支持撤销/重做等协同操作</li>
-          <li>自动保存和同步更改</li>
-        </ul>
-      </div> -->
     </div>
   </div>
   <el-aside width="300px" v-if="aiClick">
@@ -641,7 +494,7 @@ onBeforeUnmount(() => {
   overflow: hidden;
   margin-bottom: 16px;
   position: relative;
-  height: 400px; /* 你可以根据需要调整高度 */
+  height: 400px;
   min-height: 200px;
   max-height: 100%;
   display: flex;
