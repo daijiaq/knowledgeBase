@@ -6,7 +6,13 @@ export const useKnowledgeBaseStore = defineStore('knowledgeBase', () => {
   // 创建知识库
   const createKBs = async (name: string, description: string): Promise<createKnowledgeBaseRes> => {
     const res = await createKBsApi(name, description)
-    // 逻辑：将新建知识库push到knowledgeBaseList中，但是“创建知识库”接口没有返回字段permission，要么前端自行默认创建者为owner或者直接调用getAllKBs，要么后端增加返回字段，明天记得再看一下
+      const newKnowledgeBase = {
+    id: res.data.id, 
+    name: name,
+    description: description,
+    permission: 'owner',
+  };
+  knowledgeBaseList.value.push(newKnowledgeBase);
     return res
   }
 

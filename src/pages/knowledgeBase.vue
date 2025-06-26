@@ -34,7 +34,7 @@ onMounted(async()=>{
 })
 
 const goToDocument = async (knowledgeBaseId: number)=>{
-  router.push('/knowledgeBase/knowledgeBaseMain')
+  router.push(`/knowledgeBase/${knowledgeBaseId}`)
   await knowledgeBaseStore.openAndRecordRecentAccess(knowledgeBaseId)
 }
 </script>
