@@ -510,13 +510,18 @@ const removeComment = () => {
     .run();
 };
 
+
+
 onBeforeUnmount(() => {
-  this.editor.destroy();
+  editor.value.destroy();
   EventBus.all.clear();
 });
 </script>
 
 <style lang="scss">
+:deep(.el-tooltip__trigger:focus-visible) {
+  outline: none;
+}
 .container {
   width: 80%;
   margin: 0 auto;

@@ -232,8 +232,8 @@ type ConnectionStatus = "connecting" | "connected" | "disconnected";
 
 // 使用 defineProps
 const props = withDefaults(defineProps<Props>(), {
-  // websocketUrl: "ws://localhost:1234",
-  websocketUrl: "ws://192.168.31.119:1234",
+  websocketUrl: "ws://localhost:1234",
+  // websocketUrl: "ws://192.168.31.119:1234",
   roomId: "collaborative-document",
   userName: "匿名用户",
 });
@@ -322,7 +322,7 @@ const initializeCollaboration = () => {
 
   // 监听用户连接状态变化
   provider.awareness.on("change", () => {
-    onlineUsers.value = provider!.awareness.getStates().size;
+    onlineUsers.value = provider?.awareness.getStates().size;
   });
 
   // 设置当前用户信息
