@@ -232,8 +232,8 @@ type ConnectionStatus = "connecting" | "connected" | "disconnected";
 
 // 使用 defineProps
 const props = withDefaults(defineProps<Props>(), {
-  // websocketUrl: "ws://localhost:1234",
-  websocketUrl: "ws://192.168.31.119:1234",
+  websocketUrl: "ws://localhost:1234",
+  // websocketUrl: "ws://192.168.31.119:1234",
   roomId: "collaborative-document",
   userName: "匿名用户",
 });
@@ -418,15 +418,34 @@ const reconnectWebSocket = () => {
  * 销毁协同编辑器
  */
 const destroyCollaboration = () => {
-  if (provider) {
-    provider.disconnect();
-    provider.destroy();
-    provider = null;
-  }
+  try {
+    // 清理awareness状态
+    if (provider && provider.awareness) {
+      provider.awareness.setLocalState(null);
+      provider.awareness.off("change", () => {});
+    }
 
-  if (ydoc) {
-    ydoc.destroy();
-    ydoc = null;
+    // 断开并销毁provider
+    if (provider) {
+      console.log("断开WebSocket连接");
+      provider.disconnect();
+      provider.destroy();
+      provider = null;
+    }
+
+    // 销毁文档
+    if (ydoc) {
+      ydoc.destroy();
+      ydoc = null;
+    }
+
+    // 重置状态
+    connectionStatus.value = "disconnected";
+    onlineUsers.value = 0;
+
+    console.log("协同编辑器已完全销毁");
+  } catch (error) {
+    console.error("销毁协同编辑器时出错:", error);
   }
 };
 
@@ -441,13 +460,28 @@ const getComment = (event: any) => {
   });
 };
 
+// 页面卸载时清理连接
+const handleBeforeUnload = () => {
+  console.log("页面即将卸载，清理协同编辑连接");
+  destroyCollaboration();
+};
+
 // 生命周期钩子
 onMounted(() => {
   console.log("协同编辑器已挂载");
+
+  // 监听页面卸载事件
+  window.addEventListener("beforeunload", handleBeforeUnload);
+  window.addEventListener("unload", handleBeforeUnload);
 });
 
 onBeforeUnmount(() => {
   console.log("销毁协同编辑器...");
+
+  // 移除事件监听器
+  window.removeEventListener("beforeunload", handleBeforeUnload);
+  window.removeEventListener("unload", handleBeforeUnload);
+
   destroyCollaboration();
 });
 </script>

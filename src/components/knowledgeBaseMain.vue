@@ -4,16 +4,23 @@ import { ElMessage, ElMessageBox } from "element-plus";
 import { onMounted, reactive, ref } from "vue";
 import { useRouter } from "vue-router";
 import { useKnowledgeBaseStore } from "../stores/useKnowledgeBaseStore";
+import { editKBsApi, deleteKBsApi, getKBsRecentApi } from "../api/knowledgeBase";
+import { onMounted } from "vue";
+
 const knowledgeBaseStore = useKnowledgeBaseStore();
-const router = useRouter()
-// 创建知识库的规则定义
+const router = useRouter();
 const dialogFormVisible = ref(false);
 const isEditMode = ref(false);
 const formLabelWidth = "140px";
+
+// 表单数据，新增id字段用于编辑
 const form = reactive({
+  id: 0,
   name: "",
   desc: "",
 });
+
+// 表单验证规则
 const rules = reactive({
   name: [
     { required: true, message: "知识库名称不能为空", trigger: "blur" },
@@ -25,59 +32,127 @@ const rules = reactive({
   ],
 });
 
-// 打开编辑弹框
-const openEditDialog = () => {
-  isEditMode.value = true;
-  dialogFormVisible.value = true;
-};
+// 定义知识库卡片项的类型
+interface KnowledgeBaseCard {
+  id: number 
+  description: string 
+  permission: string 
+  name: string 
+  lastAccessedAt: string 
+}
+
+// 定义响应式数组
+const cardList = ref<KnowledgeBaseCard[]>([]) 
+
+// 打开编辑弹框并填充数据
+const openEditDialog = (knowledgeBaseId: number) => {
+  isEditMode.value = true 
+  dialogFormVisible.value = true 
+  
+  // 在cardList中查找对应的知识库
+  const knowledgeBase = cardList.value.find(kb => kb.id === knowledgeBaseId) 
+  
+  if (knowledgeBase) {
+    form.id = knowledgeBase.id 
+    form.name = knowledgeBase.name 
+    form.desc = knowledgeBase.description 
+  } else {
+    ElMessage.error("未找到该知识库") 
+    dialogFormVisible.value = false 
+  }
+} 
+
 // 打开新建弹框
 const openCreateDialog = () => {
-  isEditMode.value = false;
-  resetForm();
-  dialogFormVisible.value = true;
-};
+  isEditMode.value = false 
+  resetForm() 
+  dialogFormVisible.value = true 
+} 
+
 // 重置表单
 const resetForm = () => {
+  form.id = 0;
   form.name = "";
   form.desc = "";
 };
+
 // 提交表单
 const submitForm = async () => {
-  if (isEditMode.value) {
-    // 执行编辑逻辑 调接口时补充
-    ElMessage.success("编辑成功");
-  } else {
-    // 执行新建逻辑 调接口时补充
-    try {
-      const res = await knowledgeBaseStore.createKBs(form.name, form.desc);
-      if (res.code === 201) {
+  // 表单验证
+  if (!form.name || !form.desc) {
+    ElMessage.error("请填写完整信息");
+    return;
+  }
+  
+  try {
+    let res: any;
+    
+    if (isEditMode.value) {
+      // 执行编辑逻辑
+      res = await editKBsApi(form.id, form.name, form.desc);
+      ElMessage.success("编辑成功");
+      
+      // 更新cardList中的数据
+      const index = cardList.value.findIndex(kb => kb.id === form.id);
+      if (index !== -1) {
+        cardList.value[index] = {
+          ...cardList.value[index],
+          name: form.name,
+          description: form.desc,
+          lastAccessedAt: new Date().toISOString().split('T')[0]
+        };
+      }
+    } else {
+      // 执行新建逻辑
+      res = await knowledgeBaseStore.createKBs(form.name, form.desc);
+      if (res.code === 200) {
         ElMessage.success(res.message);
+        
+        // 重新获取最近访问列表
+        const recentRes = await getKBsRecentApi(5);
+        cardList.value = recentRes.data;
       } else {
         ElMessage.error(res.message || "创建失败");
       }
-    } catch (error) {
-      ElMessage.error("网络或服务器错误");
     }
+  } catch (error: any) {
+    ElMessage.error(error.message );
+    console.error("操作知识库出错:", error);
+  } finally {
+    dialogFormVisible.value = false;
   }
-  dialogFormVisible.value = false;
 };
+
 // 删除知识库-弹框
-const openDeleteModal = () => {
-  ElMessageBox.confirm("确定要删除该知识库吗？", "警告", {
+const openDeleteModal = (knowledgeBaseId: number) => {
+  ElMessageBox.confirm("确定要删除该知识库吗？此操作不可恢复", "警告", {
     confirmButtonText: "确定",
     cancelButtonText: "取消",
     type: "warning",
-  }).then(() => {
-    ElMessage({
-      type: "success",
-      message: "删除成功",
-    });
-  });
-};
-// 渲染最近访问的知识库[接口不直接返回文档数量、最近访问时间、后续确定好再来补充逻辑]
-onMounted(async()=>{
- await knowledgeBaseStore.getRecentKBs(8)
-})
+  }).then(async () => {
+    try {
+        await deleteKBsApi(knowledgeBaseId) 
+        ElMessage.success("删除成功")
+        // 从cardList中移除已删除的知识库
+        cardList.value = cardList.value.filter(kb => kb.id !== knowledgeBaseId) 
+    } catch (error: any) {
+      ElMessage.error(error.message)
+      console.error("删除知识库出错:", error) 
+    }
+  }) 
+} 
+
+// 页面加载时获取最近访问的知识库
+onMounted(async () => {
+  try {
+    const res = await getKBsRecentApi(5) 
+    cardList.value = res.data 
+    console.log(cardList.value)
+  } catch (error) {
+    ElMessage.error("获取知识库列表失败") 
+    console.error("获取最近访问知识库出错:", error) 
+  }
+}) 
 </script>
 
 <template>
@@ -85,10 +160,7 @@ onMounted(async()=>{
     <div class="cardHeader">
       <div class="des">
         <div class="docIcon">
-          <el-icon
-            color="white"
-            size="34px"
-          >
+          <el-icon color="white" size="34px">
             <Document />
           </el-icon>
         </div>
@@ -97,49 +169,42 @@ onMounted(async()=>{
           <div>管理你的知识资产，让思维更有序</div>
         </div>
       </div>
-      <div
-        class="addNewButton"
-        @click=openCreateDialog
-      >
+      <div class="addNewButton" @click="openCreateDialog">
         <div>+ 新建知识库</div>
       </div>
     </div>
     <div class="dataBaseContainer">
       <knowledgeBaseCard
-        v-for="(item, index) in knowledgeBaseStore.cardList"
-        :key="index"
-        :title="item.title"
+        v-for="item in cardList"
+        :key="item.id"
+        :title="item.name"
         :description="item.description"
-        :doc-count="item.docCount"
-        :update-time="item.updateTime"
-        @edit="openEditDialog"
-        @delete="openDeleteModal"
-        @click="router.push('/knowledgeBase/1')"
+        :update-time="item.lastAccessedAt"
+        @edit="() => openEditDialog(item.id)" 
+        @delete="() => openDeleteModal(item.id)" 
+        @click="router.push(`/knowledgeBase/${item.id}`)"
       />
+
       <div class="addNewCard">
-        <div
-          class="detailContainer"
-          @click=openCreateDialog
-        >
+        <div class="detailContainer" @click="openCreateDialog">
           <div class="add">+</div>
           <div class="addDes">创建知识库</div>
           <div class="addDesDetail">创建一个新的知识库来组织您的内容</div>
         </div>
-
       </div>
-
     </div>
   </div>
 
-  <!-- 新建知识库弹出层 -->
+  <!-- 新建/编辑知识库弹出层 -->
   <el-dialog
     v-model="dialogFormVisible"
     :title="isEditMode ? '编辑知识库' : '新建知识库'"
-    width="500"
+    width="500px"
   >
     <el-form
       :model="form"
       :rules="rules"
+      @keyup.enter.prevent
     >
       <el-form-item
         label="知识库名称"
@@ -149,6 +214,7 @@ onMounted(async()=>{
         <el-input
           v-model="form.name"
           autocomplete="off"
+          placeholder="请输入知识库名称"
         />
       </el-form-item>
       <el-form-item
@@ -170,7 +236,7 @@ onMounted(async()=>{
         <el-button @click="dialogFormVisible = false">取消</el-button>
         <el-button
           type="primary"
-          @click=submitForm
+          @click="submitForm"
         >
           确定
         </el-button>
@@ -180,6 +246,7 @@ onMounted(async()=>{
 </template>
 
 <style scoped lang="scss">
+/* 样式部分与之前相同，未做修改 */
 .whole-page {
   background: linear-gradient(rgba(230, 230, 250, 0.1)),
     linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);

@@ -20,8 +20,8 @@ const emits = defineEmits<{
     <div class="cardIcon">
       <el-icon color="#6366f1" size="25px"><Document /></el-icon>
     </div>
-    <div class="moreContainer">
-      <el-dropdown placement="bottom">
+    <div class="moreContainer" @click.stop>
+      <el-dropdown placement="bottom" >
         <el-icon class="getMore" color="#9ca3af"><MoreFilled /></el-icon>
         <template #dropdown>
           <el-dropdown-menu>
@@ -35,8 +35,7 @@ const emits = defineEmits<{
     <div class="cardDes">{{ description }}</div>
     <div class="cardOther">
       <div class="leftText">
-        <el-icon color="#9ca3af" size="16px"><Document /></el-icon>
-        <p class="docNum">{{ docCount }} 篇文档</p>
+        <Document />
       </div>
       <div class="rightTime">
         <el-icon color="#9ca3af" size="16px"><Timer /></el-icon>
@@ -153,5 +152,8 @@ const emits = defineEmits<{
              
             }
         }
+    :deep(.el-tooltip__trigger:focus-visible) {
+      outline: unset;
+    }
 </style>
 
