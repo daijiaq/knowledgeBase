@@ -5,7 +5,6 @@ import { onMounted, reactive, ref } from "vue";
 import { useRouter } from "vue-router";
 import { useKnowledgeBaseStore } from "../stores/useKnowledgeBaseStore";
 import { editKBsApi, deleteKBsApi, getKBsRecentApi } from "../api/knowledgeBase";
-import { onMounted } from "vue";
 
 const knowledgeBaseStore = useKnowledgeBaseStore();
 const router = useRouter();
@@ -105,6 +104,8 @@ const submitForm = async () => {
     } else {
       // 执行新建逻辑
       res = await knowledgeBaseStore.createKBs(form.name, form.desc);
+      console.log(res.code);
+      
       if (res.code === 200) {
         ElMessage.success(res.message);
         
