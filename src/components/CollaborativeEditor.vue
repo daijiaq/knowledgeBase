@@ -210,9 +210,7 @@
         ><Close
       /></el-icon>
       <p class="aiTitle">AI总结:</p>
-      <p>
-        来财来财来财来财来财来财来财来财来财来财来财来财来财来财来财来财来财来财来财来财
-      </p>
+      <p>财来财来财来财来财来财来财来财来财来财来财来财来财来财</p>
     </div>
   </el-aside>
 </template>
@@ -643,12 +641,17 @@ onBeforeUnmount(() => {
   overflow: hidden;
   margin-bottom: 16px;
   position: relative;
+  height: 400px; /* 你可以根据需要调整高度 */
+  min-height: 200px;
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .editor-content {
   height: 100%;
   overflow-y: auto;
-  scrollbar-width: none;
+  scrollbar-width: thin;
 }
 
 /* 编辑器内容样式 */
@@ -765,6 +768,8 @@ onBeforeUnmount(() => {
   height: 100%;
   display: flex;
   flex-direction: column;
+  overflow-y: auto;
+  max-height: 100%;
 }
 
 .aiClose {
