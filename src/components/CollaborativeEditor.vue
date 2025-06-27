@@ -239,7 +239,7 @@ const editor = useEditor({
       "data-placeholder": "开始协同编辑...",
     },
   },
-  onUpdate({ editor, transaction }) {
+  /* onUpdate({ editor, transaction }) {
     //自动获取数据内容
     const json = editor.getJSON();
     console.log(json);
@@ -247,8 +247,9 @@ const editor = useEditor({
       //文档变更细节
       console.log(transaction);
     }
-  },
+  }, */
 });
+
 
 /**
  * 更换用户光标颜色
