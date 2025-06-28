@@ -74,6 +74,7 @@ import Underline from "@tiptap/extension-underline";
 import * as Y from "yjs";
 import { WebsocketProvider } from "y-websocket";
 import { Comment } from "../utils/comment-extension";
+import { Search } from '../utils/search-extension'
 import EventBus from "../utils/event-bus";
 import { Close } from "@element-plus/icons-vue";
 
@@ -230,6 +231,10 @@ const editor = useEditor({
         color: userColor.value,
       },
     }),
+    Search.configure({
+      highlightClass: 'search-highlight', // 高亮背景色（可自定义CSS）
+      caseSensitive: false,
+    }),
     Comment,
   ],
   content: "",
@@ -239,15 +244,11 @@ const editor = useEditor({
       "data-placeholder": "开始协同编辑...",
     },
   },
-  /* onUpdate({ editor, transaction }) {
-    //自动获取数据内容
-    const json = editor.getJSON();
-    console.log(json);
-    if (transaction.docChanged) {
-      //文档变更细节
-      console.log(transaction);
-    }
-  }, */
+  onUpdate: ({ editor }) => {
+      // 编辑器内容变化时，清空搜索结果（可选）
+      editor.storage.search.matches = [];
+      editor.storage.search.currentIndex = -1;
+  },
 });
 
 

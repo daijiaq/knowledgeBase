@@ -1,5 +1,5 @@
 /**
- * 防抖函数（TypeScript 版本）
+ * 防抖函数
  * @param func 需要防抖的目标函数
  * @param wait 等待时间（毫秒）
  * @param immediate 是否在第一次触发时立即执行（默认 false）

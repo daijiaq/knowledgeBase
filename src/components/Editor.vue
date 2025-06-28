@@ -228,7 +228,16 @@
             </template>
           </el-dropdown>
         </div>
-        
+        <div className="search-panel">
+        <input
+          type="text"
+          v-model="searchText"
+          placeholder="输入搜索内容（Ctrl+F）"
+        />
+        <button @click="handleSearch">搜索</button>
+        <button @click="">上一个</button>
+        <button @Click="">下一个</button>
+      </div>
         <editor-content
           v-if="showEditorContent"
           :editor="editor"
@@ -249,7 +258,8 @@ import TextAlign from "@tiptap/extension-text-align";
 import Link from "@tiptap/extension-link";
 import Underline from "@tiptap/extension-underline";
 import { Comment } from "../utils/comment-extension";
-import { useEditor, EditorContent, Editor, Editor as EditorType } from "@tiptap/vue-3";
+import { Search } from '../utils/search-extension'
+import { useEditor, EditorContent, Editor as EditorType } from "@tiptap/vue-3";
 import { onBeforeUnmount, ref, computed } from "vue";
 import type { ComputedRef } from "vue";
 import { nanoid } from "nanoid";
@@ -281,6 +291,8 @@ const fontColors = ref<string[]>(["#A8D8EA", "#D8BFD8", "#8B7E74", "#958DF1", "#
 
 const uploadFile = ref<HTMLInputElement | null>(null);
 
+const searchText = ref<string>('')
+
 let selectedRange: { from: number; to: number } | null = null;
 
 const internalEditor = useEditor({
@@ -293,12 +305,13 @@ const internalEditor = useEditor({
     StarterKit,
     Underline,
     Comment,
+    Search.configure({
+      highlightClass: 'search-highlight', // 高亮背景色（可自定义CSS）
+      caseSensitive: false,
+    })
   ],
   content: ``,
-  onUpdate(){
 
-  }
-  
 });
 
 // 计算属性决定使用哪个编辑器实例
@@ -319,7 +332,14 @@ const setLink = () => {
   editor.value?.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
 }
 
-
+// 触发搜索
+const handleSearch = () => {
+  if (editor.value && searchText.value.trim()) {
+    // 通过 storage 调用 search 方法
+    console.log(editor.value.storage.search.search);
+    editor.value.storage.search?.search(searchText.value);
+  }
+};
 
 const saveText = () => {
   debouncedSubmit({element: document.querySelector('.tiptap') as HTMLElement,filename:'xxx.pdf'});
@@ -543,10 +563,14 @@ onBeforeUnmount(() => {
     }
   }
   .tiptap-comment {
-    /* 评论文本样式（如添加下划线或背景色） */
     text-decoration: underline;
     text-decoration-color: #2196f3;
     cursor: pointer;
+  }
+  .search-highlight {
+    background-color: #fffbcd; /* 黄色背景 */
+    border-radius: 2px;
+    padding: 0 2px;
   }
 }
 
