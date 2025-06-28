@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Document } from "@element-plus/icons-vue";
-import { ElMessage} from "element-plus";
+import { ElMessage, ElSkeleton, ElSkeletonItem } from "element-plus";
 import { onMounted, reactive, ref } from "vue";
 import { useRouter } from "vue-router";
 import { useKnowledgeBaseStore } from "../stores/useKnowledgeBaseStore";
@@ -10,19 +10,21 @@ const knowledgeBaseStore = useKnowledgeBaseStore();
 const router = useRouter();
 const dialogFormVisible = ref(false);
 const formLabelWidth = "140px";
-const emits = defineEmits(['edit', 'delete']);
+const emits = defineEmits(["edit", "delete"]);
+const isLoading = ref(true); // 加载状态用于判断骨架屏显不显示
 // 定义知识库卡片项的类型
 interface KnowledgeBaseCard {
   id: number;
   name: string;
   description: string;
-  lastAccessedAt: string;
+  lastAccessedAt?: string;
   [key: string]: any; // 可选，允许有其他字段
 }
 
-const { recentKBsList } = storeToRefs(knowledgeBaseStore) as {
-  recentKBsList: import('vue').Ref<KnowledgeBaseCard[]>
-};
+const {
+  recentKBsList,
+}: { recentKBsList: import("vue").Ref<KnowledgeBaseCard[]> } =
+  storeToRefs(knowledgeBaseStore);
 // 表单数据，新增id字段用于编辑
 const form = reactive({
   id: 0,
@@ -43,9 +45,9 @@ const rules = reactive({
 });
 // 打开新建弹框
 const openCreateDialog = () => {
-  resetForm() 
-  dialogFormVisible.value = true 
-} 
+  resetForm();
+  dialogFormVisible.value = true;
+};
 
 // 重置表单
 const resetForm = () => {
@@ -61,42 +63,44 @@ const submitForm = async () => {
     ElMessage.error("请填写完整信息");
     return;
   }
-  
+
   try {
-    let res: any
-      // 执行新建逻辑
-      res = await knowledgeBaseStore.createKBs(form.name, form.desc);
-      console.log(res.code);
-      
-      if (res.code === 200) {
-        ElMessage.success(res.message);
-        
-        // 重新获取最近访问列表
-        const recentRes = await getKBsRecentApi(5);
-        recentKBsList.value = recentRes.data.map((item: any) => ({
-          ...item,
-          lastAccessedAt: item.lastAccessedAt ?? '', // 确保有 lastAccessedAt 字段
-        }));
-      } else {
-        ElMessage.error(res.message || "创建失败");
-      }
+    let res: any;
+    // 执行新建逻辑
+    res = await knowledgeBaseStore.createKBs(form.name, form.desc);
+    console.log(res.code);
+
+    if (res.code === 200) {
+      ElMessage.success(res.message);
+
+      // 重新获取最近访问列表
+      const recentRes = await getKBsRecentApi(5);
+      recentKBsList.value = recentRes.data.map((item: any) => ({
+        ...item,
+        lastAccessedAt: item.lastAccessedAt ?? "", // 确保有 lastAccessedAt 字段
+      }));
+    } else {
+      ElMessage.error(res.message || "创建失败");
     }
-   catch (error: any) {
-    ElMessage.error(error.message );
+  } catch (error: any) {
+    ElMessage.error(error.message);
     console.error("操作知识库出错:", error);
   } finally {
     dialogFormVisible.value = false;
   }
-}
+};
 
-// 页面加载时获取最近访问的知识库
+// 的话页面加载时获取最近访问的知识库
 onMounted(async () => {
+  isLoading.value = true;
   try {
-   await getKBsRecentApi(5) 
+    await knowledgeBaseStore.getRecentKBs(5);
   } catch (error) {
-    console.error("获取最近访问知识库出错:", error) 
+    console.error("获取最近访问知识库出错:", error);
+  } finally {
+    isLoading.value = false;
   }
-}) 
+});
 </script>
 
 <template>
@@ -118,40 +122,43 @@ onMounted(async () => {
       </div>
     </div>
     <div class="dataBaseContainer">
-      <knowledgeBaseCard
-        v-for="item in recentKBsList"
-        :key="item.id"
-        :title="item.name"
-        :description="item.description"
-        :update-time="item.lastAccessedAt"
-        :id="item.id"
-        @click="router.replace(`/knowledgeBase/${item.id}`)"
-        @edit="emits('edit', item.id)"
-        @delete="emits('delete', item.id)"
-      >
-      </knowledgeBaseCard>
+      <template v-if="isLoading">
+        <el-skeleton :rows="5" animated>
+          <template #template>
+            <el-skeleton-item variant="text" style="width: 100%" />
+            <el-skeleton-item variant="text" style="width: 80%" />
+            <el-skeleton-item variant="text" style="width: 60%" />
+          </template>
+        </el-skeleton>
+      </template>
+      <template v-else>
+        <knowledgeBaseCard
+          v-for="item in recentKBsList"
+          :key="item.id"
+          :title="item.name"
+          :description="item.description"
+          :update-time="item.lastAccessedAt"
+          :id="item.id"
+          @click="router.replace(`/knowledgeBase/${item.id}`)"
+          @edit="emits('edit', item.id)"
+          @delete="emits('delete', item.id)"
+        >
+        </knowledgeBaseCard>
 
-      <div class="addNewCard">
-        <div class="detailContainer" @click="openCreateDialog">
-          <div class="add">+</div>
-          <div class="addDes">创建知识库</div>
-          <div class="addDesDetail">创建一个新的知识库来组织您的内容</div>
+        <div class="addNewCard">
+          <div class="detailContainer" @click="openCreateDialog">
+            <div class="add">+</div>
+            <div class="addDes">创建知识库</div>
+            <div class="addDesDetail">创建一个新的知识库来组织您的内容</div>
+          </div>
         </div>
-      </div>
+      </template>
     </div>
   </div>
 
   <!-- 新建/编辑知识库弹出层 -->
-  <el-dialog
-    v-model="dialogFormVisible"
-    title= "新建知识库"
-    width="500px"
-  >
-    <el-form
-      v-model="form"
-      :rules="rules"
-      @keyup.enter.prevent
-    >
+  <el-dialog v-model="dialogFormVisible" title="新建知识库" width="500px">
+    <el-form v-model="form" :rules="rules" @keyup.enter.prevent>
       <el-form-item
         label="知识库名称"
         :label-width="formLabelWidth"
@@ -180,12 +187,7 @@ onMounted(async () => {
     <template #footer>
       <div class="dialog-footer">
         <el-button @click="dialogFormVisible = false">取消</el-button>
-        <el-button
-          type="primary"
-          @click="submitForm"
-        >
-          确定
-        </el-button>
+        <el-button type="primary" @click="submitForm"> 确定 </el-button>
       </div>
     </template>
   </el-dialog>
@@ -360,5 +362,32 @@ onMounted(async () => {
 }
 ::v-deep .el-button + .el-button {
   border: none;
+}
+.skeleton-card {
+  background-color: #fff;
+  margin-bottom: 20px;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+.skeleton-header {
+  width: 100%;
+  height: 20px;
+  background-color: #f0f0f0;
+  margin-bottom: 10px;
+  border-radius: 4px;
+}
+.skeleton-content {
+  width: 80%;
+  height: 40px;
+  background-color: #f0f0f0;
+  margin-bottom: 10px;
+  border-radius: 4px;
+}
+.skeleton-footer {
+  width: 60%;
+  height: 20px;
+  background-color: #f0f0f0;
+  border-radius: 4px;
 }
 </style>
