@@ -69,3 +69,11 @@ export const inviteKBsCollaborator = (userId:number,knowledgeBaseId:number)=>{
           }
     })
 }
+
+//判断用户是否能访问该知识库
+export const checkKnowledgeBaseAuth = (knowledgeBaseId: number): Promise<{ data: boolean }> => {
+    return request({
+        url: `/knowledgeBase/${knowledgeBaseId}/auth`,
+        method: 'GET'
+    })
+}
