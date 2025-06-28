@@ -719,6 +719,20 @@ onBeforeUnmount(() => {
   font-size: 18px;
 }
 
+/* 搜索高亮样式 */
+.search-highlight {
+  background-color: #fffbcd;
+  border-radius: 2px;
+  padding: 0 2px;
+}
+
+.search-highlight-current {
+  background-color: #ffd700 !important;
+  border: 1px solid #ffb300;
+  border-radius: 2px;
+  padding: 0 2px;
+}
+
 /* 响应式设计 */
 @media (max-width: 768px) {
   .collaborative-editor {
