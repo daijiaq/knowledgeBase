@@ -6,6 +6,13 @@
       @click="selectFolder(item.id)"
       :class="{ active: currentDocId === item.id }"
       >
+        <!-- 展开/收起箭头 -->
+        <span class="arrow-icon" @click.stop="selectFolder(item.id)">
+          <svg v-if="children.folders.length > 0 || children.documents.length > 0" :style="{transform: showDetail ? 'rotate(90deg)' : 'rotate(0deg)'}" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <svg v-else width="16" height="16"></svg>
+        </span>
         <div class="doc-icon">
           <svg
             viewBox="0 0 24 24"
@@ -182,6 +189,16 @@ import { ref,defineOptions, reactive,watch } from 'vue';
         cursor: pointer;
         transition: all 0.2s ease;
         margin-bottom: 2px;
+
+        /* 箭头图标样式 */
+        .arrow-icon {
+          display: flex;
+          align-items: center;
+          margin-right: 4px;
+          width: 16px;
+          height: 16px;
+          user-select: none;
+        }
 
         &:hover {
           background: var(--background-color);

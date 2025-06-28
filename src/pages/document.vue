@@ -146,12 +146,12 @@
     </div>
 
     <!-- 新建文档对话框 -->
-    <el-dialog v-model="showNewDocDialog" title="新建文档" width="400px">
+    <el-dialog v-model="showNewDocDialog" :title="newDocForm.type==='document'?'新建文档':'新建文件夹'" width="400px">
       <el-form v-model="newDocForm" label-width="80px">
-        <el-form-item label="文档名称">
-          <el-input v-model="newDocForm.name" placeholder="请输入文档名称" />
+        <el-form-item label="名称">
+          <el-input v-model="newDocForm.name" :placeholder="newDocForm.type==='document'?'请输入文档名称':'请输入文件夹名称'" />
         </el-form-item>
-        <el-form-item label="文档类型">
+        <el-form-item label="类型">
           <el-radio-group v-model="newDocForm.type">
             <el-radio value="document">文档</el-radio>
             <el-radio value="folder">文件夹</el-radio>
