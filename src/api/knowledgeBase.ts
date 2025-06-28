@@ -1,6 +1,6 @@
 import request from '../utils/request'
 import type { createKnowledgeBaseRes, allKnowledgeBaseRes, KnowledgeBaseContentRes } from "../types/knowledgeBase"
-// ´´½¨ÖªÊ¶¿â
+// åˆ›å»ºçŸ¥è¯†åº“
 export const createKBsApi = (name: string, description: string): Promise<createKnowledgeBaseRes> => {
     return request({
         url: `/knowledgeBase`,
@@ -11,7 +11,7 @@ export const createKBsApi = (name: string, description: string): Promise<createK
         }
     })
 }
-// ±à¼­ÖªÊ¶¿â
+// ç¼–è¾‘çŸ¥è¯†åº“
 export const editKBsApi = (id: number, name: string, description: string) => {
     return request({
         url: `/knowledgeBase/${id}`,
@@ -23,7 +23,7 @@ export const editKBsApi = (id: number, name: string, description: string) => {
     })
 }
 
-// É¾³ıÖªÊ¶¿â
+// åˆ é™¤çŸ¥è¯†åº“
 export const deleteKBsApi = (id: number) => {
     return request({
         url: `/knowledgeBase/${id}`,
@@ -31,7 +31,7 @@ export const deleteKBsApi = (id: number) => {
     })
 }
 
-// »ñÈ¡ËùÓĞÖªÊ¶¿â£¨»ñÈ¡¿É·ÃÎÊµÄÖªÊ¶¿â£©
+// è·å–æ‰€æœ‰çŸ¥è¯†åº“ï¼ˆè·å–å¯è®¿é—®çš„çŸ¥è¯†åº“ï¼‰
 export const getAllKBsApi = (): Promise<allKnowledgeBaseRes> => {
     return request({
         url: `/knowledgeBase/accessible`,
@@ -39,7 +39,7 @@ export const getAllKBsApi = (): Promise<allKnowledgeBaseRes> => {
     })
 }
 
-// ¸ù¾İÖªÊ¶¿âid»ñÈ¡µÚÒ»²ãÄÚ²¿ÎÄµµºÍÎÄ¼ş¼Ğ£¨Õâ¸ö½Ó¿ÚºóÌ¨Âß¼­ÄÚ²¿ÓĞ¸üĞÂÖªÊ¶¿â·ÃÎÊ¼ÇÂ¼£¬µã»÷Ä³¸öÖªÊ¶¿â±ØĞëÏÈµ÷ÓÃ¸Ã½Ó¿Ú£¬ºóĞøµ÷ÓÃ"»ñÈ¡×î½ü·ÃÎÊµÄÖªÊ¶¿â"½Ó¿Ú²ÅÓĞÊı¾İ£©
+// æ ¹æ®çŸ¥è¯†åº“idè·å–ç¬¬ä¸€å±‚å†…éƒ¨æ–‡æ¡£å’Œæ–‡ä»¶å¤¹ï¼ˆè¿™ä¸ªæ¥å£åå°é€»è¾‘å†…éƒ¨æœ‰æ›´æ–°çŸ¥è¯†åº“è®¿é—®è®°å½•ï¼Œç‚¹å‡»æŸä¸ªçŸ¥è¯†åº“å¿…é¡»å…ˆè°ƒç”¨è¯¥æ¥å£ï¼Œåç»­è°ƒç”¨"è·å–æœ€è¿‘è®¿é—®çš„çŸ¥è¯†åº“"æ¥å£æ‰æœ‰æ•°æ®ï¼‰
 export const getKBsContentApi = (knowledgeBaseId: number): Promise<KnowledgeBaseContentRes> => {
     return request({
         url: `/knowledgeBase/${knowledgeBaseId}/content`,
@@ -47,7 +47,7 @@ export const getKBsContentApi = (knowledgeBaseId: number): Promise<KnowledgeBase
     })
 }
 
-// »ñÈ¡×î½ü·ÃÎÊµÄÖªÊ¶¿â
+// è·å–æœ€è¿‘è®¿é—®çš„çŸ¥è¯†åº“
 export const getKBsRecentApi = (limit?: number):Promise<allKnowledgeBaseRes> => {
     const finalLimit = limit ?? 5
     return request({
