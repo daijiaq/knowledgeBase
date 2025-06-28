@@ -146,7 +146,7 @@ onBeforeUnmount(()=>{
         margin-left: 5px;
         padding: 10px;
         border: 1px solid #dddddd;
-        max-height: 10em;
+        // max-height: 10em;
         max-width: 300px;
         box-shadow: 2px 2px 0px 0px rgba(138, 43, 226, 0.3);
         cursor: pointer;
@@ -165,13 +165,13 @@ onBeforeUnmount(()=>{
 
         .content {
             padding: 3px 5px;
-            overflow: hidden;
+            // overflow: hidden;
             /* 隐藏溢出内容 */
-            display: -webkit-box;
+            // display: -webkit-box;
             /* 必须声明为弹性盒模型（旧版） */
-            -webkit-box-orient: vertical;
+            // -webkit-box-orient: vertical;
             /* 子元素垂直排列 */
-            -webkit-line-clamp: 2;
+            // -webkit-line-clamp: 2;
             /* 限制显示的行数（可修改为其他数值） */
         }
     }

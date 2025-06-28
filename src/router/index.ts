@@ -1,18 +1,20 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import Login from '../pages/login.vue'
+import knowledgeBase from '../pages/knowledgeBase.vue'
 
 //定义路由规则
 const routes = [
     {
         path: '/', 
-         component: () => import('../pages/login.vue')
+         component: Login
     },
     {
         path: '/login', 
-        component: () => import('../pages/login.vue')
+        component: Login
     }, 
     {
         path: '/knowledgeBase',
-         component: () => import('../pages/knowledgeBase.vue'),
+        component: knowledgeBase,
         children: [
         {
           path: "KnowledgeBaseMain",
@@ -20,16 +22,16 @@ const routes = [
           component: () => import("../components/knowledgeBaseMain.vue"),
         },
         {
-          path: ":knowledgeBaseId/:documentId?",
+          path: ":knowledgeBaseId",
           component: () => import('../pages/document.vue')
         },
         {
           path:"",
-          redirect: '/KnowledgeBase/KnowledgeBaseMain'
+          redirect: '/knowledgeBase/KnowledgeBaseMain'
         },
         {
           path:'*',
-          redirect: '/KnowledgeBase/KnowledgeBaseMain'
+          redirect: '/knowledgeBase/KnowledgeBaseMain'
         }
       ]
     }

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Document, Timer } from '@element-plus/icons-vue';
 import MoreActions from '../components/MoreActions.vue';
+import dayjs from 'dayjs';
 
 const props = defineProps<{
   id: number; // 新增id字段
@@ -40,7 +41,7 @@ const handleCardClick = () => {
         <el-icon color="#9ca3af" size="16px">
           <Timer />
         </el-icon>
-        <p class="time">{{ updateTime }}</p>
+        <p class="time">{{ dayjs(updateTime).format('YYYY-MM-DD HH:mm:ss') }}</p>
       </div>
     </div>
   </div>

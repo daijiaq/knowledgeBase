@@ -15,3 +15,14 @@ interface userRegister {
    */
   password: string
 }
+
+// 用户信息
+export interface userInfo{
+  username:string
+  id:number
+  email:string
+}
+//搜索的列表信息
+export interface searchItem extends userInfo{
+  checked:boolean
+}

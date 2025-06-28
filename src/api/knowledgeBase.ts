@@ -23,7 +23,7 @@ export const editKBsApi = (id: number, name: string, description: string) => {
     })
 }
 
-// 删除知识库
+//  删除知识库
 export const deleteKBsApi = (id: number) => {
     return request({
         url: `/knowledgeBase/${id}`,
@@ -39,6 +39,7 @@ export const getAllKBsApi = (): Promise<allKnowledgeBaseRes> => {
     })
 }
 
+
 // 根据知识库id获取第一层内部文档和文件夹（这个接口后台逻辑内部有更新知识库访问记录，点击某个知识库必须先调用该接口，后续调用"获取最近访问的知识库"接口才有数据）
 export const getKBsContentApi = (knowledgeBaseId: number): Promise<KnowledgeBaseContentRes> => {
     return request({
@@ -53,5 +54,18 @@ export const getKBsRecentApi = (limit?: number):Promise<allKnowledgeBaseRes> => 
     return request({
         url: `/knowledgeBase/recent?limit=${finalLimit}`,
         method: 'GET'
+    })
+}
+
+// 邀请协作者
+export const inviteKBsCollaborator = (userId:number,knowledgeBaseId:number)=>{
+    return request({
+        url:'/knowledgeBase/invite',
+        method:'POST',
+        data:{
+            userId,
+            knowledgeBaseId,
+            permission: "write"
+          }
     })
 }

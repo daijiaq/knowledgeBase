@@ -1,19 +1,12 @@
 <template>
   <div class="collaborative-editor">
-    <!-- 协同编辑器标题
-    <h2 class="editor-title">协同富文本编辑器</h2> -->
-
-    <!-- 连接状态指示器 -->
     <div class="connection-status">
       <div class="status-indicator">
-        <span
-          class="status-dot"
-          :class="{
+        <span class="status-dot" :class="{
             connected: connectionStatus === 'connected',
             connecting: connectionStatus === 'connecting',
             disconnected: connectionStatus === 'disconnected',
-          }"
-        ></span>
+          }"></span>
         <span class="status-text">
           {{ getStatusText() }}
         </span>
@@ -26,149 +19,12 @@
     </div>
 
     <!-- 协同编辑工具栏 -->
-    <!-- <div class="toolbar" v-if="editor"> -->
-    <!-- 基础格式化按钮 
-      <div class="toolbar-group">
-        <button
-          @click="editor.chain().focus().toggleBold().run()"
-          :class="{ 'is-active': editor.isActive('bold') }"
-          class="toolbar-btn"
-          title="粗体"
-        >
-          <strong>B</strong>
-        </button>
-
-        <button
-          @click="editor.chain().focus().toggleItalic().run()"
-          :class="{ 'is-active': editor.isActive('italic') }"
-          class="toolbar-btn"
-          title="斜体"
-        >
-          <em>I</em>
-        </button>
-
-        <button
-          @click="editor.chain().focus().toggleStrike().run()"
-          :class="{ 'is-active': editor.isActive('strike') }"
-          class="toolbar-btn"
-          title="删除线"
-        >
-          <s>S</s>
-        </button>
-      </div>
-
-      标题级别按钮 
-      <div class="toolbar-group">
-        <button
-          @click="editor.chain().focus().toggleHeading({ level: 1 }).run()"
-          :class="{ 'is-active': editor.isActive('heading', { level: 1 }) }"
-          class="toolbar-btn"
-          title="一级标题"
-        >
-          H1
-        </button>
-
-        <button
-          @click="editor.chain().focus().toggleHeading({ level: 2 }).run()"
-          :class="{ 'is-active': editor.isActive('heading', { level: 2 }) }"
-          class="toolbar-btn"
-          title="二级标题"
-        >
-          H2
-        </button>
-
-        <button
-          @click="editor.chain().focus().toggleHeading({ level: 3 }).run()"
-          :class="{ 'is-active': editor.isActive('heading', { level: 3 }) }"
-          class="toolbar-btn"
-          title="三级标题"
-        >
-          H3
-        </button>
-      </div>
-
-       列表按钮 
-      <div class="toolbar-group">
-        <button
-          @click="editor.chain().focus().toggleBulletList().run()"
-          :class="{ 'is-active': editor.isActive('bulletList') }"
-          class="toolbar-btn"
-          title="无序列表"
-        >
-          •
-        </button>
-
-        <button
-          @click="editor.chain().focus().toggleOrderedList().run()"
-          :class="{ 'is-active': editor.isActive('orderedList') }"
-          class="toolbar-btn"
-          title="有序列表"
-        >
-          1.
-        </button>
-      </div>
-
-      其他功能按钮 
-      <div class="toolbar-group">
-        <button
-          @click="editor.chain().focus().toggleBlockquote().run()"
-          :class="{ 'is-active': editor.isActive('blockquote') }"
-          class="toolbar-btn"
-          title="引用"
-        >
-          "
-        </button>
-
-        <button
-          @click="editor.chain().focus().toggleCode().run()"
-          :class="{ 'is-active': editor.isActive('code') }"
-          class="toolbar-btn"
-          title="行内代码"
-        >
-          &lt;/&gt;
-        </button>
-
-        <button
-          @click="editor.chain().focus().toggleCodeBlock().run()"
-          :class="{ 'is-active': editor.isActive('codeBlock') }"
-          class="toolbar-btn"
-          title="代码块"
-        >
-          { }
-        </button>
-      </div>
-
-       协同功能按钮 
-      <div class="toolbar-group">
-        <button
-          @click="reconnectWebSocket"
-          :disabled="connectionStatus === 'connecting'"
-          class="toolbar-btn"
-          title="重新连接"
-        >
-          🔄
-        </button>
-
-        <button
-          @click="changeUserColor"
-          class="toolbar-btn"
-          title="更换光标颜色"
-        >
-          🎨
-        </button>
-      </div>
-         </div>-->
-
     <!-- 使用 Editor 组件，传入协同编辑器实例，不显示其内容区域 -->
     <Editor :external-editor="editor" :show-editor-content="false" />
 
     <!-- 编辑器容器 -->
     <div class="editor-container">
-      <editor-content
-        :editor="editor"
-        class="editor-content"
-        @click="getComment"
-      />
+      <editor-content :editor="editor" class="editor-content" @click="getComment" />
     </div>
 
     <!-- 协同信息面板 -->
@@ -179,36 +35,23 @@
         <p>用户ID: {{ userId }}</p> -->
         <p>
           光标颜色:
-          <span
-            class="color-preview"
-            :style="{ backgroundColor: userColor }"
-          ></span>
+          <span class="color-preview" :style="{ backgroundColor: userColor }"></span>
         </p>
-        <el-button
-          type="success"
-          class="aiSummarize"
-          color="#7a72e0"
-          @click="aiClick = true"
-          >AI总结全文</el-button
-        >
+        <div class="editor-tool">
+          <span class="update-time">更新于2025-6-25 13:45<span style="color:#7a72e0;cursor: pointer;">&nbsp;回退版本</span></span>
+          <div class="button-box">
+            <el-button type="success" color="#7a72e0" @click="aiClick = true">AI总结全文</el-button>
+            <el-button type="success" color="#7a72e0">保存</el-button>
+          </div>
+        </div>
       </div>
-
-      <!-- <div class="info-section">
-        <h4>使用说明</h4>
-        <ul>
-          <li>多个用户可以同时编辑同一文档</li>
-          <li>实时看到其他用户的光标位置和编辑内容</li>
-          <li>支持撤销/重做等协同操作</li>
-          <li>自动保存和同步更改</li>
-        </ul>
-      </div> -->
     </div>
   </div>
   <el-aside width="300px" v-if="aiClick">
     <div class="aiContent">
-      <el-icon class="aiClose" color="#7a72e0" @click="aiClick = false"
-        ><Close
-      /></el-icon>
+      <el-icon class="aiClose" color="#7a72e0" @click="aiClick = false">
+        <Close />
+      </el-icon>
       <p class="aiTitle">AI总结:</p>
       <p>财来财来财来财来财来财来财来财来财来财来财来财来财来财</p>
     </div>
@@ -396,7 +239,7 @@ const editor = useEditor({
       "data-placeholder": "开始协同编辑...",
     },
   },
-  onUpdate({ editor, transaction }) {
+  /* onUpdate({ editor, transaction }) {
     //自动获取数据内容
     const json = editor.getJSON();
     console.log(json);
@@ -404,8 +247,9 @@ const editor = useEditor({
       //文档变更细节
       console.log(transaction);
     }
-  },
+  }, */
 });
+
 
 /**
  * 更换用户光标颜色
@@ -641,7 +485,7 @@ onBeforeUnmount(() => {
   overflow: hidden;
   margin-bottom: 16px;
   position: relative;
-  height: 400px; /* 你可以根据需要调整高度 */
+  height: 400px;
   min-height: 200px;
   max-height: 100%;
   display: flex;
@@ -732,9 +576,22 @@ onBeforeUnmount(() => {
   text-align: end;
 }
 
-.info-section .aiSummarize {
+.button-box {
+  float: right;
+}
+.info-section .button-box button {
   margin-top: 12px;
   color: #fff;
+  float: right;
+  margin-left: 5px;
+}
+
+.info-section .editor-tool{
+  width: 100%;
+}
+.info-section .editor-tool .update-time{
+  line-height: 58px;
+  color: gray;
 }
 
 .info-section ul {
