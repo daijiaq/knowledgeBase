@@ -51,7 +51,12 @@
           type="success"
           class="aiSummarize"
           color="#7a72e0"
-          @click="aiClick = true"
+          @click="
+            aiClick = true;
+            aiClickSummary(
+              '本次课程设计聚焦网络编程实践，我成功开发了基于 UDP 协议的 PingServer 与 PingClient 工具。不同于传统使用 ICMP 协议的 “ping” 工具，这组程序通过 UDP 协议实现网络连通性测试。在开发过程中，我系统掌握了网络编程的核心技术，深入理解了并发处理、数据包操作及错误处理等关键环节的实践要点。'
+            );
+          "
           >AI总结全文</el-button
         >
       </div>
@@ -63,13 +68,13 @@
         ><Close
       /></el-icon>
       <p class="aiTitle">AI总结:</p>
-      <p>财来财来财来财来财来财来财来财来财来财来财来财来财来财</p>
+      <p>{{ aiText }}</p>
     </div>
   </el-aside>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, watch } from "vue";
+import { ref, onMounted, onBeforeUnmount } from "vue";
 import { EditorContent, useEditor } from "@tiptap/vue-3";
 import StarterKit from "@tiptap/starter-kit";
 import Collaboration from "@tiptap/extension-collaboration";
@@ -86,6 +91,8 @@ import { WebsocketProvider } from "y-websocket";
 import { Comment } from "../utils/comment-extension";
 import EventBus from "../utils/event-bus";
 import { Close } from "@element-plus/icons-vue";
+import { generateSummary } from "../api/aiSummary";
+// import OpenAI from "openai";
 
 let aiClick = ref(false);
 
@@ -263,28 +270,28 @@ const editor = useEditor({
 /**
  * 更换用户光标颜色
  */
-const changeUserColor = () => {
-  userColor.value = generateRandomColor();
-  if (provider) {
-    provider.awareness.setLocalStateField("user", {
-      name: props.userName,
-      color: userColor.value,
-    });
-  }
-};
+// const changeUserColor = () => {
+//   userColor.value = generateRandomColor();
+//   if (provider) {
+//     provider.awareness.setLocalStateField("user", {
+//       name: props.userName,
+//       color: userColor.value,
+//     });
+//   }
+// };
 
 /**
  * 重新连接 WebSocket
  */
-const reconnectWebSocket = () => {
-  if (provider && connectionStatus.value !== "connecting") {
-    connectionStatus.value = "connecting";
-    provider.disconnect();
-    setTimeout(() => {
-      provider?.connect();
-    }, 1000);
-  }
-};
+// const reconnectWebSocket = () => {
+//   if (provider && connectionStatus.value !== "connecting") {
+//     connectionStatus.value = "connecting";
+//     provider.disconnect();
+//     setTimeout(() => {
+//       provider?.connect();
+//     }, 1000);
+//   }
+// };
 
 /**
  * 销毁协同编辑器
@@ -336,6 +343,57 @@ const getComment = (event: any) => {
 const handleBeforeUnload = () => {
   console.log("页面即将卸载，清理协同编辑连接");
   destroyCollaboration();
+};
+
+// ai接口调用
+// const openai = new OpenAI({
+//   apiKey: "b02abbe3-cc00-4199-a4ef-550fbdbd93a9", // 这里直接写字符串，勿用 process.env
+//   // dangerouslyAllowBrowser: true,
+//   baseURL: "https://ark.cn-beijing.volces.com/api/v3",
+// });
+
+// // 调用文档摘要接口
+// async function getDocumentSummary(documentText: string) {
+//   try {
+//     const response = await openai.chat.completions.create({
+//       model: "ep-20250627232809-8d2lz", // 替换为你的模型ID
+//       messages: [
+//         {
+//           role: "user",
+//           content: `请对以下文档进行摘要，控制在300字内：\n${documentText}`,
+//         },
+//       ],
+//       temperature: 0.4,
+//       max_tokens: 300,
+//     });
+//     return response.choices[0].message.content; // 提取摘要结果
+//   } catch (error) {
+//     console.error("API调用失败：", error);
+//   }
+// }
+
+// // 测试：传入文档文本
+// const documentText =
+//   "模块化开发价值认知：将系统拆解为网络通信、数据处理、并发控制等独立模块，显著提升了代码的可读性与可维护性。清晰的模块边界大幅降低了系统迭代与功能扩展的难度，体现了模块化设计的优越性。并发编程深度实践：线程池技术的实际应用让我深刻认识到并发控制的复杂性。在处理多线程协作过程中，对死锁预防、竞态条件避免等问题的探索，强化了我对同步机制与线程安全策略的理解与应用能力。网络特性深刻理解：模拟丢包与延迟功能的开发，使我直观感受到网络环境的不确定性。这一经历强调了在网络编程中充分考虑网络波动、设计弹性应对方案的重要性。测试调试能力进阶：通过在不同网络场景下的测试与调试，熟练掌握了日志记录、性能分析等工具的使用方法。这些实践经验有效提升了系统性能优化与故障排查的能力。";
+// getDocumentSummary(documentText).then((summary) =>
+//   console.log("文档摘要：", summary)
+// );
+
+// const documentText =
+//   "模块化开发价值认知：将系统拆解为网络通信、数据处理、并发控制等独立模块，显著提升了代码的可读性与可维护性。清晰的模块边界大幅降低了系统迭代与功能扩展的难度，体现了模块化设计的优越性。发编程深度实践：线程池技术的实际应用让我深刻认识到并发控制的复杂性。在处理多线程协作过程中，对死锁预防、竞态条件避免等问题的探索，强化了我对同步机制与线程安全策略的理解与应用能力。网络特性深刻理解：模拟丢包与延迟功能的开发，使我直观感受到网络环境的不确定性。这一经历强调了在网络编程中充分考虑网络波动、设计弹性应对方案的重要性。测试调试能力进阶：通过在不同网络场景下的测试与调试，熟练掌握了日志记录、性能分析等工具的使用方法。这些实践经验有效提升了系统性能优化与故障排查的能力。";
+
+const aiText = ref("");
+
+const aiClickSummary = async (documentText: string) => {
+  console.log("点击AI总结，开始生成摘要", documentText);
+  try {
+    const response = await generateSummary(documentText);
+    const summary = response.data.summary || "";
+    aiText.value = summary;
+    console.log("文档摘要：", summary);
+  } catch (error) {
+    console.error("摘要生成失败：", error);
+  }
 };
 
 // 生命周期钩子
