@@ -47,26 +47,36 @@
             :style="{ backgroundColor: userColor }"
           ></span>
         </p>
-        <el-button
-          type="success"
-          class="aiSummarize"
-          color="#7a72e0"
-          @click="
-            aiClick = true;
-            aiClickSummary(
-              '本次课程设计聚焦网络编程实践，我成功开发了基于 UDP 协议的 PingServer 与 PingClient 工具。不同于传统使用 ICMP 协议的 “ping” 工具，这组程序通过 UDP 协议实现网络连通性测试。在开发过程中，我系统掌握了网络编程的核心技术，深入理解了并发处理、数据包操作及错误处理等关键环节的实践要点。'
-            );
-          "
-          >AI总结全文</el-button
-        >
+        <div class="editor-tool">
+          <span class="update-time"
+            >更新于2025-6-25 13:45<span style="color: #7a72e0; cursor: pointer"
+              >&nbsp;回退版本</span
+            ></span
+          >
+          <div class="button-box">
+            <el-button
+              type="success"
+              class="aiSummarize"
+              color="#7a72e0"
+              @click="
+                aiClick = true;
+                aiClickSummary(
+                  '本次课程设计聚焦网络编程实践，我成功开发了基于 UDP 协议的 PingServer 与 PingClient 工具。不同于传统使用 ICMP 协议的 “ping” 工具，这组程序通过 UDP 协议实现网络连通性测试。在开发过程中，我系统掌握了网络编程的核心技术，深入理解了并发处理、数据包操作及错误处理等关键环节的实践要点。'
+                );
+              "
+              >AI总结全文</el-button
+            >
+            <el-button type="success" color="#7a72e0">保存</el-button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
   <el-aside width="300px" v-if="aiClick">
     <div class="aiContent">
-      <el-icon class="aiClose" color="#7a72e0" @click="aiClick = false"
-        ><Close
-      /></el-icon>
+      <el-icon class="aiClose" color="#7a72e0" @click="aiClick = false">
+        <Close />
+      </el-icon>
       <p class="aiTitle">AI总结:</p>
       <p>{{ aiText }}</p>
     </div>
@@ -256,7 +266,7 @@ const editor = useEditor({
       "data-placeholder": "开始协同编辑...",
     },
   },
-  onUpdate({ editor, transaction }) {
+  /* onUpdate({ editor, transaction }) {
     //自动获取数据内容
     const json = editor.getJSON();
     console.log(json);
@@ -264,7 +274,7 @@ const editor = useEditor({
       //文档变更细节
       console.log(transaction);
     }
-  },
+  }, */
 });
 
 /**
@@ -643,9 +653,22 @@ onBeforeUnmount(() => {
   text-align: end;
 }
 
-.info-section .aiSummarize {
+.button-box {
+  float: right;
+}
+.info-section .button-box button {
   margin-top: 12px;
   color: #fff;
+  float: right;
+  margin-left: 5px;
+}
+
+.info-section .editor-tool {
+  width: 100%;
+}
+.info-section .editor-tool .update-time {
+  line-height: 58px;
+  color: gray;
 }
 
 .info-section ul {

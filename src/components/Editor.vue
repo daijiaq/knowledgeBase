@@ -209,14 +209,26 @@
               <el-dropdown-menu>
                 <el-dropdown-item @click="addComment"> 添加评论 </el-dropdown-item>
                 <el-dropdown-item @click="removeComment">
-                  删除评论
+                  取消延续
+                </el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
+          <el-dropdown placement="top-end" size="small">
+            <button>
+              <el-icon size="18" style="padding-top: 6px"><MoreFilled /></el-icon>
+            </button>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item @click="saveText">导出为pdf</el-dropdown-item>
+                <el-dropdown-item @click="uploadDocx">
+                  导入docx<input type="file" @change="handleWordUpload" ref="uploadFile" style="display: none;"/>
                 </el-dropdown-item>
               </el-dropdown-menu>
             </template>
           </el-dropdown>
         </div>
-        <!-- <button @click="saveText">保存</button>
-            <button @click="onw">回显</button> -->
+        
         <editor-content
           v-if="showEditorContent"
           :editor="editor"
@@ -227,8 +239,7 @@
       
 </template>
 
-<script setup>
-// 引入tiptap包
+<script setup lang="ts">
 import { ListItem } from "@tiptap/extension-list-item";
 import { TextStyle } from "@tiptap/extension-text-style";
 import { Color } from "@tiptap/extension-color";
@@ -237,283 +248,210 @@ import Highlight from "@tiptap/extension-highlight";
 import TextAlign from "@tiptap/extension-text-align";
 import Link from "@tiptap/extension-link";
 import Underline from "@tiptap/extension-underline";
-import { Comment } from "../utils/comment-extension"; // 引入自定义评论扩展
-import { useEditor, EditorContent, Editor } from "@tiptap/vue-3";
+import { Comment } from "../utils/comment-extension";
+import { useEditor, EditorContent, Editor, Editor as EditorType } from "@tiptap/vue-3";
 import { onBeforeUnmount, ref, computed } from "vue";
+import type { ComputedRef } from "vue";
 import { nanoid } from "nanoid";
-import { ChatSquare } from "@element-plus/icons-vue";
-import EventBus from '../utils/event-bus'
+import { ChatSquare , MoreFilled } from "@element-plus/icons-vue";
+import EventBus from '../utils/event-bus';
+import { generatePDF }  from '../utils/export-pdf'
+import { debounce } from "../utils/debounce";
+import * as mammoth from 'mammoth';
+import { ElMessage } from "element-plus";
 
-// 定义组件 props
-const props = defineProps({
-  /** 外部传入的编辑器实例（用于协同编辑） */
-  externalEditor: {
-    type: Object,
-    default: null,
-  },
-  /** 是否显示编辑器内容区域 */
-  showEditorContent: {
-    type: Boolean,
-    default: true,
-  },
-});
 
-// 预设背景颜色列表
-const highlightColors = ref([
-  "#E0F7FA",
-  "#FFF3E0",
-  "#FFF8E1",
-  "#F0F4C3",
-  "#FFE0B2",
-  "#EDE7F6",
+// Props 类型声明
+interface EditorProps {
+  externalEditor?: EditorType | null;
+  showEditorContent?: boolean;
+}
+
+// 创建立即执行的防抖函数（等待 5s）
+//防止文件过大产生的延迟
+const debouncedSubmit = debounce(generatePDF, 5000, true);
+
+const props = defineProps<EditorProps>();
+
+// 颜色列表
+const highlightColors = ref<string[]>([
+  "#E0F7FA", "#FFF3E0", "#FFF8E1", "#F0F4C3", "#FFE0B2", "#EDE7F6",
 ]);
-// 预设背景颜色列表
-const fontColors = ref(["#A8D8EA", "#D8BFD8", "#8B7E74", "#958DF1", "#9CA3AF"]);
-// 当前对齐状态（初始左对齐）
-const currentAlignment = ref("left");
-const showCommentInput = ref(false); // 控制评论输入框显示
-const commentContent = ref(""); // 评论内容输入
-let selectedRange = null; // 保存用户选中的文本范围
+const fontColors = ref<string[]>(["#A8D8EA", "#D8BFD8", "#8B7E74", "#958DF1", "#9CA3AF"]);
 
-// 创建内部编辑器实例（仅在没有外部编辑器时使用）
+const uploadFile = ref<HTMLInputElement | null>(null);
+
+let selectedRange: { from: number; to: number } | null = null;
+
 const internalEditor = useEditor({
   extensions: [
     Color.configure({ types: [TextStyle.name, ListItem.name] }),
-    TextStyle.configure({ types: [ListItem.name] }),
-    Highlight.configure({
-      multicolor: true, // 启用多颜色
-    }),
-    TextAlign.configure({
-      types: ["heading", "paragraph"],
-    }),
-    Link.configure({
-      openOnClick: false,
-      defaultProtocol: "https",
-    }),
+    TextStyle,
+    Highlight.configure({ multicolor: true }),
+    TextAlign.configure({ types: ["heading", "paragraph"] }),
+    Link.configure({ openOnClick: false, defaultProtocol: "https" }),
     StarterKit,
     Underline,
     Comment,
   ],
-  content: `<h2>Heading</h2>
-        <p style="text-align: center">first paragraph</p>
-        <p style="text-align: right">second paragraph</p>`,
-  onUpdate({ editor,transaction }) {
-    //自动获取数据内容
-    const json = editor.getJSON();
-    console.log(json);
-    if (transaction.docChanged) {
-      //文档变更细节
-      console.log(transaction);
+  content: ``,
+  onUpdate(){
+
   }
-  },
+  
 });
 
-
-// 使用计算属性来决定使用哪个编辑器实例
-const editor = computed(() => {
-  return props.externalEditor || internalEditor.value;
+// 计算属性决定使用哪个编辑器实例
+const editor: ComputedRef<EditorType | null> = computed(() => {
+  return props.externalEditor ?? internalEditor.value ?? null;
 });
 
-
-//建立链接
-function setLink() {
-  const previousUrl = editor.value.getAttributes("link").href;
+// 建立链接
+const setLink = () => {
+  const previousUrl = editor.value?.getAttributes("link").href;
   const url = window.prompt("URL", previousUrl);
 
-  // cancelled
-  if (url === null) {
-    return;
-  }
-
-  // empty
+  if (url === null) return;
   if (url === "") {
-    editor.value.chain().focus().extendMarkRange("link").unsetLink().run();
-
+    editor.value?.chain().focus().extendMarkRange("link").unsetLink().run();
     return;
   }
-
-  // update link
-  editor.value
-    .chain()
-    .focus()
-    .extendMarkRange("link")
-    .setLink({ href: url })
-    .run();
+  editor.value?.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
 }
 
-/* function saveText() {
-  //手动获取文本内容
-  console.log(editor.value.getJSON());
-}
-function onw() {
-  editor.value.commands.setContent({
-    type: "doc",
-    content: [
-      {
-        type: "heading",
-        attrs: {
-          level: 1,
-        },
-        content: [
-          {
-            type: "text",
-            text: "hello",
-          },
-        ],
-      },
-      {
-        type: "paragraph",
-      },
-      {
-        type: "paragraph",
-        content: [
-          {
-            type: "text",
-            text: "1112",
-          },
-        ],
-      },
-      {
-        type: "horizontalRule",
-      },
-      {
-        type: "codeBlock",
-        attrs: {
-          language: null,
-        },
-        content: [
-          {
-            type: "text",
-            text: "11",
-          },
-        ],
-      },
-    ],
-  });
-} */
 
-let text_id = null;
+
+const saveText = () => {
+  debouncedSubmit({element: document.querySelector('.tiptap') as HTMLElement,filename:'xxx.pdf'});
+}
+
+const handleWordUpload = async (event: Event) => {
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0];
+  if (!file) return;
+  if (!file.type.includes('wordprocessingml.document') && !file.name.endsWith('.docx')) {
+    ElMessage.error('仅支持上传 .docx 格式的 Word 文档');
+    return;
+  }
+  try {
+    const arrayBuffer = await new Promise<ArrayBuffer>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as ArrayBuffer);
+      reader.onerror = reject;
+      reader.readAsArrayBuffer(file);
+    });
+    const result = await mammoth.convertToHtml({ arrayBuffer });
+    const htmlContent = result.value;
+    const errors = result.messages;
+    editor.value?.commands.setContent(htmlContent);
+    if (errors.length > 0) {
+      console.warn('转换警告:', errors);
+    }
+  } catch (error) {
+    console.error('转换失败:', error);
+    ElMessage.error('文件转换失败，请检查文件是否为有效 .docx 格式');
+  }
+};
+
+const uploadDocx = () => {
+  uploadFile.value?.click();
+}
+
+let text_id: string | null = null;
+
 // 添加评论按钮点击事件
 const addComment = () => {
-  const { from, to } = editor.value.state.selection;
-  console.log(from, to);
-
+  const { from, to } = editor.value!.state.selection;
   if (from === to) {
-    ElMessage.info('未选中文本！')
+    // @ts-ignore
+    ElMessage.info('未选中文本！');
     return;
   }
-  const markInfo = [];
-
-   // 遍历选区范围内的所有节点和文本区间
-   //以便判断文本是否已被评论过
-   editor.value.state.doc.nodesBetween(from, to, (node, pos) => {
-   // 仅处理行内文本节点（Mark 作用于行内元素）
-   if (node.isText) {
-      // 当前文本节点的起始位置（在文档中的绝对位置rgb(82, 15, 15)    
+  const markInfo: Array<{ text: string; marks: Array<{ name: string; attrs: any }> }> = [];
+  editor.value!.state.doc.nodesBetween(from, to, (node, pos) => {
+    if (node.isText) {
       const nodeStart = pos;
-      // 当前文本节点的结束位置
       const nodeEnd = pos + node.nodeSize;
-
-      // 文本内容的实际起始和结束位置（在选区中的相对位置）
       const textStart = Math.max(from, nodeStart);
       const textEnd = Math.min(to, nodeEnd);
-
-      // 文本在节点内的偏移量（用于截取实际选中的文本片段）
       const offsetInNode = textStart - nodeStart;
       const lengthInNode = textEnd - textStart;
-      const selectedText = node.text?.slice(offsetInNode, offsetInNode + lengthInNode);
-
-      // 获取当前文本片段的 Mark（可能多个）
-      const marks = node.marks; // 该文本节点的所有 Mark（全局 Mark，可能覆盖整个节点）
-
-      // 注意：若 Mark 仅作用于文本的一部分（如部分加粗），需结合位置进一步判断
-      // 此处简化为获取整个文本节点的 Mark（实际需根据选区细化）
+      const selectedText = node.text?.slice(offsetInNode, offsetInNode + lengthInNode) || "";
+      const marks = node.marks;
       if (marks.length > 0) {
-         markInfo.push({
-            text: selectedText,
-            marks: marks.map(mark => ({
-              name: mark.type.name, // Mark 名称（如 'bold'、'link'）
-              attrs: mark.attrs, // Mark 的属性（如链接的 'href'）
-            })),
-         });
+        markInfo.push({
+          text: selectedText,
+          marks: marks.map(mark => ({
+            name: mark.type.name,
+            attrs: mark.attrs,
+          })),
+        });
       }
-   }
-   });
+    }
+  });
 
   console.log(markInfo);
-  console.log(markInfo[0]?.name,markInfo[0]?.text.length);
   
-  if(markInfo.length === 1 && markInfo[0]?.text.length === to - from){
-    markInfo[0].marks.map(mark=>{
-      console.log(mark.name === 'comment');
-      if(mark.name === 'comment'){
+  if (markInfo.length === 1 && markInfo[0]?.text.length === to - from) {
+    markInfo[0].marks.forEach(mark => {
+      if (mark.name === 'comment') {
         text_id = mark.attrs.id;
       }
-    })
+    });
   }
 
-  
-   
-
-  selectedRange = { from, to }; // 保存选中范围
-  //显示评论框
-  EventBus.emit('showCommentInput',true);
-
+  selectedRange = { from, to };
+  EventBus.emit('showCommentInput', true);
 };
 
 // 确认评论（保存到编辑器）
 const confirmComment = () => {
-  // 生成评论属性
   const attributes = {
     id: text_id || nanoid(),
   };
-
-  console.log(attributes);
-  
-  // 应用 Mark 到选中范围
   editor.value
-    .chain()
+    ?.chain()
     .focus()
-    .setMark("comment", attributes) // 添加评论 Mark
+    .setMark("comment", attributes)
     .run();
-
-  // 重置状态
   selectedRange = null;
 };
 
-EventBus.on('confirmComment',(val)=>{
-  if(val){
-      confirmComment();
-  }else{
+EventBus.on('confirmComment', (val => {
+  if (val as boolean) {
+    confirmComment();
+  } else {
     selectedRange = null;
   }
-})
+}));
 
-
-//获取评论
-const getComment = (event) => {
-  const { target } = event;
+// 获取评论
+const getComment = (event: MouseEvent) => {
+  const target = event.target as HTMLElement;
   if (!target.classList.contains("tiptap-comment")) return;
-  // 获取被点击的 comment Mark 的属性
   const textId = target.getAttribute("id");
-  EventBus.emit('getComment',{
+  EventBus.emit('getComment', {
     text_id: textId,
-  })
+  });
 };
 
-// 删除当前选中范围的评论（示例函数）
+// 删除当前选中范围的评论
 const removeComment = () => {
-  editor.value
-    .chain()
-    .focus()
-    .unsetMark("comment") // 移除 comment Mark
-    .run();
+  const { from, to } = editor.value!.state.selection;
+  if (from === to) {
+    editor.value
+      ?.chain()
+      .focus()
+      .unsetMark("comment")
+      .run();
+  } else {
+    // @ts-ignore
+    ElMessage.info('请在评论区中选择自己所写评论删除噢~');
+  }
 };
-
-
 
 onBeforeUnmount(() => {
-  editor.value.destroy();
+  editor.value?.destroy();
   EventBus.all.clear();
 });
 </script>
