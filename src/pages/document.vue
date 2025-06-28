@@ -27,7 +27,7 @@
             <h3>{{ currentKnowledgeBaseInfo?.name }}</h3>
           </div>
         </div>
-        <el-button @click="toggleSidebar" type="text" class="collapse-btn">
+        <el-button @click="toggleSidebar" class="collapse-btn">
           <svg
             viewBox="0 0 24 24"
             fill="none"
@@ -114,9 +114,6 @@
             <template #dropdown>
               <el-dropdown-menu>
                 <el-dropdown-item @click="shareDoc">添加协作</el-dropdown-item>
-                <el-dropdown-item>导入文档</el-dropdown-item>
-                <el-dropdown-item>导出知识库</el-dropdown-item>
-                <el-dropdown-item>模板库</el-dropdown-item>
               </el-dropdown-menu>
             </template>
           </el-dropdown>
@@ -125,7 +122,7 @@
         <!-- 文档树 -->
         <div class="doc-tree" @click.stop>
           <!-- 文件夹 -->
-          <FolderItem v-for="item in filteredDocs" :item="item"/>
+          <FolderItem v-for="item in filteredDocs" :item="item" :key="item.id" :getKBsContent="getKBsContent" ref="folderItem" :expandFolder="expandFolder"/>
           <!-- 文档 -->
         </div>
       </div>
@@ -149,15 +146,15 @@
     </div>
 
     <!-- 新建文档对话框 -->
-    <el-dialog v-model="showNewDocDialog" title="新建文档" width="400px">
-      <el-form :model="newDocForm" label-width="80px">
-        <el-form-item label="文档名称">
-          <el-input v-model="newDocForm.name" placeholder="请输入文档名称" />
+    <el-dialog v-model="showNewDocDialog" :title="newDocForm.type==='document'?'新建文档':'新建文件夹'" width="400px">
+      <el-form v-model="newDocForm" label-width="80px">
+        <el-form-item label="名称">
+          <el-input v-model="newDocForm.name" :placeholder="newDocForm.type==='document'?'请输入文档名称':'请输入文件夹名称'" />
         </el-form-item>
-        <el-form-item label="文档类型">
+        <el-form-item label="类型">
           <el-radio-group v-model="newDocForm.type">
-            <el-radio label="document">文档</el-radio>
-            <el-radio label="folder">文件夹</el-radio>
+            <el-radio value="document">文档</el-radio>
+            <el-radio value="folder">文件夹</el-radio>
           </el-radio-group>
         </el-form-item>
       </el-form>
@@ -200,13 +197,6 @@
               style="margin-left: 10px"
               >邀请</el-button
             >
-          </div>
-        </div>
-        <div class="share-section">
-          <h4>分享链接</h4>
-          <div class="share-link">
-            <el-input v-model="shareLink" readonly />
-            <el-button @click="copyShareLink">复制链接</el-button>
           </div>
         </div>
       </div>
@@ -292,7 +282,6 @@ const newDocForm = reactive(({
 });
 
 const inviteEmail = ref("");
-const shareLink = ref("https://example.com/share/abc123");
 
 //获取当前知识库下的内容
 const rootFolders = ref<FolderInfo[]>()
@@ -324,6 +313,8 @@ const toggleSidebar = () => {
   sidebarCollapsed.value = !sidebarCollapsed.value;
 };
 
+const folderItem = ref(null)
+const expandFolder = ref<null|number>(null)
 const createNewDoc = async() => {
   try{
     if (!newDocForm.name.trim()) {
@@ -338,13 +329,18 @@ const createNewDoc = async() => {
       //创建文件夹
       await folderApi.createFolderApi(knowledgeBaseId.value,newDocForm.name,currentDocId.value)
     }
-
+    expandFolder.value = currentDocId.value
     showNewDocDialog.value = false;
     newDocForm.name = "";
     newDocForm.type = "document";
     newDocForm.parentId = null
     ElMessage.success("创建成功");
-    location.reload()
+    getKBsContent()
+    if(folderItem.value){
+      for(let i=0;i<folderItem.value.length;i++){
+        folderItem.value[i].getKBsContent()
+      }
+    }
   }catch(error){
     console.log('创建文档或文件夹失败',error);
     ElMessage.error('创建失败')
@@ -357,14 +353,14 @@ const sendInvite = async () => {
     search_list.value.filter(item=>item.checked===true).forEach((ele:searchItem)=>{
       checkedUser.push(ele.id)
     })
-    if(Boolean(checkedUser)==false){
+    if(checkedUser.length===0){
       ElMessage.error("请选择协作人");
       return
     }
     await Promise.all(checkedUser.map((id:number)=>{
       return KBsApi.inviteKBsCollaborator(id,knowledgeBaseId.value)//第二个参数是知识库id
     }))
-    ElMessage.success("邀请已发送");
+    ElMessage.success("邀请成功");
     inviteEmail.value = "";
     searchInviteUser(inviteEmail.value)
     showShareDialog.value = false
@@ -372,11 +368,6 @@ const sendInvite = async () => {
   }catch(error){
     ElMessage.error("邀请失败");
   }
-};
-
-const copyShareLink = () => {
-  navigator.clipboard.writeText(shareLink.value);
-  ElMessage.success("链接已复制");
 };
 </script>
 
@@ -596,15 +587,6 @@ const copyShareLink = () => {
     .invite-form {
       display: flex;
       align-items: flex-start;
-    }
-
-    .share-link {
-      display: flex;
-      gap: 8px;
-
-      .el-input {
-        flex: 1;
-      }
     }
   }
 }

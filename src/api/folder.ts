@@ -19,3 +19,22 @@ export const getFolderContentApi = (folderId:number)=>{
       method:'GET'
   })
 }
+
+//删除文件夹
+export const deleteFolderApi = (folderId:number)=>{
+  return request({
+      url:`/folders/${folderId}`,
+      method:'DELETE'
+  })
+}
+
+//编辑文件夹名称
+export const editFolderApi = (folderId:number,name:string)=>{
+  return request({
+      url:`/folders/${folderId}`,
+      method:'PUT',
+      data:{
+          name
+      }
+  })
+}

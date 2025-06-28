@@ -64,7 +64,7 @@
       <div class="card-body">
         <el-form
           ref="formRef"
-          :model="formData"
+          v-model="formData"
           :rules="rules"
           class="login-form"
         >
@@ -306,7 +306,7 @@ const handleSubmit = async () => {
       useStore.logined = true
       localStorage.setItem("username", res.data.username || '未知用户'  )
       ElMessage.success("登录成功")
-      router.push('/knowledgeBase/KnowledgeBaseMain')
+      router.replace('/knowledgeBase/KnowledgeBaseMain')
     } else {
       // 注册
       await userRegister(
