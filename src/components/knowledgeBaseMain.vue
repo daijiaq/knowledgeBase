@@ -125,7 +125,7 @@ onMounted(async () => {
         :description="item.description"
         :update-time="item.lastAccessedAt"
         :id="item.id"
-        @click="router.push(`/knowledgeBase/${item.id}`)"
+        @click="router.replace(`/knowledgeBase/${item.id}`)"
         @edit="emits('edit', item.id)"
         @delete="emits('delete', item.id)"
       >
@@ -148,7 +148,7 @@ onMounted(async () => {
     width="500px"
   >
     <el-form
-      :model="form"
+      v-model="form"
       :rules="rules"
       @keyup.enter.prevent
     >

@@ -19,7 +19,7 @@ interface KnowledgeBaseCard {
   description: string
 }
 // 最近访问列表
-const {getRecentKBs,selectDoc} = knowledgeBaseStore
+const {getRecentKBs,selectDoc,getAllKBs} = knowledgeBaseStore
 const { recentKBsList } = storeToRefs(knowledgeBaseStore) as {
   recentKBsList: import('vue').Ref<KnowledgeBaseCard[]>
 };
@@ -52,7 +52,7 @@ const logOut = ()=>{
   localStorage.removeItem("token")
   userStore.logined = false
   ElMessage.success("已退出登录")
-  router.push('/login')
+  router.replace('/login')
 }
 // 获取所有知识库（获取可访问的知识库）
 onMounted(async()=>{
@@ -90,7 +90,7 @@ async function submitForm() {
     await knowledgeBaseStore.getAllKBs()
     await getRecentKBs(5)
   } else{
-    location.reload() // 刷新当前页面
+    await getAllKBs()
   }
 }
 
@@ -116,14 +116,14 @@ const openDeleteModal = (knowledgeBaseId: number) => {
         }
         if(knowledgeBaseList.value.length===0){
           //没有知识库了
-          router.push('/knowledgeBase/KnowledgeBaseMain')
+          router.replace('/knowledgeBase/KnowledgeBaseMain')
         }else{
           console.log(route.path);
           console.log(route.path==='/knowledgeBase/KnowledgeBaseMain');
           
           if(route.path!=='/knowledgeBase/KnowledgeBaseMain'){
             const id = knowledgeBaseList.value[0].id
-            router.push(`/knowledgeBase/${id}`)
+            router.replace(`/knowledgeBase/${id}`)
           }
         }
     } catch (error: any) {
@@ -135,7 +135,7 @@ const openDeleteModal = (knowledgeBaseId: number) => {
 
 const handleLogoClick = async () => {
   await knowledgeBaseStore.getRecentKBs(5)
-  router.push('/knowledgeBase/KnowledgeBaseMain')
+  router.replace('/knowledgeBase/KnowledgeBaseMain')
 }
 </script>
 
@@ -224,7 +224,7 @@ const handleLogoClick = async () => {
       title="编辑知识库"
       width="500px"
     >
-      <el-form :model="form">
+      <el-form v-model="form">
         <el-form-item label="知识库名称">
           <el-input v-model="form.name" autocomplete="off" placeholder="请输入知识库名称" />
         </el-form-item>
