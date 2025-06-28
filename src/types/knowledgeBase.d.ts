@@ -1,5 +1,5 @@
 /**
- * ����֪ʶ��
+ * 创建知识库
  */
 export interface createKnowledgeBaseRes {
     data: createKnowledgeBase
@@ -9,38 +9,38 @@ export interface createKnowledgeBaseRes {
 
 export interface createKnowledgeBase {
     /**
-     * ֪ʶ�ⴴ��ʱ��
+     * 创建时间
      */
     createdAt: string;
     /**
-     * ֪ʶ������
+     * 知识库描述
      */
     description: string;
     /**
-     * ֪ʶ��id
+     * 知识库id
      */
     id: number;
     /**
-     * true��ʾ�ļ�����
+     * 知识库是否可用
      */
     isActive: boolean;
     /**
-     * ֪ʶ������
+     * 知识库名字
      */
     name: string;
     /**
-     * ������id
+     * 创建者id
      */
     ownerId: number;
     /**
-     * ֪ʶ�����ʱ��
+     * 更新时间
      */
     updatedAt: string;
 }
 
 
 /**
- * ��ȡ����֪ʶ�⣨��ȡ�ɷ��ʵ�֪ʶ�⣩
+ * 获取所有知识库（获取可访问的知识库）
  */
 export interface allKnowledgeBaseRes {
     data: allKnowledgeBase[]
@@ -49,25 +49,25 @@ export interface allKnowledgeBaseRes {
 }
 export interface allKnowledgeBase {
     /**
-     * ֪ʶ�����
+     * 描述
      */
     description: string;
     /**
-     * ֪ʶ��id
+     * 知识库id
      */
     id: number;
     /**
-     * ֪ʶ������
+     * 知识库名字
      */
     name: string;
     /**
-     * ��ӵ�е�Ȩ��
+     * 权限
      */
     permission: string;
 }
 
 /**
- * ����֪ʶ��id��ȡ��һ���ڲ��ĵ����ļ���
+ * 文件夹信息
  */
 export interface FolderInfo {
   id: string
@@ -95,7 +95,3 @@ export interface KnowledgeBaseContentRes {
   message: string
   data: KnowledgeBaseContent
 }
-
-/**
- * ��ȡ������ʵ�֪ʶ�⡪�����������ͻ�ȡ����֪ʶ�⣨��ȡ�ɷ��ʵ�֪ʶ�⣩һ��
- */
