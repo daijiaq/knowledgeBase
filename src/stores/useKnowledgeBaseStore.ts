@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import { createKBsApi, getAllKBsApi, getKBsContentApi, getKBsRecentApi } from "../api/knowledgeBase"
+import { createKBsApi, getAllKBsApi,  getKBsRecentApi } from "../api/knowledgeBase"
+import {getFolderContentApi} from '../api/folder'
 import type { createKnowledgeBaseRes, allKnowledgeBase } from "../types/knowledgeBase"
 export const useKnowledgeBaseStore = defineStore('knowledgeBase', () => {
   // 知识库列表(目录树那边的所有知识库)
@@ -27,15 +28,35 @@ export const useKnowledgeBaseStore = defineStore('knowledgeBase', () => {
    knowledgeBaseList.value = res.data
   }
 
-  //点击某个知识库去往对应文档页面（同时记录最近访问）
-  const openAndRecordRecentAccess = async (knowledgeBaseId: number) => {
-      await getKBsContentApi(knowledgeBaseId)
-  }
 
   // 获取最近访问的知识库
   const getRecentKBs = async (limit: number) => {
     const res = await getKBsRecentApi(limit)
     recentKBsList.value = res.data
+  }
+
+  //当前选中的文档或文件夹
+  const currentDocId = ref<null|number>(null)
+  const currentDocType = ref<'document'|'folder'>()
+  const storageId = localStorage.getItem('currentDocId')
+  const storageType = localStorage.getItem('currentDocType')
+  currentDocId.value = storageId!=undefined&&storageId!='null'?Number(storageId):null
+  currentDocType.value = storageType=='folder'||storageType=='document'?storageType:'folder'
+
+  //更新当前选中的文档
+  const selectDoc = (docId:number|null)=>{
+    currentDocId.value = docId
+    localStorage.setItem('currentDocId',String(currentDocId.value))
+  }
+  const selectDocType = (type:'document'|'folder')=>{
+    currentDocType.value = type
+    localStorage.setItem('currentDocType',currentDocType.value)
+  }
+
+  //获取文件夹里面内容
+  async function getFolderContent(folderId:number){
+    const res = await getFolderContentApi(folderId)
+    return res.data
   }
 
 
@@ -44,7 +65,11 @@ export const useKnowledgeBaseStore = defineStore('knowledgeBase', () => {
     recentKBsList,
     createKBs,
     getAllKBs,
-    openAndRecordRecentAccess,
-    getRecentKBs
+    getRecentKBs,
+    currentDocId,
+    currentDocType,
+    selectDoc,
+    selectDocType,
+    getFolderContent
   }
 })

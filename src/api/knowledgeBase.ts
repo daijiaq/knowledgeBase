@@ -1,6 +1,6 @@
 import request from '../utils/request'
 import type { createKnowledgeBaseRes, allKnowledgeBaseRes, KnowledgeBaseContentRes } from "../types/knowledgeBase"
-// ´´½¨ÖªÊ¶¿â
+// ï¿½ï¿½ï¿½ï¿½ÖªÊ¶ï¿½ï¿½
 export const createKBsApi = (name: string, description: string): Promise<createKnowledgeBaseRes> => {
     return request({
         url: `/knowledgeBase`,
@@ -11,7 +11,7 @@ export const createKBsApi = (name: string, description: string): Promise<createK
         }
     })
 }
-// ±à¼­ÖªÊ¶¿â
+// ï¿½à¼­ÖªÊ¶ï¿½ï¿½
 export const editKBsApi = (id: number, name: string, description: string) => {
     return request({
         url: `/knowledgeBase/${id}`,
@@ -23,7 +23,7 @@ export const editKBsApi = (id: number, name: string, description: string) => {
     })
 }
 
-// É¾³ýÖªÊ¶¿â
+// É¾ï¿½ï¿½ÖªÊ¶ï¿½ï¿½
 export const deleteKBsApi = (id: number) => {
     return request({
         url: `/knowledgeBase/${id}`,
@@ -31,7 +31,7 @@ export const deleteKBsApi = (id: number) => {
     })
 }
 
-// »ñÈ¡ËùÓÐÖªÊ¶¿â£¨»ñÈ¡¿É·ÃÎÊµÄÖªÊ¶¿â£©
+// ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ÖªÊ¶ï¿½â£¨ï¿½ï¿½È¡ï¿½É·ï¿½ï¿½Êµï¿½ÖªÊ¶ï¿½â£©
 export const getAllKBsApi = (): Promise<allKnowledgeBaseRes> => {
     return request({
         url: `/knowledgeBase/accessible`,
@@ -39,7 +39,8 @@ export const getAllKBsApi = (): Promise<allKnowledgeBaseRes> => {
     })
 }
 
-// ¸ù¾ÝÖªÊ¶¿âid»ñÈ¡µÚÒ»²ãÄÚ²¿ÎÄµµºÍÎÄ¼þ¼Ð£¨Õâ¸ö½Ó¿ÚºóÌ¨Âß¼­ÄÚ²¿ÓÐ¸üÐÂÖªÊ¶¿â·ÃÎÊ¼ÇÂ¼£¬µã»÷Ä³¸öÖªÊ¶¿â±ØÐëÏÈµ÷ÓÃ¸Ã½Ó¿Ú£¬ºóÐøµ÷ÓÃ"»ñÈ¡×î½ü·ÃÎÊµÄÖªÊ¶¿â"½Ó¿Ú²ÅÓÐÊý¾Ý£©
+
+// ï¿½ï¿½ï¿½ï¿½ÖªÊ¶ï¿½ï¿½idï¿½ï¿½È¡ÖªÊ¶ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Ú²ï¿½ï¿½Äµï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½Ð£ï¿½ï¿½ï¿½ï¿½ï¿½Ó¿Úºï¿½Ì¨ï¿½ß¼ï¿½ï¿½Ú²ï¿½ï¿½Ð¸ï¿½ï¿½ï¿½ÖªÊ¶ï¿½ï¿½ï¿½ï¿½Ê¼ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½Ä³ï¿½ï¿½ÖªÊ¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Èµï¿½ï¿½Ã¸Ã½Ó¿Ú£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½"ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Êµï¿½ÖªÊ¶ï¿½ï¿½"ï¿½Ó¿Ú²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý£ï¿½
 export const getKBsContentApi = (knowledgeBaseId: number): Promise<KnowledgeBaseContentRes> => {
     return request({
         url: `/knowledgeBase/${knowledgeBaseId}/content`,
@@ -47,11 +48,24 @@ export const getKBsContentApi = (knowledgeBaseId: number): Promise<KnowledgeBase
     })
 }
 
-// »ñÈ¡×î½ü·ÃÎÊµÄÖªÊ¶¿â
+// ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Êµï¿½ÖªÊ¶ï¿½ï¿½
 export const getKBsRecentApi = (limit?: number):Promise<allKnowledgeBaseRes> => {
     const finalLimit = limit ?? 5
     return request({
         url: `/knowledgeBase/recent?limit=${finalLimit}`,
         method: 'GET'
+    })
+}
+
+// ï¿½ï¿½ï¿½ï¿½Ð­ï¿½ï¿½ï¿½ï¿½
+export const inviteKBsCollaborator = (userId:number,knowledgeBaseId:number)=>{
+    return request({
+        url:'/knowledgeBase/invite',
+        method:'POST',
+        data:{
+            userId,
+            knowledgeBaseId,
+            permission: "write"
+          }
     })
 }

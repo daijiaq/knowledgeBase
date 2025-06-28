@@ -24,8 +24,7 @@
             </svg>
           </div>
           <div class="kb-details">
-            <h3>前端开发指南</h3>
-            <p>15 篇文档</p>
+            <h3>{{ currentKnowledgeBaseInfo?.name }}</h3>
           </div>
         </div>
         <el-button @click="toggleSidebar" type="text" class="collapse-btn">
@@ -45,9 +44,9 @@
         </el-button>
       </div>
 
-      <div class="sidebar-content" v-if="!sidebarCollapsed">
+      <div class="sidebar-content" v-if="!sidebarCollapsed" @click="initParentId">
         <!-- 搜索框 -->
-        <div class="search-box">
+        <div class="search-box" @click.stop>
           <svg
             class="search-icon"
             viewBox="0 0 24 24"
@@ -67,7 +66,7 @@
         </div>
 
         <!-- 工具栏 -->
-        <div class="toolbar">
+        <div class="toolbar" @click.stop="">
           <el-button
             @click="showNewDocDialog = true"
             type="primary"
@@ -114,7 +113,7 @@
             </el-button>
             <template #dropdown>
               <el-dropdown-menu>
-                <el-dropdown-item @click="shareDoc">添加协作人</el-dropdown-item>
+                <el-dropdown-item @click="shareDoc">添加协作</el-dropdown-item>
                 <el-dropdown-item>导入文档</el-dropdown-item>
                 <el-dropdown-item>导出知识库</el-dropdown-item>
                 <el-dropdown-item>模板库</el-dropdown-item>
@@ -124,100 +123,42 @@
         </div>
 
         <!-- 文档树 -->
-        <div class="doc-tree">
-          <div
-            v-for="item in filteredDocs"
-            :key="item.id"
-            class="doc-item"
-            :class="{ active: currentDocId === item.id }"
-            @click="selectDoc(item)"
-          >
-            <div class="doc-icon">
-              <svg
-                v-if="item.type === 'folder'"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"
-                  stroke="currentColor"
-                  stroke-width="2"
-                />
-              </svg>
-              <svg
-                v-else
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
-                  stroke="currentColor"
-                  stroke-width="2"
-                />
-                <polyline
-                  points="14,2 14,8 20,8"
-                  stroke="currentColor"
-                  stroke-width="2"
-                />
-              </svg>
-            </div>
-            <span class="doc-title">{{ item.title }}</span>
-            <div class="doc-actions">
-              <el-dropdown trigger="click" @click.stop>
-                <el-button type="text" size="small">
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <circle cx="12" cy="12" r="1" fill="currentColor" />
-                    <circle cx="12" cy="5" r="1" fill="currentColor" />
-                    <circle cx="12" cy="19" r="1" fill="currentColor" />
-                  </svg>
-                </el-button>
-                <template #dropdown>
-                  <el-dropdown-menu>
-                    <el-dropdown-item>重命名</el-dropdown-item>
-                    <el-dropdown-item>复制</el-dropdown-item>
-                    <el-dropdown-item>移动</el-dropdown-item>
-                    <el-dropdown-item class="danger">删除</el-dropdown-item>
-                  </el-dropdown-menu>
-                </template>
-              </el-dropdown>
-            </div>
-          </div>
+        <div class="doc-tree" @click.stop>
+          <!-- 文件夹 -->
+          <FolderItem v-for="item in filteredDocs" :item="item"/>
+          <!-- 文档 -->
         </div>
       </div>
     </div>
 
     <!-- 主内容区 -->
-    <CollaborativeEditor :shareDoc="shareDoc"/>
-    <Comment />
+    <template v-if="currentDocId!==null&&currentDocType=='document'">
+      <CollaborativeEditor/>
+      <Comment />
+    </template>
+    <div v-else style="width: 890px;padding: 20px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    background-color: white;">
+      <div style="display: flex;justify-content: space-between;">
+        <h1>{{ currentKnowledgeBaseInfo?.name }}</h1>
+        <el-button @click="shareDoc">分享</el-button>
+      </div>
+      <p style="margin-top: 20px; font-size: 18px;">👋 欢迎来到知识库</p>
+    </div>
 
     <!-- 新建文档对话框 -->
     <el-dialog v-model="showNewDocDialog" title="新建文档" width="400px">
       <el-form :model="newDocForm" label-width="80px">
         <el-form-item label="文档名称">
-          <el-input v-model="newDocForm.title" placeholder="请输入文档名称" />
+          <el-input v-model="newDocForm.name" placeholder="请输入文档名称" />
         </el-form-item>
         <el-form-item label="文档类型">
           <el-radio-group v-model="newDocForm.type">
             <el-radio label="document">文档</el-radio>
             <el-radio label="folder">文件夹</el-radio>
           </el-radio-group>
-        </el-form-item>
-        <el-form-item label="父级目录">
-          <el-select v-model="newDocForm.parentId" placeholder="选择父级目录">
-            <el-option label="根目录" :value="0" />
-            <el-option
-              v-for="folder in folders"
-              :key="folder.id"
-              :label="folder.title"
-              :value="folder.id"
-            />
-          </el-select>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -227,24 +168,32 @@
     </el-dialog>
 
     <!-- 分享对话框 -->
-    <el-dialog v-model="showShareDialog" title="分享知识库" width="500px">
+    <el-dialog v-model="showShareDialog" title="分享知识库" width="400px">
       <div class="share-content">
         <div class="share-section">
           <h4>邀请协作者</h4>
           <div class="invite-form">
-            <el-input
+            <div style="width: 300px">
+              <el-input
               v-model="inviteEmail"
               placeholder="输入邮箱地址"
-              style="width: 300px"
-            />
-            <el-select
-              v-model="invitePermission"
-              style="width: 120px; margin-left: 10px"
-            >
-              <el-option label="查看" value="view" />
-              <el-option label="评论" value="comment" />
-              <el-option label="编辑" value="edit" />
-            </el-select>
+              @input="searchInviteUser"
+              />
+              <div class="invite-list">
+                <template v-if="search_list.length">
+                  <div
+                    v-for="item in search_list"
+                    :key="item.id"
+                    class="invite-user-item"
+                    :class="{ checked: item.checked }"
+                    @click="if(!item.readonly){item.checked = !item.checked};">
+                    <span class="user-name" :title="item.username">{{ item.username }}</span>
+                    <el-check-tag :checked="item.checked">{{ item.readonly?'协作者':item.checked ? '已选' : '选择' }}</el-check-tag>
+                  </div>
+                </template>
+                <div v-else class="no-user">无匹配用户</div>
+              </div>
+            </div>
             <el-button
               type="primary"
               @click="sendInvite"
@@ -266,162 +215,176 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, nextTick, reactive } from "vue";
+import { ref, computed, watch, reactive, onBeforeUnmount } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { ElMessage } from "element-plus";
 import CollaborativeEditor from "../components/CollaborativeEditor.vue";
+import { userSearch } from "../api/user";
+import * as KBsApi from "../api/knowledgeBase";
+import * as folderApi from '../api/folder'
+import type { userInfo,searchItem } from "../types/user";
+import type{ FolderInfo } from "../types/knowledgeBase";
+import FolderItem from "../components/FolderItem.vue";
+import { useKnowledgeBaseStore } from "../stores/useKnowledgeBaseStore";
+import { storeToRefs } from "pinia";
 
 const router = useRouter();
 const route = useRoute();
-console.log('知识库id',route.params.knowledgeBaseId);
-console.log('文档id',route.params.documentId);
+const knowledgeBaseId = ref(Number(route.params.knowledgeBaseId))
+//监听路由变化
+watch(()=>route.params.knowledgeBaseId,(newValue)=>{
+  knowledgeBaseId.value = Number(newValue)
+  getKBsContent()
+})
 
+const knowledgeBaseStore =useKnowledgeBaseStore()
+const {currentDocId,currentDocType} = storeToRefs(knowledgeBaseStore)
+const {selectDoc,selectDocType} = knowledgeBaseStore
 
 // 响应式数据
 const sidebarCollapsed = ref(false);
 const searchQuery = ref("");
-const currentDocId = ref(1);
 const showNewDocDialog = ref(false);
 const showShareDialog = ref(false);
+//双击空白位置将parentId设置为null
+const isClickDouble = ref(true)
+function initParentId(){
+  isClickDouble.value = !isClickDouble.value
+  if(isClickDouble.value===true){
+    selectDoc(null)
+    selectDocType('folder')
+  }
+}
 
 //打开分享界面
 const shareDoc = ()=>{
   showShareDialog.value = true
 }
+//根据邮箱搜索用户
+const tt = ref(0)
+const search_list = ref<searchItem[]>([])
+const searchInviteUser = (keyword:string)=>{
+  tt.value&&clearTimeout(tt.value)
+  tt.value = setTimeout(async ()=>{
+    search_list.value = []
+    if(keyword){
+      const {data} = await userSearch(keyword)
+      data.forEach((item:userInfo)=>{
+        console.log(item.id);
+        let checked = false
+        let readonly = false
+        if(currentKnowledgeBaseInfo.value?.collaborators.indexOf(item.id)!==-1){
+          checked = true
+          readonly = true
+        }
+        search_list.value.push({
+          ...item,
+          checked,
+          readonly
+        })
+      })
+    }
+  },500)
+}
 
 // 表单数据
-const newDocForm = reactive({
-  title: "",
+const newDocForm = reactive(({
+  name: "",
   type: "document",
-  parentId: 0,
+  parentId: null,
+}) as {
+  name:string
+  type:'document'|'folder'
+  parentId:number|null
 });
 
 const inviteEmail = ref("");
-const invitePermission = ref("view");
 const shareLink = ref("https://example.com/share/abc123");
 
-// 编辑器引用
-const editorRef = ref<HTMLTextAreaElement>();
-
-// 模拟数据
-const documents = ref([
-  {
-    id: 1,
-    title: "快速开始",
-    type: "document",
-    parentId: 0,
-    content: "# 快速开始\n\n这是一个示例文档...",
-  },
-  { id: 2, title: "Vue 基础", type: "folder", parentId: 0 },
-  {
-    id: 3,
-    title: "组件开发",
-    type: "document",
-    parentId: 2,
-    content: "# 组件开发\n\n学习如何开发Vue组件...",
-  },
-  {
-    id: 4,
-    title: "状态管理",
-    type: "document",
-    parentId: 2,
-    content: "# 状态管理\n\nVuex和Pinia的使用...",
-  },
-  { id: 5, title: "项目实战", type: "folder", parentId: 0 },
-]);
-
-// 找当前文档
-const currentDoc = computed(() => {
-  return documents.value.find((doc) => doc.id === currentDocId.value);
-});
+//获取当前知识库下的内容
+const rootFolders = ref<FolderInfo[]>()
+const rootDoc = ref()
+const currentKnowledgeBaseInfo = ref()
+const getKBsContent = async()=>{
+  try{
+    const {data:{documents,folders,knowledgeBaseInfo}} = await KBsApi.getKBsContentApi(knowledgeBaseId.value)
+    rootFolders.value = folders
+    rootDoc.value = documents
+    currentKnowledgeBaseInfo.value = knowledgeBaseInfo
+  }catch(error){
+    console.log('根据知识库id获取内容失败');
+    ElMessage.error('无法获取知识库')
+  }
+}
+getKBsContent()
 
 const filteredDocs = computed(() => {
-  if (!searchQuery.value) return documents.value;
-  return documents.value.filter((doc) =>
-    doc.title.toLowerCase().includes(searchQuery.value.toLowerCase())
+  if (!searchQuery.value) return rootFolders.value;
+  return rootFolders.value?.filter((doc) =>
+    doc.name.toLowerCase().includes(searchQuery.value.toLowerCase())
   );
 });
 
-const folders = computed(() => {
-  return documents.value.filter((doc) => doc.type === "folder");
-});
 
-
-// 方法
+// 折叠侧边栏
 const toggleSidebar = () => {
   sidebarCollapsed.value = !sidebarCollapsed.value;
 };
 
-const goBack = () => {
-  router.push("/home/knowledge");
+const createNewDoc = async() => {
+  try{
+    if (!newDocForm.name.trim()) {
+      ElMessage.error("请输入文档名称");
+      return;
+    }
+
+    if (newDocForm.type === "document") {
+      //创建文档
+      //创建完后选中文档
+    }else{
+      //创建文件夹
+      await folderApi.createFolderApi(knowledgeBaseId.value,newDocForm.name,currentDocId.value)
+    }
+
+    showNewDocDialog.value = false;
+    newDocForm.name = "";
+    newDocForm.type = "document";
+    newDocForm.parentId = null
+    ElMessage.success("创建成功");
+    location.reload()
+  }catch(error){
+    console.log('创建文档或文件夹失败',error);
+    ElMessage.error('创建失败')
+  }
 };
 
-const selectDoc = (doc: any) => {
-  currentDocId.value = doc.id;
-  
-};
-
-const createNewDoc = () => {
-  if (!newDocForm.title.trim()) {
-    ElMessage.error("请输入文档名称");
-    return;
+const sendInvite = async () => {
+  try{
+    const checkedUser:number[] = []
+    search_list.value.filter(item=>item.checked===true&&item.readonly===false).forEach((ele:searchItem)=>{
+      checkedUser.push(ele.id)
+    })
+    if(Boolean(checkedUser)==false){
+      ElMessage.error("请选择协作人");
+      return
+    }
+    await Promise.all(checkedUser.map((id:number)=>{
+      return KBsApi.inviteKBsCollaborator(id,knowledgeBaseId.value)//第二个参数是知识库id
+    }))
+    ElMessage.success("邀请已发送");
+    inviteEmail.value = "";
+    searchInviteUser(inviteEmail.value)
+    showShareDialog.value = false
+    getKBsContent()
+  }catch(error){
+    ElMessage.error("邀请失败");
   }
-
-  const newDoc = {
-    id: Date.now(),
-    title: newDocForm.title,
-    type: newDocForm.type,
-    parentId: newDocForm.parentId,
-    content:
-      newDocForm.type === "document"
-        ? "# " + newDocForm.title + "\n\n"
-        : undefined,
-  };
-
-  documents.value.push(newDoc);
-
-  if (newDocForm.type === "document") {
-    selectDoc(newDoc);
-  }
-
-  showNewDocDialog.value = false;
-  newDocForm.title = "";
-  newDocForm.type = "document";
-  newDocForm.parentId = 0;
-
-  ElMessage.success("创建成功");
-};
-
-const sendInvite = () => {
-  if (!inviteEmail.value.trim()) {
-    ElMessage.error("请输入邮箱地址");
-    return;
-  }
-
-  ElMessage.success("邀请已发送");
-  inviteEmail.value = "";
 };
 
 const copyShareLink = () => {
   navigator.clipboard.writeText(shareLink.value);
   ElMessage.success("链接已复制");
 };
-
-onMounted(() => {
-  // 根据路由参数设置当前文档
-  const docId = route.params.id;
-  if (docId) {
-    const doc = documents.value.find((d) => d.id === Number(docId));
-    if (doc) {
-      selectDoc(doc);
-    }
-  }
-
-  // 聚焦编辑器
-  nextTick(() => {
-    editorRef.value?.focus();
-  });
-});
 </script>
 
 <style scoped lang="scss">
@@ -639,7 +602,7 @@ onMounted(() => {
 
     .invite-form {
       display: flex;
-      align-items: center;
+      align-items: flex-start;
     }
 
     .share-link {
@@ -663,6 +626,56 @@ onMounted(() => {
         background: rgba(239, 68, 68, 0.1);
       }
     }
+  }
+}
+
+//协作人搜索用户列表样式
+.invite-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 10px 0 0 0;
+  width: 100%;
+
+  .invite-user-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    background: #f7f8fa;
+    transition: background 0.2s;
+    border: 1px solid transparent;
+
+    &:hover {
+      background: #fff;
+      border-color: #409eff;
+    }
+    &.checked {
+      border-color: #409eff;
+      background-color: #fff;
+    }
+
+    .user-name {
+      flex: 1;
+      font-size: 14px;
+      color: #333;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      margin-right: 10px;
+    }
+    .el-check-tag {
+      min-width: 40px;
+      text-align: center;
+    }
+  }
+  .no-user {
+    color: #aaa;
+    text-align: center;
+    padding: 10px 0;
+    font-size: 13px;
   }
 }
 

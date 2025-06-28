@@ -1,5 +1,5 @@
 /**
- * ´´½¨ÖªÊ¶¿â
+ * ï¿½ï¿½ï¿½ï¿½ÖªÊ¶ï¿½ï¿½
  */
 export interface createKnowledgeBaseRes {
     data: createKnowledgeBase
@@ -9,38 +9,38 @@ export interface createKnowledgeBaseRes {
 
 export interface createKnowledgeBase {
     /**
-     * ÖªÊ¶¿â´´½¨Ê±¼ä
+     * ÖªÊ¶ï¿½â´´ï¿½ï¿½Ê±ï¿½ï¿½
      */
     createdAt: string;
     /**
-     * ÖªÊ¶¿âÃèÊö
+     * ÖªÊ¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
      */
     description: string;
     /**
-     * ÖªÊ¶¿âid
+     * ÖªÊ¶ï¿½ï¿½id
      */
     id: number;
     /**
-     * true±íÊ¾ÎÄ¼þ¿ÉÓÃ
+     * trueï¿½ï¿½Ê¾ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½
      */
     isActive: boolean;
     /**
-     * ÖªÊ¶¿âÃû×Ö
+     * ÖªÊ¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
      */
     name: string;
     /**
-     * ´´½¨Õßid
+     * ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½id
      */
     ownerId: number;
     /**
-     * ÖªÊ¶¿â¸üÐÂÊ±¼ä
+     * ÖªÊ¶ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½
      */
     updatedAt: string;
 }
 
 
 /**
- * »ñÈ¡ËùÓÐÖªÊ¶¿â£¨»ñÈ¡¿É·ÃÎÊµÄÖªÊ¶¿â£©
+ * ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ÖªÊ¶ï¿½â£¨ï¿½ï¿½È¡ï¿½É·ï¿½ï¿½Êµï¿½ÖªÊ¶ï¿½â£©
  */
 export interface allKnowledgeBaseRes {
     data: allKnowledgeBase[]
@@ -49,47 +49,53 @@ export interface allKnowledgeBaseRes {
 }
 export interface allKnowledgeBase {
     /**
-     * ÖªÊ¶¿â½éÉÜ
+     * ÖªÊ¶ï¿½ï¿½ï¿½ï¿½ï¿½
      */
     description: string;
     /**
-     * ÖªÊ¶¿âid
+     * ÖªÊ¶ï¿½ï¿½id
      */
     id: number;
     /**
-     * ÖªÊ¶¿âÃû³Æ
+     * ÖªÊ¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
      */
     name: string;
     /**
-     * ËùÓµÓÐµÄÈ¨ÏÞ
+     * ï¿½ï¿½Óµï¿½Ðµï¿½È¨ï¿½ï¿½
      */
     permission: string;
 }
 
 /**
- * ¸ù¾ÝÖªÊ¶¿âid»ñÈ¡µÚÒ»²ãÄÚ²¿ÎÄµµºÍÎÄ¼þ¼Ð
+ * ï¿½ï¿½ï¿½ï¿½ÖªÊ¶ï¿½ï¿½idï¿½ï¿½È¡ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Ú²ï¿½ï¿½Äµï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½
  */
-export interface FolderItem {
+export interface FolderInfo {
   id: string
   name: string
 }
 
-export interface DocumentItem {
+export interface DocumentInfo {
   id: string
   title: string
 }
 
 export interface KnowledgeBaseContent {
-  folders: FolderItem[]
-  documents: DocumentItem[]
+  folders: FolderInfo[]
+  documents: DocumentInfo[]
+  knowledgeBaseInfo:{
+    id:number,
+    name:string,
+    desc:string,
+    collaborators:number[]
+  }
 }
 
 export interface KnowledgeBaseContentRes {
   code: number
   message: string
-  data: KnowledgeBaseContent | null
+  data: KnowledgeBaseContent
 }
 
 /**
- * »ñÈ¡×î½ü·ÃÎÊµÄÖªÊ¶¿â¡ª¡ª¡ª¡ª¡ª¡ªºÍ»ñÈ¡ËùÓÐÖªÊ¶¿â£¨»ñÈ¡¿É·ÃÎÊµÄÖªÊ¶¿â£©Ò»Ñù
+ * ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Êµï¿½ÖªÊ¶ï¿½â¡ªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í»ï¿½È¡ï¿½ï¿½ï¿½ï¿½ÖªÊ¶ï¿½â£¨ï¿½ï¿½È¡ï¿½É·ï¿½ï¿½Êµï¿½ÖªÊ¶ï¿½â£©Ò»ï¿½ï¿½
  */

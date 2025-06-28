@@ -4,10 +4,10 @@ import {
   Folder,
   Reading,
 } from "@element-plus/icons-vue";
-import { useRouter } from 'vue-router'
+import { useRouter,useRoute } from 'vue-router'
 import {useUserStore} from "../stores/useUserStore"
 import { useKnowledgeBaseStore } from "../stores/useKnowledgeBaseStore";
-import { onMounted, ref, reactive } from "vue";
+import { onMounted, ref, reactive,watch } from "vue";
 import MoreActions from '../components/MoreActions.vue'
 import { deleteKBsApi, editKBsApi } from '../api/knowledgeBase'
 import { ElMessage, ElMessageBox } from "element-plus";
@@ -19,6 +19,7 @@ interface KnowledgeBaseCard {
   description: string
 }
 // 最近访问列表
+const {getRecentKBs,selectDoc} = knowledgeBaseStore
 const { recentKBsList } = storeToRefs(knowledgeBaseStore) as {
   recentKBsList: import('vue').Ref<KnowledgeBaseCard[]>
 };
@@ -27,8 +28,17 @@ const { knowledgeBaseList } = storeToRefs(knowledgeBaseStore) as {
   knowledgeBaseList: import('vue').Ref<KnowledgeBaseCard[]>
 }
 const router = useRouter()
+const route = useRoute()
 const userStore = useUserStore()
 const username = localStorage.getItem("username") || "用户";
+//当前打开的menu
+const activeMenu =ref(route.params.knowledgeBaseId)
+watch(()=>route.params.knowledgeBaseId,(newValue)=>{
+  activeMenu.value = newValue
+})
+watch(()=>route.path,()=>{
+  selectDoc(null)
+})
 const handleOpen = () => {
   console.log('打开');
   
@@ -49,11 +59,6 @@ onMounted(async()=>{
   await knowledgeBaseStore.getAllKBs()
   await knowledgeBaseStore.getRecentKBs(5)
 })
-
-const goToDocument = async (knowledgeBaseId: number)=>{
-  router.push(`/knowledgeBase/${knowledgeBaseId}`)
-  await knowledgeBaseStore.openAndRecordRecentAccess(knowledgeBaseId)
-}
 
 const dialogFormVisible = ref(false)
 const editingId = ref<number | null>(null)
@@ -79,8 +84,14 @@ async function submitForm() {
   await editKBsApi(editingId.value, form.name, form.desc)
   ElMessage.success('编辑成功')
   dialogFormVisible.value = false
-  // 更新知识库列表
-  await knowledgeBaseStore.getRecentKBs(5)
+  
+  if(route.path === `/knowledgeBase/KnowledgeBaseMain`) {
+    // 更新知识库列表
+    await knowledgeBaseStore.getAllKBs()
+    await getRecentKBs(5)
+  } else{
+    location.reload() // 刷新当前页面
+  }
 }
 
 //删除知识库-弹框
@@ -103,6 +114,18 @@ const openDeleteModal = (knowledgeBaseId: number) => {
         if (index2 !== -1) {
           knowledgeBaseList.value.splice(index2, 1);
         }
+        if(knowledgeBaseList.value.length===0){
+          //没有知识库了
+          router.push('/knowledgeBase/KnowledgeBaseMain')
+        }else{
+          console.log(route.path);
+          console.log(route.path==='/knowledgeBase/KnowledgeBaseMain');
+          
+          if(route.path!=='/knowledgeBase/KnowledgeBaseMain'){
+            const id = knowledgeBaseList.value[0].id
+            router.push(`/knowledgeBase/${id}`)
+          }
+        }
     } catch (error: any) {
       ElMessage.error(error.message)
       console.error("删除知识库出错:", error) 
@@ -112,7 +135,7 @@ const openDeleteModal = (knowledgeBaseId: number) => {
 
 const handleLogoClick = async () => {
   await knowledgeBaseStore.getRecentKBs(5)
-  router.replace('/knowledgeBase/KnowledgeBaseMain')
+  router.push('/knowledgeBase/KnowledgeBaseMain')
 }
 </script>
 
@@ -147,7 +170,8 @@ const handleLogoClick = async () => {
           class="aside"
         >
           <el-menu
-            default-active=""
+            :default-active="activeMenu"
+            :default-openeds="['1']"
             class="menu"
             @open="handleOpen"
             @close="handleClose"
@@ -161,16 +185,14 @@ const handleLogoClick = async () => {
                 <span>知识库</span>
               </template>
             <el-menu-item
-              v-for="(item, index) in knowledgeBaseStore.knowledgeBaseList"
+              v-for="item in knowledgeBaseStore.knowledgeBaseList"
               :key="item.id"
-              :index="`1-${index + 1}`"
-              @click="goToDocument(item.id)"
+              :index="`${item.id}`"
               style="display: flex; align-items: center;"
             >
               <div style="display: flex; align-items: center; flex: 1;">
                 <el-icon><Folder /></el-icon>
-                <el-tooltip :content="item.name" placement="top">
-                  <span
+                <span
                     style="
                       margin-left: 8px;
                       max-width: 64px;
@@ -182,8 +204,7 @@ const handleLogoClick = async () => {
                     "
                   >
                     {{ item.name.length > 4 ? item.name.slice(0, 4) + '...' : item.name }}
-                  </span>
-                </el-tooltip>
+                </span>
               </div>
               <div style="margin-left: auto;" @click.stop>
                 <MoreActions :id="item.id" @edit="openEditDialog" @delete="openDeleteModal" />
