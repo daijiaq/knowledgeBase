@@ -186,9 +186,9 @@
                     :key="item.id"
                     class="invite-user-item"
                     :class="{ checked: item.checked }"
-                    @click="if(!item.readonly){item.checked = !item.checked};">
+                    @click="item.checked = !item.checked">
                     <span class="user-name" :title="item.username">{{ item.username }}</span>
-                    <el-check-tag :checked="item.checked">{{ item.readonly?'协作者':item.checked ? '已选' : '选择' }}</el-check-tag>
+                    <el-check-tag :checked="item.checked">{{ item.checked ? '已选' : '选择' }}</el-check-tag>
                   </div>
                 </template>
                 <div v-else class="no-user">无匹配用户</div>
@@ -215,7 +215,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, reactive, onBeforeUnmount } from "vue";
+import { ref, computed, watch, reactive } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { ElMessage } from "element-plus";
 import CollaborativeEditor from "../components/CollaborativeEditor.vue";
@@ -268,19 +268,12 @@ const searchInviteUser = (keyword:string)=>{
   tt.value = setTimeout(async ()=>{
     search_list.value = []
     if(keyword){
-      const {data} = await userSearch(keyword)
+      const {data} = await userSearch(keyword,knowledgeBaseId.value)
       data.forEach((item:userInfo)=>{
-        console.log(item.id);
         let checked = false
-        let readonly = false
-        if(currentKnowledgeBaseInfo.value?.collaborators.indexOf(item.id)!==-1){
-          checked = true
-          readonly = true
-        }
         search_list.value.push({
           ...item,
-          checked,
-          readonly
+          checked
         })
       })
     }
@@ -361,7 +354,7 @@ const createNewDoc = async() => {
 const sendInvite = async () => {
   try{
     const checkedUser:number[] = []
-    search_list.value.filter(item=>item.checked===true&&item.readonly===false).forEach((ele:searchItem)=>{
+    search_list.value.filter(item=>item.checked===true).forEach((ele:searchItem)=>{
       checkedUser.push(ele.id)
     })
     if(Boolean(checkedUser)==false){

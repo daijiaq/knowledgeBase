@@ -16,12 +16,13 @@ export const userRegister = (username: string, email: string, password: string) 
     })
 }
 //根据邮箱搜索用户
-export const userSearch = (keyword:string)=>{
+export const userSearch = (keyword:string,knowledgeBaseId:number)=>{
     return request({
         url:'/users/search',
         method:'GET',
         params:{
-            email:keyword
+            email:keyword,
+            knowledgeBaseId
         }
     })
 }

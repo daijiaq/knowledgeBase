@@ -25,5 +25,4 @@ export interface userInfo{
 //搜索的列表信息
 export interface searchItem extends userInfo{
   checked:boolean
-  readonly:boolean
 }
