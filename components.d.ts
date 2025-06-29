@@ -36,5 +36,6 @@ declare module 'vue' {
     MoreActions: typeof import('./src/components/MoreActions.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    SearchPanel: typeof import('./src/components/SearchPanel.vue')['default']
   }
 }

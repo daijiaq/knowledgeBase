@@ -61,7 +61,7 @@
               @click="
                 aiClick = true;
                 aiClickSummary(
-                  '本次课程设计聚焦网络编程实践，我成功开发了基于 UDP 协议的 PingServer 与 PingClient 工具。不同于传统使用 ICMP 协议的 “ping” 工具，这组程序通过 UDP 协议实现网络连通性测试。在开发过程中，我系统掌握了网络编程的核心技术，深入理解了并发处理、数据包操作及错误处理等关键环节的实践要点。'
+                  '本次课程设计聚焦网络编程实践，我成功开发了基于 UDP 协议的 PingServer 与 PingClient 工具。不同于传统使用 ICMP 协议的 ping 工具，这组程序通过 UDP 协议实现网络连通性测试。在开发过程中，我系统掌握了网络编程的核心技术，深入理解了并发处理、数据包操作及错误处理等关键环节的实践要点。'
                 );
               "
               >AI总结全文</el-button
@@ -258,9 +258,16 @@ const editor = useEditor({
         color: userColor.value,
       },
     }),
-    Search.configure({
+    /* Search.configure({
       highlightClass: 'search-highlight', // 高亮背景色（可自定义CSS）
       caseSensitive: false,
+    }), */
+    Search.configure({
+      highlightClass: "search-highlight",
+      currentHighlightClass: "search-highlight-current",
+      caseSensitive: false,
+      wholeWord: false,
+      regex: false,
     }),
     Comment,
   ],
@@ -273,8 +280,9 @@ const editor = useEditor({
   },
   onUpdate: ({ editor }) => {
       // 编辑器内容变化时，清空搜索结果（可选）
-      editor.storage.search.matches = [];
-      editor.storage.search.currentIndex = -1;
+      if (editor.commands.clearSearch) {
+        editor.commands.clearSearch();
+      }
   },
 });
 
@@ -355,6 +363,15 @@ const handleBeforeUnload = () => {
   console.log("页面即将卸载，清理协同编辑连接");
   destroyCollaboration();
 };
+
+// 暴露编辑器实例给父组件
+defineExpose({
+  editor,
+  connectionStatus,
+  onlineUsers,
+  userId,
+  userColor,
+});
 
 // ai接口调用
 // const openai = new OpenAI({
