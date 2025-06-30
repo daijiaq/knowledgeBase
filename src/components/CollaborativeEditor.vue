@@ -118,6 +118,10 @@ import { ElMessage, ElSkeleton, ElSkeletonItem } from "element-plus";
 import { generateSummary } from "../api/aiSummary";
 // import OpenAI from "openai";
 
+// ai
+const aiText = ref("");
+const isAISummaryLoading = ref(true);
+
 let aiClick = ref(false);
 
 // 定义组件的 props
@@ -387,44 +391,87 @@ defineExpose({
 });
 
 // ai接口调用
-// const openai = new OpenAI({
-//   apiKey: "b02abbe3-cc00-4199-a4ef-550fbdbd93a9", // 这里直接写字符串，勿用 process.env
-//   // dangerouslyAllowBrowser: true,
-//   baseURL: "https://ark.cn-beijing.volces.com/api/v3",
-// });
 
-// // 调用文档摘要接口
-// async function getDocumentSummary(documentText: string) {
+// !!!非流式输出
+// const aiText = ref("");
+// const aiClickSummary = async (documentText: string) => {
+//   console.log("点击AI总结，开始生成摘要", documentText);
 //   try {
-//     const response = await openai.chat.completions.create({
-//       model: "ep-20250627232809-8d2lz", // 替换为你的模型ID
-//       messages: [
-//         {
-//           role: "user",
-//           content: `请对以下文档进行摘要，控制在300字内：\n${documentText}`,
-//         },
-//       ],
-//       temperature: 0.4,
-//       max_tokens: 300,
-//     });
-//     return response.choices[0].message.content; // 提取摘要结果
+//     const response = await generateSummary(documentText);
+//     const summary = response.data.summary || "";
+//     aiText.value = summary;
+//     console.log("文档摘要：", summary);
+//     isAISummaryLoading.value = false;
 //   } catch (error) {
-//     console.error("API调用失败：", error);
+//     console.error("摘要生成失败：", error);
 //   }
-// }
+// };
 
-// // 测试：传入文档文本
-// const documentText =
-//   "模块化开发价值认知：将系统拆解为网络通信、数据处理、并发控制等独立模块，显著提升了代码的可读性与可维护性。清晰的模块边界大幅降低了系统迭代与功能扩展的难度，体现了模块化设计的优越性。并发编程深度实践：线程池技术的实际应用让我深刻认识到并发控制的复杂性。在处理多线程协作过程中，对死锁预防、竞态条件避免等问题的探索，强化了我对同步机制与线程安全策略的理解与应用能力。网络特性深刻理解：模拟丢包与延迟功能的开发，使我直观感受到网络环境的不确定性。这一经历强调了在网络编程中充分考虑网络波动、设计弹性应对方案的重要性。测试调试能力进阶：通过在不同网络场景下的测试与调试，熟练掌握了日志记录、性能分析等工具的使用方法。这些实践经验有效提升了系统性能优化与故障排查的能力。";
-// getDocumentSummary(documentText).then((summary) =>
-//   console.log("文档摘要：", summary)
-// );
+// !!!SSE 无法传token
+// const aiClickSummary = async (documentText: string) => {
+//   console.log("点击AI总结，开始生成摘要", documentText);
+//   let retryCount = 0;
+//   // const maxRetries = 3;
+//   let eventSource: EventSource | null = null;
 
-// const documentText =
-//   "模块化开发价值认知：将系统拆解为网络通信、数据处理、并发控制等独立模块，显著提升了代码的可读性与可维护性。清晰的模块边界大幅降低了系统迭代与功能扩展的难度，体现了模块化设计的优越性。发编程深度实践：线程池技术的实际应用让我深刻认识到并发控制的复杂性。在处理多线程协作过程中，对死锁预防、竞态条件避免等问题的探索，强化了我对同步机制与线程安全策略的理解与应用能力。网络特性深刻理解：模拟丢包与延迟功能的开发，使我直观感受到网络环境的不确定性。这一经历强调了在网络编程中充分考虑网络波动、设计弹性应对方案的重要性。测试调试能力进阶：通过在不同网络场景下的测试与调试，熟练掌握了日志记录、性能分析等工具的使用方法。这些实践经验有效提升了系统性能优化与故障排查的能力。";
+//   const createEventSource = () => {
+//     // 重置状态
+//     aiText.value = "";
+//     isAISummaryLoading.value = true;
 
-const aiText = ref("");
-const isAISummaryLoading = ref(true);
+//     // 获取SSE连接URL
+//     const sseUrl = generateSummary(documentText);
+
+//     // 创建 EventSource 实例
+//     eventSource = new EventSource(sseUrl);
+
+//     // 监听消息
+//     eventSource.onmessage = (event) => {
+//       const content = event.data;
+//       if (content) {
+//         aiText.value += content;
+//         isAISummaryLoading.value = false;
+//       }
+//     };
+
+//     // 监听错误
+//     eventSource.onerror = (error) => {
+//       console.error("SSE连接错误:", error);
+//       if (eventSource) {
+//         eventSource.close();
+//         eventSource = null;
+//       }
+
+//       // 如果还有重试次数，则重试
+//       // if (retryCount < maxRetries) {
+//       //   console.log(`尝试重新连接 (${retryCount + 1}/${maxRetries})`);
+//       //   retryCount++;
+//       //   setTimeout(createEventSource, 1000 * retryCount); // 递增重试延迟
+//       // } else {
+//       //   isAISummaryLoading.value = false;
+//       //   ElMessage.error("摘要生成失败，请稍后重试");
+//       // }
+//     };
+
+//     // 监听关闭事件
+//     eventSource.addEventListener("close", () => {
+//       console.log("SSE连接已关闭");
+//       if (eventSource) {
+//         eventSource.close();
+//         eventSource = null;
+//       }
+//     });
+//   };
+
+//   try {
+//     createEventSource();
+//   } catch (error) {
+//     console.error("摘要生成失败：", error);
+//     isAISummaryLoading.value = false;
+//     ElMessage.error("摘要生成失败");
+//   }
+// };
+
 const handleAIClick = () => {
   aiClick.value = true;
 
@@ -439,16 +486,45 @@ const handleAIClick = () => {
   // 调用AI摘要功能
   aiClickSummary(editorContent);
 };
+
+// !!!使用fetch处理SSE流式响应
 const aiClickSummary = async (documentText: string) => {
   console.log("点击AI总结，开始生成摘要", documentText);
+
+  // 重置状态
+  aiText.value = "";
+  isAISummaryLoading.value = true;
+
+  // 存储取消函数
+  let cancelRequest: (() => void) | null = null;
+
   try {
-    const response = await generateSummary(documentText);
-    const summary = response.data.summary || "";
-    aiText.value = summary;
-    console.log("文档摘要：", summary);
-    isAISummaryLoading.value = false;
+    // 使用新的generateSummary函数
+    cancelRequest = generateSummary(
+      documentText,
+      // onData: 处理每个数据块
+      (chunk: string) => {
+        console.log("收到数据块:", chunk);
+        aiText.value += chunk;
+        isAISummaryLoading.value = false;
+      },
+      // onComplete: 完成回调
+      () => {
+        console.log("AI摘要生成完成");
+        isAISummaryLoading.value = false;
+        ElMessage.success("摘要生成完成");
+      },
+      // onError: 错误处理
+      (error: Error) => {
+        console.error("AI摘要生成失败:", error);
+        isAISummaryLoading.value = false;
+        ElMessage.error(`摘要生成失败: ${error.message}`);
+      }
+    );
   } catch (error) {
     console.error("摘要生成失败：", error);
+    isAISummaryLoading.value = false;
+    ElMessage.error("摘要生成失败");
   }
 };
 
