@@ -229,14 +229,14 @@
             </button>
             <template #dropdown>
               <el-dropdown-menu>
-                <el-dropdown-item @click="saveText">导出为pdf</el-dropdown-item>
-                <el-dropdown-item @click="uploadDocx">
-              导入docx<input
-                type="file"
-                @change="handleWordUpload"
-                ref="uploadFile"
-                style="display: none"
-              />
+                <el-dropdown-item @click="exportPdf">导出为pdf</el-dropdown-item>
+                <el-dropdown-item @click="uploadDocx">导入docx
+                  <input
+                  type="file"
+                  @change="handleWordUpload"
+                  ref="uploadFile"
+                  style="display: none"
+                  />
                 </el-dropdown-item>
               </el-dropdown-menu>
             </template>
@@ -248,17 +248,11 @@
             @close="closeSearchPanel"
           />
         </div>
-        <editor-content
-          v-if="showEditorContent"
-          :editor="editor"
-          class="editor-content"
-          @click="getComment"
-        />
-      </div>
+    </div>
 </template>
 
 <script setup lang="ts">
-import { ListItem } from "@tiptap/extension-list-item";
+/* import { ListItem } from "@tiptap/extension-list-item";
 import { TextStyle } from "@tiptap/extension-text-style";
 import { Color } from "@tiptap/extension-color";
 import StarterKit from "@tiptap/starter-kit";
@@ -267,8 +261,8 @@ import TextAlign from "@tiptap/extension-text-align";
 import Link from "@tiptap/extension-link";
 import Underline from "@tiptap/extension-underline";
 import { Comment } from "../utils/comment-extension";
-import { Search } from "../utils/search-extension";
-import { useEditor, EditorContent, Editor as EditorType } from "@tiptap/vue-3";
+import { Search } from "../utils/search-extension"; */
+import { Editor as EditorType } from "@tiptap/vue-3";
 import { onBeforeUnmount, ref, computed, onMounted } from "vue";
 import type { ComputedRef } from "vue";
 import { nanoid } from "nanoid";
@@ -283,7 +277,6 @@ import SearchPanel from "./SearchPanel.vue";
 // Props 类型声明
 interface EditorProps {
   externalEditor?: EditorType | null;
-  showEditorContent?: boolean;
 }
 
 // 创建立即执行的防抖函数（等待 5s）
@@ -312,11 +305,11 @@ const fontColors = ref<string[]>([
 const uploadFile = ref<HTMLInputElement | null>(null);
 
 // 搜索相关状态
-const showSearchPanel = ref(false)
+const showSearchPanel = ref<boolean>(false)
 
 let selectedRange: { from: number; to: number } | null = null;
 
-const internalEditor = useEditor({
+/* const internalEditor = useEditor({
   extensions: [
     Color.configure({ types: [TextStyle.name, ListItem.name] }),
     TextStyle,
@@ -335,11 +328,11 @@ const internalEditor = useEditor({
     }),
   ],
   content: ``,
-});
+}); */
 
 // 计算属性决定使用哪个编辑器实例
 const editor: ComputedRef<EditorType | null> = computed(() => {
-  return props.externalEditor ?? internalEditor.value ?? null;
+  return props.externalEditor ?? null;
 });
 
 
@@ -362,10 +355,11 @@ const setLink = () => {
 };
 
 // 搜索相关方法
+// 打开搜索面板
 const openSearchPanel = () => {
   showSearchPanel.value = true
 }
-
+// 关闭搜索面板
 const closeSearchPanel = () => {
   showSearchPanel.value = false
 }
@@ -384,13 +378,15 @@ onMounted(() => {
   window.addEventListener("keydown", handleKeydown)
 })
 
-const saveText = () => {
+// 导出pdf
+const exportPdf = () => {
   debouncedSubmit({
     element: document.querySelector(".tiptap") as HTMLElement,
     filename: "xxx.pdf",
   });
 };
 
+//上传docx文档
 const handleWordUpload = async (event: Event) => {
   const input = event.target as HTMLInputElement;
   const file = input.files?.[0];
@@ -422,6 +418,7 @@ const handleWordUpload = async (event: Event) => {
   }
 };
 
+// 模拟点击
 const uploadDocx = () => {
   uploadFile.value?.click();
 };
@@ -483,6 +480,7 @@ const confirmComment = () => {
     id: text_id || nanoid(),
   };
   editor.value?.chain().focus().setMark("comment", attributes).run();
+  //保存评论接口
   selectedRange = null;
 };
 
@@ -494,23 +492,12 @@ EventBus.on("confirmComment", (val) => {
   }
 });
 
-// 获取评论
-const getComment = (event: MouseEvent) => {
-  const target = event.target as HTMLElement;
-  if (!target.classList.contains("tiptap-comment")) return;
-  const textId = target.getAttribute("id");
-  EventBus.emit("getComment", {
-    text_id: textId,
-  });
-};
-
 // 删除当前选中范围的评论
 const removeComment = () => {
   const { from, to } = editor.value!.state.selection;
   if (from === to) {
     editor.value?.chain().focus().unsetMark("comment").run();
   } else {
-    // @ts-ignore
     ElMessage.info("请在评论区中选择自己所写评论删除噢~");
   }
 };
@@ -520,6 +507,8 @@ onBeforeUnmount(() => {
   EventBus.all.clear();
   window.removeEventListener("keydown", handleKeydown)
 });
+
+
 </script>
 
 <style lang="scss">
