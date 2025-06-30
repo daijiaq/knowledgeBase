@@ -214,6 +214,15 @@
               </el-dropdown-menu>
             </template>
           </el-dropdown>
+          
+          <!-- 搜索按钮 -->
+          <button
+            @click="openSearchPanel"
+            :class="{ 'is-active': showSearchPanel }"
+          >
+          <el-icon size="16" style="padding-top: 6px"><ZoomIn /></el-icon>
+          </button>
+          
           <el-dropdown placement="top-end" size="small">
             <button>
               <el-icon size="18" style="padding-top: 6px"><MoreFilled /></el-icon>
@@ -232,63 +241,13 @@
               </el-dropdown-menu>
             </template>
           </el-dropdown>
+          <!-- 搜索面板 -->
+          <SearchPanel 
+            :visible="showSearchPanel"
+            :editor="editor"
+            @close="closeSearchPanel"
+          />
         </div>
-    <!-- 搜索面板 -->
-    <div v-if="showSearchPanel" class="search-panel">
-      <div class="search-input-group">
-        <input
-          type="text"
-          v-model="searchText"
-          placeholder="输入搜索内容（Ctrl+F）"
-          @keyup.enter="handleSearch"
-          @keyup.esc="closeSearchPanel"
-          ref="searchInput"
-          class="search-input"
-        />
-        <div class="search-options">
-          <label>
-            <input type="checkbox" v-model="searchOptions.caseSensitive" />
-            区分大小写
-          </label>
-          <label>
-            <input type="checkbox" v-model="searchOptions.wholeWord" />
-            全词匹配
-          </label>
-        </div>
-      </div>
-      <div class="search-controls">
-        <button @click="handleSearch" class="search-btn">
-          <span class="iconfont icon-search"></span>
-          搜索
-        </button>
-        <button @click="testSearch" class="test-btn">
-          测试搜索
-        </button>
-        <button @click="prevMatch" :disabled="!hasMatches" class="nav-btn">
-          <span class="iconfont icon-arrow-up"></span>
-          上一个
-        </button>
-        <button @click="nextMatch" :disabled="!hasMatches" class="nav-btn">
-          <span class="iconfont icon-arrow-down"></span>
-          下一个
-        </button>
-        <button @click="closeSearchPanel" class="close-btn">
-          <span class="iconfont icon-close"></span>
-        </button>
-      </div>
-      <div v-if="hasMatches" class="search-results">
-        找到 {{ matchCount }} 个匹配项
-        <span v-if="currentMatchIndex >= 0">
-          ({{ currentMatchIndex + 1 }}/{{ matchCount }})
-        </span>
-      </div>
-      <div
-        v-else-if="searchText && !isSearching"
-        class="search-results no-results"
-      >
-        未找到匹配项
-      </div>
-      </div>
         <editor-content
           v-if="showEditorContent"
           :editor="editor"
@@ -310,15 +269,16 @@ import Underline from "@tiptap/extension-underline";
 import { Comment } from "../utils/comment-extension";
 import { Search } from "../utils/search-extension";
 import { useEditor, EditorContent, Editor as EditorType } from "@tiptap/vue-3";
-import { onBeforeUnmount, ref, computed } from "vue";
+import { onBeforeUnmount, ref, computed, onMounted } from "vue";
 import type { ComputedRef } from "vue";
 import { nanoid } from "nanoid";
-import { ChatSquare, MoreFilled } from "@element-plus/icons-vue";
+import { ChatSquare, MoreFilled,ZoomIn } from "@element-plus/icons-vue";
 import EventBus from "../utils/event-bus";
 import { generatePDF } from "../utils/export-pdf";
 import { debounce } from "../utils/debounce";
 import * as mammoth from "mammoth";
 import { ElMessage } from "element-plus";
+import SearchPanel from "./SearchPanel.vue";
 
 // Props 类型声明
 interface EditorProps {
@@ -351,18 +311,8 @@ const fontColors = ref<string[]>([
 
 const uploadFile = ref<HTMLInputElement | null>(null);
 
-const searchText = ref<string>("");
-const showSearchPanel = ref<boolean>(false);
-const searchInput = ref<HTMLInputElement | null>(null);
-const isSearching = ref<boolean>(false);
-const matchCount = ref<number>(0);
-const currentMatchIndex = ref<number>(-1);
-const hasMatches = ref<boolean>(false);
-
-const searchOptions = ref({
-  caseSensitive: false,
-  wholeWord: false,
-});
+// 搜索相关状态
+const showSearchPanel = ref(false)
 
 let selectedRange: { from: number; to: number } | null = null;
 
@@ -377,25 +327,21 @@ const internalEditor = useEditor({
     Underline,
     Comment,
     Search.configure({
-      highlightClass: "search-highlight", // 高亮背景色（可自定义CSS）
+      highlightClass: "search-highlight",
+      currentHighlightClass: "search-highlight-current",
       caseSensitive: false,
+      wholeWord: false,
+      regex: false,
     }),
   ],
-  content: `
-    <h1>测试文档</h1>
-    <p>这是一个测试文档，用于测试搜索功能。</p>
-    <p>文档中包含多个段落，每个段落都有不同的内容。</p>
-    <p>搜索功能应该能够找到文档中的任何文本。</p>
-    <h2>搜索测试</h2>
-    <p>这里有一些重复的词语：测试、文档、功能、搜索。</p>
-    <p>你可以尝试搜索这些词语来测试功能。</p>
-  `,
+  content: ``,
 });
 
 // 计算属性决定使用哪个编辑器实例
 const editor: ComputedRef<EditorType | null> = computed(() => {
   return props.externalEditor ?? internalEditor.value ?? null;
 });
+
 
 // 建立链接
 const setLink = () => {
@@ -417,120 +363,16 @@ const setLink = () => {
     .run();
 };
 
-// 测试搜索功能
-const testSearch = () => {
-  console.log('Editor - 开始测试搜索');
-  
-  // 设置测试搜索文本
-  searchText.value = '测试';
-  
-  // 检查编辑器状态
-  console.log('Editor - 编辑器状态检查:');
-  console.log('- 编辑器实例:', editor.value);
-  console.log('- 编辑器内容:', editor.value?.getHTML());
-  console.log('- 编辑器JSON:', editor.value?.getJSON());
-  console.log('- 搜索扩展:', (editor.value as any).search);
-  
-  // 执行搜索
-  if (editor.value && (editor.value as any).search?.search) {
-    console.log('Editor - 执行测试搜索');
-    (editor.value as any).search.search('测试', { caseSensitive: false, wholeWord: false });
-  } else {
-    console.error('Editor - 搜索功能不可用');
-  }
-};
-
-// 触发搜索
-const handleSearch = () => {
-  console.log('Editor - 开始搜索:', { searchText: searchText.value, options: searchOptions.value });
-  
-  if (editor.value && searchText.value.trim()) {
-    isSearching.value = true;
-    console.log('Editor - 编辑器实例:', editor.value);
-    console.log('Editor - 搜索扩展:', (editor.value as any).search);
-    
-    // 直接调用搜索方法
-    if ((editor.value as any).search?.search) {
-      console.log('Editor - 调用搜索方法');
-      (editor.value as any).search.search(searchText.value, searchOptions.value);
-    } else {
-      console.error('Editor - 搜索方法不存在');
-    }
-  } else if (!searchText.value.trim()) {
-    console.log('Editor - 搜索文本为空，清除搜索');
-    clearSearch();
-  } else {
-    console.error('Editor - 编辑器实例不存在');
-  }
-};
-
-// 清除搜索
-const clearSearch = () => {
-  if (editor.value) {
-    (editor.value as any).search?.clearSearch();
-  }
-  searchText.value = "";
-  matchCount.value = 0;
-  currentMatchIndex.value = -1;
-  hasMatches.value = false;
-  isSearching.value = false;
-};
-
-// 下一个匹配项
-const nextMatch = () => {
-  if (editor.value) {
-    (editor.value as any).search?.nextMatch();
-    // 更新当前索引
-    currentMatchIndex.value =
-      (editor.value as any).search?.getCurrentMatchIndex() || -1;
-  }
-};
-
-// 上一个匹配项
-const prevMatch = () => {
-  if (editor.value) {
-    (editor.value as any).search?.prevMatch();
-    // 更新当前索引
-    currentMatchIndex.value =
-      (editor.value as any).search?.getCurrentMatchIndex() || -1;
-  }
-};
-
-// 打开搜索面板
+// 搜索相关方法
 const openSearchPanel = () => {
-  showSearchPanel.value = true;
-  // 延迟聚焦到搜索输入框
-  setTimeout(() => {
-    searchInput.value?.focus();
-  }, 100);
-};
+  showSearchPanel.value = true
+}
 
-// 关闭搜索面板
 const closeSearchPanel = () => {
-  showSearchPanel.value = false;
-  clearSearch();
-};
+  showSearchPanel.value = false
+}
 
-// 监听搜索事件
-EventBus.on("search:result", (data: any) => {
-  console.log('Editor - 收到搜索结果事件:', data);
-  const matches = data.detail || [];
-  matchCount.value = matches.length;
-  hasMatches.value = matches.length > 0;
-  currentMatchIndex.value = -1;
-  isSearching.value = false;
-  console.log('Editor - 更新搜索状态:', { matchCount: matchCount.value, hasMatches: hasMatches.value });
-});
-
-EventBus.on("search:clear", () => {
-  console.log('Editor - 收到清除搜索事件');
-  matchCount.value = 0;
-  currentMatchIndex.value = -1;
-  hasMatches.value = false;
-  isSearching.value = false;
-});
-
-// 监听键盘快捷键
+// 键盘快捷键处理
 const handleKeydown = (event: KeyboardEvent) => {
   if (event.ctrlKey || event.metaKey) {
     if (event.key === "f") {
@@ -745,10 +587,20 @@ onBeforeUnmount(() => {
     }
   }
   text-align: center;
+  position: relative;
 }
 /* Basic editor styles */
 .tiptap {
   outline: none;
+  h1{
+    font-size: 30px;
+  }
+  hr{
+    margin: 15px 0;
+  }
+  li{
+    margin-left: 20px;
+  }
   code {
     font-family: "Consolas", monospace; /* 等宽字体 */
     background-color: #e0e0e0;
@@ -804,119 +656,6 @@ onBeforeUnmount(() => {
   // margin-top: 20px;
   height: 200px;
   padding: 5px;
-}
-
-/* 搜索面板样式 */
-.search-panel {
-  position: sticky;
-  top: 0;
-  background: #ffffff;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  padding: 12px;
-  margin: 10px 0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  z-index: 1000;
-}
-
-.search-input-group {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 8px;
-}
-
-.search-input {
-  flex: 1;
-  padding: 8px 12px;
-  border: 1px solid #d0d0d0;
-  border-radius: 4px;
-  font-size: 14px;
-  outline: none;
-  transition: border-color 0.2s;
-}
-
-.search-input:focus {
-  border-color: #958df1;
-  box-shadow: 0 0 0 2px rgba(149, 141, 241, 0.2);
-}
-
-.search-options {
-  display: flex;
-  gap: 16px;
-  font-size: 12px;
-  color: #666;
-}
-
-.search-options label {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  cursor: pointer;
-}
-
-.search-options input[type="checkbox"] {
-  margin: 0;
-}
-
-.search-controls {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.search-btn, .nav-btn, .close-btn, .test-btn {
-  padding: 6px 12px;
-  border: 1px solid #d0d0d0;
-  border-radius: 4px;
-  background: #ffffff;
-  cursor: pointer;
-  font-size: 12px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  transition: all 0.2s;
-}
-
-.search-btn:hover, .nav-btn:hover, .test-btn:hover {
-  background: #f5f5f5;
-  border-color: #b0b0b0;
-}
-
-.search-btn:disabled, .nav-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.test-btn {
-  background: #e3f2fd;
-  border-color: #2196f3;
-  color: #1976d2;
-}
-
-.test-btn:hover {
-  background: #bbdefb;
-  border-color: #1976d2;
-}
-
-.close-btn {
-  padding: 6px;
-  color: #999;
-}
-
-.close-btn:hover {
-  background: #f5f5f5;
-  color: #666;
-}
-
-.search-results {
-  margin-top: 8px;
-  font-size: 12px;
-  color: #666;
-}
-
-.search-results.no-results {
-  color: #ff6b6b;
 }
 
 /* 搜索高亮样式 */

@@ -1,34 +1,96 @@
-// 自定义扩展
-import { Extension, Editor } from '@tiptap/core';
-import { Decoration, DecorationSet } from 'prosemirror-view';
-import { TextSelection,Plugin } from 'prosemirror-state';
-import EventBus from './event-bus' 
+import { Extension } from '@tiptap/core'
+import { Plugin, PluginKey } from '@tiptap/pm/state'
+import { Decoration, DecorationSet } from '@tiptap/pm/view'
+import { TextSelection } from '@tiptap/pm/state'
 
-interface Match {
-  from: number;
-  to: number;
+export interface SearchOptions {
+  highlightClass?: string
+  currentHighlightClass?: string
+  caseSensitive?: boolean
+  wholeWord?: boolean
+  regex?: boolean
 }
 
-interface SearchWorkerMessage {
-  requestId: number;
-  matches: Match[];
+interface SearchState {
+  query: string
+  matches: Array<{ from: number; to: number; text: string }>
+  currentIndex: number
+  options: SearchOptions
 }
 
-interface SearchOptions {
-  caseSensitive: boolean;
-  wholeWord: boolean;
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    search: {
+      /**
+       * 搜索文本
+       */
+      search: (query: string, options?: SearchOptions) => ReturnType
+      /**
+       * 清除搜索
+       */
+      clearSearch: () => ReturnType
+      /**
+       * 下一个匹配
+       */
+      nextMatch: () => ReturnType
+      /**
+       * 上一个匹配
+       */
+      prevMatch: () => ReturnType
+      /**
+       * 替换当前匹配
+       */
+      replaceCurrent: (replacement: string) => ReturnType
+      /**
+       * 替换所有匹配
+       */
+      replaceAll: (replacement: string) => ReturnType
+    }
+  }
 }
 
-interface SearchStorage {
-  matches: Match[];
-  currentIndex: number;
-  pendingRequest: number | null;
-  searchText: string;
+// 全局变量存储pluginKey
+let searchPluginKey: PluginKey | null = null
+
+// 辅助函数：查找匹配项
+function findMatches(doc: any, query: string, options: SearchOptions): Array<{ from: number; to: number; text: string }> {
+  const matches: Array<{ from: number; to: number; text: string }> = []
+  const { caseSensitive, wholeWord, regex } = options
+
+  if (!query.trim()) return matches
+
+  let searchRegex: RegExp
+  if (regex) {
+    try {
+      searchRegex = new RegExp(query, caseSensitive ? 'g' : 'gi')
+    } catch (e) {
+      return matches
+    }
+  } else {
+    const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const pattern = wholeWord ? `\\b${escapedQuery}\\b` : escapedQuery
+    searchRegex = new RegExp(pattern, caseSensitive ? 'g' : 'gi')
+  }
+
+  doc.descendants((node: any, pos: number) => {
+    if (node.isText) {
+      const text = node.text || ''
+      let match
+
+      while ((match = searchRegex.exec(text)) !== null) {
+        matches.push({
+          from: pos + match.index,
+          to: pos + match.index + match[0].length,
+          text: match[0],
+        })
+      }
+    }
+  })
+
+  return matches
 }
 
-
-let worker: Worker | null = null;
-export const Search = Extension.create({
+export const Search = Extension.create<SearchOptions>({
   name: 'search',
 
   addOptions() {
@@ -37,448 +99,208 @@ export const Search = Extension.create({
       currentHighlightClass: 'search-highlight-current',
       caseSensitive: false,
       wholeWord: false,
-    };
+      regex: false,
+    }
   },
 
-  // 类型声明
-  storage: {} as SearchStorage,
-  editor: null as Editor | null,
+  addCommands() {
+    return {
+      search: (query: string, options: SearchOptions = {}) => ({ tr, dispatch, state, commands }) => {
+        if (!query.trim()) {
+          return commands.clearSearch()
+        }
 
-   // 初始化时添加状态存储（用于记录匹配结果和当前索引）
-  addStorage() {
-    return {
-      matches: [], // 所有匹配项的位置信息（格式：{ from: number, to: number }[]）
-      currentIndex: -1, // 当前选中的匹配项索引
-      pendingRequest: null,
-      searchText: '',
-    };
-  },
-  
-  // 添加键盘快捷方式（可选：如 Ctrl+F 触发搜索面板）
-  addKeyboardShortcuts() {
-    return {
-      'Mod-F': () => {
-        window.dispatchEvent(new CustomEvent('search:open')); // 触发自定义事件，打开搜索面板
-        return true;
-      },
-      'Mod-G': () => {
-        (this as any).nextMatch();
-        return true;
-      },
-      'Mod-Shift-G': () => {
-        (this as any).prevMatch();
-        return true;
-      },
-      'Escape': () => {
-        (this as any).clearSearch();
-        return true;
-      },
-    };
-  },
-  
-  onCreate() {
-    if (!worker) {
-      worker = new Worker(new URL('./search-worker.js', import.meta.url), { type: 'module' });
-      worker.onmessage = (e: MessageEvent<SearchWorkerMessage>) => {
-        const { requestId, matches } = e.data;
-        // console.log('主线程收到 worker 匹配结果:', matches);
-        console.log('搜索扩展 - 收到Worker响应:', { requestId, matches, pendingRequest: this.storage.pendingRequest });
+        const searchOptions = { ...this.options, ...options }
+        const matches = findMatches(state.doc, query, searchOptions)
         
-        if (requestId !== this.storage.pendingRequest && this.storage.pendingRequest !== null) {
-          console.log(requestId,this.storage.pendingRequest);
-          
-          console.log('搜索扩展 - 请求ID不匹配，忽略响应');
-          return;
+        if (dispatch && searchPluginKey) {
+          tr.setMeta(searchPluginKey, { type: 'search', query, matches, options: searchOptions })
         }
         
-        this.storage.matches = matches;
-        this.storage.currentIndex = -1;
-        console.log('搜索扩展 - 更新存储:', { matches: this.storage.matches, currentIndex: this.storage.currentIndex });
-        
-        this.editor?.view.dispatch(this.editor.state.tr); // 触发视图更新
-        // 如需通知外部，请用事件总线或回调，不要用 this.editor.emit
-        // 例如：window.dispatchEvent(new CustomEvent('search:results', { detail: matches }));
-        console.log('搜索扩展 - 发送搜索结果事件:', matches);
-        EventBus.emit('search:result', { detail: matches });
-      };
-    }
+        return true
+      },
 
-    // Store the worker in a variable outside the extension instance
-    this.storage = {
-      matches: [],
-      currentIndex: -1,
-      pendingRequest: null,
-      searchText: '',
-    };
-  
-    console.log('搜索扩展 - onCreate 被调用');
-    console.log('搜索扩展 - 编辑器实例:', this.editor);
-  
-    // 将搜索方法暴露给editor实例
-    if (this.editor) {
-      console.log('搜索扩展 - 暴露搜索方法给编辑器');
-      const extension = this;
-      (this.editor as any).search = {
-        search: (text: string, options?: Partial<SearchOptions>) => {
-          console.log('搜索扩展 - 通过编辑器调用搜索:', text);
-          
-          if (!text) {
-            extension.storage.matches = [];
-            extension.storage.currentIndex = -1;
-            extension.storage.searchText = '';
-            extension.storage.pendingRequest = null;
-            extension.editor?.view.dispatch(extension.editor.state.tr);
-            EventBus.emit('search:clear');
-            return;
+      clearSearch: () => ({ tr, dispatch }) => {
+        if (dispatch && searchPluginKey) {
+          tr.setMeta(searchPluginKey, { type: 'clear' })
+        }
+        return true
+      },
+
+      nextMatch: () => ({ tr, dispatch, state }) => {
+        if (!searchPluginKey) return false
+        
+        const searchState = searchPluginKey.getState(state) as SearchState
+        if (!searchState || !searchState.matches.length) return false
+
+        const nextIndex = searchState.currentIndex + 1 >= searchState.matches.length 
+          ? 0 
+          : searchState.currentIndex + 1
+
+        if (dispatch) {
+          tr.setMeta(searchPluginKey, { type: 'navigate', index: nextIndex })
+        }
+        return true
+      },
+
+      prevMatch: () => ({ tr, dispatch, state }) => {
+        if (!searchPluginKey) return false
+        
+        const searchState = searchPluginKey.getState(state) as SearchState
+        if (!searchState || !searchState.matches.length) return false
+
+        const prevIndex = searchState.currentIndex - 1 < 0 
+          ? searchState.matches.length - 1 
+          : searchState.currentIndex - 1
+
+        if (dispatch) {
+          tr.setMeta(searchPluginKey, { type: 'navigate', index: prevIndex })
+        }
+        return true
+      },
+
+      replaceCurrent: (replacement: string) => ({ tr, dispatch, state }) => {
+        if (!searchPluginKey) return false
+        
+        const searchState = searchPluginKey.getState(state) as SearchState
+        if (!searchState || searchState.currentIndex < 0) return false
+
+        const match = searchState.matches[searchState.currentIndex]
+        if (!match) return false
+
+        if (dispatch) {
+          tr.replaceWith(match.from, match.to, state.schema.text(replacement))
+          tr.setSelection(TextSelection.create(tr.doc, match.from, match.from + replacement.length))
+        }
+        return true
+      },
+
+      replaceAll: (replacement: string) => ({ tr, dispatch, state }) => {
+        if (!searchPluginKey) return false
+        
+        const searchState = searchPluginKey.getState(state) as SearchState
+        if (!searchState || !searchState.matches.length) return false
+
+        if (dispatch) {
+          // 从后往前替换，避免位置偏移
+          for (let i = searchState.matches.length - 1; i >= 0; i--) {
+            const match = searchState.matches[i]
+            tr.replaceWith(match.from, match.to, state.schema.text(replacement))
           }
-          
-          extension.storage.searchText = text;
-          console.log('搜索扩展 - 搜索文本:', text);
-          console.log('搜索扩展 - 选项:', options);
-          
-          const requestId = Date.now();
-          extension.storage.pendingRequest = requestId;
-          const docJson = extension.editor?.getJSON();
-          
-          console.log('搜索扩展 - 编辑器实例:', extension.editor);
-          console.log('搜索扩展 - 文档JSON:', docJson);
-          console.log('搜索扩展 - 文档类型:', typeof docJson);
-          console.log('搜索扩展 - 文档内容:', JSON.stringify(docJson, null, 2));
-          
-          if (!docJson) {
-           
-            return;
-          }
-          
-          // 检查文档是否有内容
-          if (!docJson.content || !Array.isArray(docJson.content) || docJson.content.length === 0) {
-            console.warn('搜索扩展 - 文档内容为空');
-            return;
-          }
-          
-          const message = {
-            requestId,
-            doc: docJson,
-            text,
-            options: {
-              caseSensitive: options?.caseSensitive ?? extension.options.caseSensitive,
-              wholeWord: options?.wholeWord ?? extension.options.wholeWord,
-            } as SearchOptions,
-          };
-          
-          console.log('搜索扩展 - 发送消息给Worker:', message);
-          
-          (worker as Worker | null)?.postMessage(message);
-        },
-        clearSearch: () => {
-          console.log('搜索扩展 - 通过编辑器调用清除搜索');
-          extension.storage.matches = [];
-          extension.storage.currentIndex = -1;
-          extension.storage.searchText = '';
-          extension.storage.pendingRequest = null;
-          extension.editor?.view.dispatch(extension.editor.state.tr);
-          EventBus.emit('search:clear');
-        },
-        nextMatch: () => {
-          console.log('搜索扩展 - 通过编辑器调用下一个匹配');
-          const { matches, currentIndex } = extension.storage;
-          if (!matches || matches.length === 0) return;
-          const nextIndex = currentIndex + 1 >= matches.length ? 0 : currentIndex + 1;
-          
-          if (nextIndex < 0 || nextIndex >= matches.length) return;
-          const { from, to } = matches[nextIndex];
-          extension.storage.currentIndex = nextIndex;
-          if (extension.editor) {
-            const { state, view } = extension.editor;
-            const tr = state.tr.setSelection(TextSelection.create(state.doc, from, to));
-            view.dispatch(tr);
-            view.focus();
-            // 滚动到匹配位置
-            const dom = view.nodeDOM(from) as HTMLElement;
-            if (dom) {
-              dom.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-          }
-        },
-        prevMatch: () => {
-          console.log('搜索扩展 - 通过编辑器调用上一个匹配');
-          const { matches, currentIndex } = extension.storage;
-          if (!matches || matches.length === 0) return;
-          const prevIndex = currentIndex - 1 < 0 ? matches.length - 1 : currentIndex - 1;
-          
-          if (prevIndex < 0 || prevIndex >= matches.length) return;
-          const { from, to } = matches[prevIndex];
-          extension.storage.currentIndex = prevIndex;
-          if (extension.editor) {
-            const { state, view } = extension.editor;
-            const tr = state.tr.setSelection(TextSelection.create(state.doc, from, to));
-            view.dispatch(tr);
-            view.focus();
-            // 滚动到匹配位置
-            const dom = view.nodeDOM(from) as HTMLElement;
-            if (dom) {
-              dom.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-          }
-        },
-        getMatchCount: () => extension.storage.matches.length,
-        getCurrentMatchIndex: () => extension.storage.currentIndex,
-        getSearchText: () => extension.storage.searchText,
-        hasMatches: () => extension.storage.matches.length > 0,
-      };
-    } else {
-      console.warn('搜索扩展 - 编辑器实例不存在，无法暴露方法');
+        }
+        return true
+      },
     }
-  
-    // console.log(this.editor)
-    
-  },
-  
-  onUpdate() {
-    // 确保搜索方法始终可用
-    console.log('搜索扩展 - onUpdate 被调用');
-    if (this.editor) {
-      console.log('搜索扩展 - 重新暴露搜索方法给编辑器');
-      const extension = this;
-      (this.editor as any).search = {
-        search: (text: string, options?: Partial<SearchOptions>) => {
-          console.log('搜索扩展 - 通过编辑器调用搜索:', text);
-          
-          if (!text) {
-            extension.storage.matches = [];
-            extension.storage.currentIndex = -1;
-            extension.storage.searchText = '';
-            extension.storage.pendingRequest = null;
-            extension.editor?.view.dispatch(extension.editor.state.tr);
-            EventBus.emit('search:clear');
-            return;
-          }
-          
-          extension.storage.searchText = text;
-          console.log('搜索扩展 - 搜索文本:', text);
-          console.log('搜索扩展 - 选项:', options);
-          
-          const requestId = Date.now();
-          extension.storage.pendingRequest = requestId;
-          const docJson = extension.editor?.getJSON();
-          
-          console.log('搜索扩展 - 编辑器实例:', extension.editor);
-          console.log('搜索扩展 - 文档JSON:', docJson);
-          console.log('搜索扩展 - 文档类型:', typeof docJson);
-          console.log('搜索扩展 - 文档内容:', JSON.stringify(docJson, null, 2));
-          
-          if (!docJson) {
-            console.warn('搜索扩展 - 文档为空，无法搜索');
-            return;
-          }
-          
-          // 检查文档是否有内容
-          if (!docJson.content || !Array.isArray(docJson.content) || docJson.content.length === 0) {
-            console.warn('搜索扩展 - 文档内容为空');
-            return;
-          }
-          
-          const message = {
-            requestId,
-            doc: docJson,
-            text,
-            options: {
-              caseSensitive: options?.caseSensitive ?? extension.options.caseSensitive,
-              wholeWord: options?.wholeWord ?? extension.options.wholeWord,
-            } as SearchOptions,
-          };
-          
-          console.log('搜索扩展 - 发送消息给Worker:', message);
-          
-          (worker as Worker | null)?.postMessage(message);
-        },
-        clearSearch: () => {
-          console.log('搜索扩展 - 通过编辑器调用清除搜索');
-          extension.storage.matches = [];
-          extension.storage.currentIndex = -1;
-          extension.storage.searchText = '';
-          extension.storage.pendingRequest = null;
-          extension.editor?.view.dispatch(extension.editor.state.tr);
-          EventBus.emit('search:clear');
-        },
-        nextMatch: () => {
-          console.log('搜索扩展 - 通过编辑器调用下一个匹配');
-          const { matches, currentIndex } = extension.storage;
-          if (!matches || matches.length === 0) return;
-          const nextIndex = currentIndex + 1 >= matches.length ? 0 : currentIndex + 1;
-          
-          if (nextIndex < 0 || nextIndex >= matches.length) return;
-          const { from, to } = matches[nextIndex];
-          extension.storage.currentIndex = nextIndex;
-          if (extension.editor) {
-            const { state, view } = extension.editor;
-            const tr = state.tr.setSelection(TextSelection.create(state.doc, from, to));
-            view.dispatch(tr);
-            view.focus();
-            // 滚动到匹配位置
-            const dom = view.nodeDOM(from) as HTMLElement;
-            if (dom) {
-              dom.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-          }
-        },
-        prevMatch: () => {
-          console.log('搜索扩展 - 通过编辑器调用上一个匹配');
-          const { matches, currentIndex } = extension.storage;
-          if (!matches || matches.length === 0) return;
-          const prevIndex = currentIndex - 1 < 0 ? matches.length - 1 : currentIndex - 1;
-          
-          if (prevIndex < 0 || prevIndex >= matches.length) return;
-          const { from, to } = matches[prevIndex];
-          extension.storage.currentIndex = prevIndex;
-          if (extension.editor) {
-            const { state, view } = extension.editor;
-            const tr = state.tr.setSelection(TextSelection.create(state.doc, from, to));
-            view.dispatch(tr);
-            view.focus();
-            // 滚动到匹配位置
-            const dom = view.nodeDOM(from) as HTMLElement;
-            if (dom) {
-              dom.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-          }
-        },
-        getMatchCount: () => extension.storage.matches.length,
-        getCurrentMatchIndex: () => extension.storage.currentIndex,
-        getSearchText: () => extension.storage.searchText,
-        hasMatches: () => extension.storage.matches.length > 0,
-      };
-    } else {
-      console.warn('搜索扩展 - 编辑器实例不存在，无法暴露方法');
-    }
-  },
-  
-  onDestroy() {
-    (worker as Worker | null)?.terminate();
   },
 
   addProseMirrorPlugins() {
+    const pluginKey = new PluginKey('search')
+    searchPluginKey = pluginKey
+
     return [
       new Plugin({
+        key: pluginKey,
+        state: {
+          init(): SearchState {
+            return {
+              query: '',
+              matches: [],
+              currentIndex: -1,
+              options: {},
+            }
+          },
+          apply(tr, value: SearchState): SearchState {
+            const meta = tr.getMeta(pluginKey)
+            if (!meta) return value
+
+            switch (meta.type) {
+              case 'search':
+                return {
+                  query: meta.query,
+                  matches: meta.matches,
+                  currentIndex: meta.matches.length > 0 ? 0 : -1,
+                  options: meta.options,
+                }
+              case 'clear':
+                return {
+                  query: '',
+                  matches: [],
+                  currentIndex: -1,
+                  options: {},
+                }
+              case 'navigate':
+                return {
+                  ...value,
+                  currentIndex: meta.index,
+                }
+              default:
+                return value
+            }
+          },
+        },
         props: {
-          decorations: (state: any) => {
-            const { matches, currentIndex } = this.storage;
-            if (!matches || matches.length === 0) return null;
+          decorations(state) {
+            const searchState = pluginKey.getState(state) as SearchState
+            if (!searchState || !searchState.matches.length) return DecorationSet.empty
+
+            const decorations: Decoration[] = []
             
-            const decorations = matches.map((match: Match, index: number) => {
-              const className = index === currentIndex 
-                ? `${this.options.highlightClass} ${this.options.currentHighlightClass}`
-                : this.options.highlightClass;
-              return Decoration.inline(match.from, match.to, { class: className });
-            });
-            
-            return DecorationSet.create(state.doc, decorations);
+            searchState.matches.forEach((match, index) => {
+              const isCurrent = index === searchState.currentIndex
+              const className = isCurrent 
+                ? `${searchState.options.highlightClass} ${searchState.options.currentHighlightClass}`
+                : searchState.options.highlightClass
+
+              decorations.push(
+                Decoration.inline(match.from, match.to, {
+                  class: className,
+                })
+              )
+            })
+
+            return DecorationSet.create(state.doc, decorations)
           },
         },
       }),
-    ];
+    ]
   },
 
-  // 实际的搜索方法
-  performSearch(text: string, options?: Partial<SearchOptions>) {
-    if (!text) {
-      this.performClearSearch();
-      return;
-    }
-    
-    this.storage.searchText = text;
-    console.log('搜索扩展 - 搜索文本:', text);
-    console.log('搜索扩展 - 选项:', options);
-    
-    const requestId = Date.now();
-    this.storage.pendingRequest = requestId;
-    const docJson = this.editor?.getJSON();
-    
-    console.log('搜索扩展 - 编辑器实例:', this.editor);
-    console.log('搜索扩展 - 文档JSON:', docJson);
-    console.log('搜索扩展 - 文档类型:', typeof docJson);
-    console.log('搜索扩展 - 文档内容:', JSON.stringify(docJson, null, 2));
-    
-    if (!docJson) {
-      console.warn('搜索扩展 - 文档为空，无法搜索');
-      return;
-    }
-    
-    // 检查文档是否有内容
-    if (!docJson.content || !Array.isArray(docJson.content) || docJson.content.length === 0) {
-      console.warn('搜索扩展 - 文档内容为空');
-      return;
-    }
-    
-    const message = {
-      requestId,
-      doc: docJson,
-      text,
-      options: {
-        caseSensitive: options?.caseSensitive ?? this.options.caseSensitive,
-        wholeWord: options?.wholeWord ?? this.options.wholeWord,
-      } as SearchOptions,
-    };
-    
-    console.log('搜索扩展 - 发送消息给Worker:', message);
-    
-    (worker as Worker | null)?.postMessage(message);
-  },
+  addMethods() {
+    return {
+      getSearchState(): SearchState | null {
+        if (!searchPluginKey) return null
+        try {
+          return searchPluginKey.getState((this as any).editor?.state) as SearchState || null
+        } catch (error) {
+          console.warn('Failed to get search state:', error)
+          return null
+        }
+      },
 
-  performClearSearch() {
-    this.storage.matches = [];
-    this.storage.currentIndex = -1;
-    this.storage.searchText = '';
-    this.storage.pendingRequest = null;
-    this.editor?.view.dispatch(this.editor.state.tr);
-    EventBus.emit('search:clear');
-  },
+      getCurrentMatchIndex(): number {
+        const state = this.getSearchState()
+        return state?.currentIndex ?? -1
+      },
 
-  performNextMatch() {
-    const { matches, currentIndex } = this.storage;
-    if (!matches || matches.length === 0) return;
-    const nextIndex = currentIndex + 1 >= matches.length ? 0 : currentIndex + 1;
-    this.navigateToMatch(nextIndex);
-  },
+      getMatchCount(): number {
+        const state = this.getSearchState()
+        return state?.matches?.length ?? 0
+      },
 
-  performPrevMatch() {
-    const { matches, currentIndex } = this.storage;
-    if (!matches || matches.length === 0) return;
-    const prevIndex = currentIndex - 1 < 0 ? matches.length - 1 : currentIndex - 1;
-    this.navigateToMatch(prevIndex);
-  },
+      hasMatches(): boolean {
+        return this.getMatchCount() > 0
+      },
 
-  navigateToMatch(index: number) {
-    const { matches } = this.storage;
-    if (index < 0 || index >= matches.length) return;
-    const { from, to } = matches[index];
-    this.storage.currentIndex = index;
-    if (this.editor) {
-      const { state, view } = this.editor;
-      const tr = state.tr.setSelection(TextSelection.create(state.doc, from, to));
-      view.dispatch(tr);
-      view.focus();
-      // 滚动到匹配位置
-      const dom = view.nodeDOM(from) as HTMLElement;
-      if (dom) {
-        dom.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // 添加调试方法
+      debugSearchState(): void {
+        const state = this.getSearchState()
+        console.log('Debug search state:', state)
+        if (state) {
+          console.log('Matches:', state.matches)
+          console.log('Current index:', state.currentIndex)
+          console.log('Query:', state.query)
+        }
       }
     }
   },
-
-  getMatchCount(): number {
-    return this.storage.matches.length;
-  },
-
-  getCurrentMatchIndex(): number {
-    return this.storage.currentIndex;
-  },
-
-  getSearchText(): string {
-    return this.storage.searchText;
-  },
-
-  hasMatches(): boolean {
-    return this.storage.matches.length > 0;
-  },
-});
+}) 

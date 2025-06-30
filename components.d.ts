@@ -29,6 +29,8 @@ declare module 'vue' {
     ElMenuItem: typeof import('element-plus/es')['ElMenuItem']
     ElRadio: typeof import('element-plus/es')['ElRadio']
     ElRadioGroup: typeof import('element-plus/es')['ElRadioGroup']
+    ElSkeleton: typeof import('element-plus/es')['ElSkeleton']
+    ElSkeletonItem: typeof import('element-plus/es')['ElSkeletonItem']
     ElSubMenu: typeof import('element-plus/es')['ElSubMenu']
     FolderItem: typeof import('./src/components/FolderItem.vue')['default']
     KnowledgeBaseCard: typeof import('./src/components/knowledgeBaseCard.vue')['default']
@@ -36,5 +38,6 @@ declare module 'vue' {
     MoreActions: typeof import('./src/components/MoreActions.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    SearchPanel: typeof import('./src/components/SearchPanel.vue')['default']
   }
 }
