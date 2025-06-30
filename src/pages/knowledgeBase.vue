@@ -30,7 +30,7 @@ const { knowledgeBaseList } = storeToRefs(knowledgeBaseStore) as {
 const router = useRouter()
 const route = useRoute()
 const userStore = useUserStore()
-const username = localStorage.getItem("username") || "用户";
+const username = typeof window !== 'undefined' ? (localStorage.getItem("username") || "用户") : "用户";
 //当前打开的menu
 const activeMenu =ref(route.params.knowledgeBaseId)
 watch(()=>route.params.knowledgeBaseId,(newValue)=>{
@@ -49,7 +49,9 @@ const handleClose = () => {
 };
 
 const logOut = ()=>{
-  localStorage.removeItem("token")
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem("token")
+  }
   userStore.logined = false
   ElMessage.success("已退出登录")
   router.replace('/login')

@@ -114,9 +114,6 @@
             <template #dropdown>
               <el-dropdown-menu>
                 <el-dropdown-item @click="shareDoc">添加协作</el-dropdown-item>
-                <el-dropdown-item>导入文档</el-dropdown-item>
-                <el-dropdown-item>导出知识库</el-dropdown-item>
-                <el-dropdown-item>模板库</el-dropdown-item>
               </el-dropdown-menu>
             </template>
           </el-dropdown>
@@ -136,7 +133,7 @@
       <CollaborativeEditor/>
       <Comment />
     </template>
-    <!-- <div v-else style="width: 890px;padding: 20px;
+    <div v-else style="width: 890px;padding: 20px;
     border: 1px solid #e5e7eb;
     border-radius: 8px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -146,9 +143,7 @@
         <el-button @click="shareDoc">分享</el-button>
       </div>
       <p style="margin-top: 20px; font-size: 18px;">👋 欢迎来到知识库</p>
-    </div> -->
-    <CollaborativeEditor/>
-    <Comment/>
+    </div>
 
     <!-- 新建文档对话框 -->
     <el-dialog v-model="showNewDocDialog" title="新建文档" width="400px">
@@ -311,7 +306,9 @@ const getKBsContent = async()=>{
     ElMessage.error('无法获取知识库')
   }
 }
-getKBsContent()
+if (typeof window !== 'undefined') {
+  getKBsContent()
+}
 
 const filteredDocs = computed(() => {
   if (!searchQuery.value) return rootFolders.value;
