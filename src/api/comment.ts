@@ -1,6 +1,6 @@
 import request from '../utils/request'
 
-export const createCommentApi = (textNanoid:string,comment:string,userId:Number,documentId:Number) =>{
+export const createCommentApi = (textNanoid:string,comment:string,documentId:number): Promise<any> =>{
     return request({
         url:'/text-comments/add',
         method:'POST',
@@ -12,7 +12,7 @@ export const createCommentApi = (textNanoid:string,comment:string,userId:Number,
     })
 }
 
-export const removeCommentApi = (commentId:Number,textNanoid:Number) => {
+export const removeCommentApi = (commentId:number,textNanoid:number): Promise<any> => {
     return request({
         url: `/text-comments/${commentId}`,
         method:'DELETE',
@@ -22,7 +22,7 @@ export const removeCommentApi = (commentId:Number,textNanoid:Number) => {
     })
 }
 
-export const getCommentApi = (textNanoid:String) => {
+export const getCommentApi = (textNanoid:String): Promise<any> => {
     return request({
         url:`/text-comments/${textNanoid}`,
         method: 'GET',

@@ -273,10 +273,12 @@ import { debounce } from "../utils/debounce";
 import * as mammoth from "mammoth";
 import { ElMessage } from "element-plus";
 import SearchPanel from "./SearchPanel.vue";
+import { createCommentApi } from "../api/comment";
 
 // Props 类型声明
 interface EditorProps {
   externalEditor?: EditorType | null;
+  docId?:number;
 }
 
 // 创建立即执行的防抖函数（等待 5s）
@@ -372,14 +374,7 @@ const handleKeydown = (event: KeyboardEvent) => {
     if (event.key === "f") {
       event.preventDefault();
       openSearchPanel();
-    } else if (event.key === "g") {
-      event.preventDefault();
-      if (event.shiftKey) {
-        prevMatch();
-      } else {
-        nextMatch();
-      }
-    }
+    } 
   } else if (event.key === "Escape" && showSearchPanel.value) {
     closeSearchPanel();
   }
@@ -493,18 +488,25 @@ const addComment = () => {
 };
 
 // 确认评论（保存到编辑器）
-const confirmComment = () => {
+const confirmComment = async(comment:string) => {
   const attributes = {
     id: text_id || nanoid(),
   };
   editor.value?.chain().focus().setMark("comment", attributes).run();
   //保存评论接口
+  const res = await createCommentApi(attributes.id, comment, props.docId ?? 0);
+  if(res.code === 200){
+    ElMessage.success('评论成功');
+  }else{
+    ElMessage.error('评论失败');
+  }
   selectedRange = null;
 };
 
-EventBus.on("confirmComment", (val) => {
-  if (val as boolean) {
-    confirmComment();
+EventBus.on("confirmComment", (val: unknown) => {
+  const comment = val as string;
+  if (comment) {
+    confirmComment(comment);
   } else {
     selectedRange = null;
   }
