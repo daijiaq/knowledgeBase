@@ -346,8 +346,10 @@ const editor: ComputedRef<EditorType | null> = computed(() => {
 // 建立链接
 const setLink = () => {
   const previousUrl = editor.value?.getAttributes("link").href;
-  const url = window.prompt("URL", previousUrl);
-
+  let url = '';
+  if (typeof window !== 'undefined') {
+    url = window.prompt("URL", previousUrl) || '';
+  }
   if (url === null) return;
   if (url === "") {
     editor.value?.chain().focus().extendMarkRange("link").unsetLink().run();
@@ -372,23 +374,39 @@ const closeSearchPanel = () => {
 
 // 键盘快捷键处理
 const handleKeydown = (event: KeyboardEvent) => {
-  // 搜索快捷键
-  if ((event.ctrlKey || event.metaKey) && event.key === 'f') {
-      event.preventDefault()
-      openSearchPanel()
+  if (event.ctrlKey || event.metaKey) {
+    if (event.key === "f") {
+      event.preventDefault();
+      openSearchPanel();
+    } else if (event.key === "g") {
+      event.preventDefault();
+      if (event.shiftKey) {
+        prevMatch();
+      } else {
+        nextMatch();
+      }
+    }
+  } else if (event.key === "Escape" && showSearchPanel.value) {
+    closeSearchPanel();
   }
+};
+
+// 监听全局搜索打开事件
+if (typeof window !== 'undefined') {
+  window.addEventListener("search:open", () => {
+    openSearchPanel();
+  });
+  // 监听键盘事件
+  window.addEventListener("keydown", handleKeydown);
 }
 
-// 监听键盘事件
-onMounted(() => {
-  window.addEventListener("keydown", handleKeydown)
-})
-
 const saveText = () => {
-  debouncedSubmit({
-    element: document.querySelector(".tiptap") as HTMLElement,
-    filename: "xxx.pdf",
-  });
+  if (typeof document !== 'undefined') {
+    debouncedSubmit({
+      element: document.querySelector(".tiptap") as HTMLElement,
+      filename: "xxx.pdf",
+    });
+  }
 };
 
 const handleWordUpload = async (event: Event) => {
@@ -518,7 +536,11 @@ const removeComment = () => {
 onBeforeUnmount(() => {
   editor.value?.destroy();
   EventBus.all.clear();
-  window.removeEventListener("keydown", handleKeydown)
+  if (typeof window !== 'undefined') {
+    // 清理事件监听器
+    window.removeEventListener("keydown", handleKeydown);
+    window.removeEventListener("search:open", openSearchPanel);
+  }
 });
 </script>
 

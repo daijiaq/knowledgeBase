@@ -133,7 +133,7 @@ onMounted(async () => {
       </template>
       <template v-else>
         <knowledgeBaseCard
-          v-for="item in recentKBsList"
+          v-for="item in (recentKBsList || [])"
           :key="item.id"
           :title="item.name"
           :description="item.description"

@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vue-tsc -b && vite build",
-    "preview": "vite preview"
+    "build": "vite build",
+    "preview": "vite preview",
+    "build:ssr": "vite build --mode ssr"
   },
   "dependencies": {
     "@tiptap/extension-bullet-list": "^2.22.2",
@@ -26,11 +27,13 @@
     "axios": "^1.9.0",
     "dayjs": "^1.11.13",
     "element-plus": "^2.10.2",
+    "express": "^4.21.2",
     "html2canvas": "^1.4.1",
     "jspdf": "^3.0.1",
     "mammoth": "^1.9.1",
     "mitt": "^3.0.1",
     "openai": "^5.8.2",
+    "path-to-regexp": "^6.3.0",
     "pinia": "^3.0.3",
     "scss": "^0.2.4",
     "vue": "^3.5.13",
@@ -42,6 +45,7 @@
     "yjs": "^13.6.27"
   },
   "devDependencies": {
+    "@types/node": "^24.0.7",
     "@vitejs/plugin-vue": "^5.2.3",
     "@vue/tsconfig": "^0.7.0",
     "sass-embedded": "^1.89.2",

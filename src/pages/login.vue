@@ -302,9 +302,11 @@ const handleSubmit = async () => {
     if (isLogin.value) {
       // 登录
       const res = await userLogin(formData.email, formData.password)
-      localStorage.setItem("token", res.data.token || "")
+      if (typeof window !== 'undefined') {
+        localStorage.setItem("token", res.data.token || "")
+        localStorage.setItem("username", res.data.username || '未知用户')
+      }
       useStore.logined = true
-      localStorage.setItem("username", res.data.username || '未知用户'  )
       ElMessage.success("登录成功")
       router.replace('/knowledgeBase/KnowledgeBaseMain')
     } else {
