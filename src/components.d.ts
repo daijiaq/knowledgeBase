@@ -8,10 +8,9 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
-    CollaborativeEditor: typeof import('./src/components/CollaborativeEditor.vue')['default']
-    Comment: typeof import('./src/components/Comment.vue')['default']
-    DocumentItem: typeof import('./src/components/DocumentItem.vue')['default']
-    Editor: typeof import('./src/components/Editor.vue')['default']
+    CollaborativeEditor: typeof import('./components/CollaborativeEditor.vue')['default']
+    Comment: typeof import('./components/Comment.vue')['default']
+    Editor: typeof import('./components/Editor.vue')['default']
     ElAside: typeof import('element-plus/es')['ElAside']
     ElButton: typeof import('element-plus/es')['ElButton']
     ElCheckTag: typeof import('element-plus/es')['ElCheckTag']
@@ -31,12 +30,12 @@ declare module 'vue' {
     ElRadio: typeof import('element-plus/es')['ElRadio']
     ElRadioGroup: typeof import('element-plus/es')['ElRadioGroup']
     ElSubMenu: typeof import('element-plus/es')['ElSubMenu']
-    FolderItem: typeof import('./src/components/FolderItem.vue')['default']
-    KnowledgeBaseCard: typeof import('./src/components/knowledgeBaseCard.vue')['default']
-    KnowledgeBaseMain: typeof import('./src/components/knowledgeBaseMain.vue')['default']
-    MoreActions: typeof import('./src/components/MoreActions.vue')['default']
+    FolderItem: typeof import('./components/FolderItem.vue')['default']
+    KnowledgeBaseCard: typeof import('./components/knowledgeBaseCard.vue')['default']
+    KnowledgeBaseMain: typeof import('./components/knowledgeBaseMain.vue')['default']
+    MoreActions: typeof import('./components/MoreActions.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
-    SearchPanel: typeof import('./src/components/SearchPanel.vue')['default']
+    SearchPanel: typeof import('./components/SearchPanel.vue')['default']
   }
 }

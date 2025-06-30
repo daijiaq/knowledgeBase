@@ -124,13 +124,14 @@
           <!-- 文件夹 -->
           <FolderItem v-for="item in filteredDocs" :item="item"/>
           <!-- 文档 -->
+          <DocumentItem v-for="doc in rootDoc" :key="doc.id" :item="doc" @click.native="selectDoc(doc.id);selectDocType('document');"/>
         </div>
       </div>
     </div>
 
     <!-- 主内容区 -->
     <template v-if="currentDocId!==null&&currentDocType=='document'">
-      <CollaborativeEditor/>
+      <CollaborativeEditor :docId="currentDocId"/>
       <Comment />
     </template>
     <div v-else style="width: 890px;padding: 20px;
@@ -219,9 +220,11 @@ import CollaborativeEditor from "../components/CollaborativeEditor.vue";
 import { userSearch } from "../api/user";
 import * as KBsApi from "../api/knowledgeBase";
 import * as folderApi from '../api/folder'
+import * as documentApi from '../api/document'
 import type { userInfo,searchItem } from "../types/user";
 import type{ FolderInfo } from "../types/knowledgeBase";
 import FolderItem from "../components/FolderItem.vue";
+import DocumentItem from "../components/DocumentItem.vue"
 import { useKnowledgeBaseStore } from "../stores/useKnowledgeBaseStore";
 import { storeToRefs } from "pinia";
 
@@ -306,7 +309,9 @@ const getKBsContent = async()=>{
     ElMessage.error('无法获取知识库')
   }
 }
-getKBsContent()
+if (typeof window !== 'undefined') {
+  getKBsContent()
+}
 
 const filteredDocs = computed(() => {
   if (!searchQuery.value) return rootFolders.value;
@@ -330,7 +335,14 @@ const createNewDoc = async() => {
 
     if (newDocForm.type === "document") {
       //创建文档
+      const {data} = await documentApi.createDocument(
+        knowledgeBaseId.value,
+        newDocForm.name,
+        currentDocId.value
+      );
       //创建完后选中文档
+      selectDoc(data.id);
+      selectDocType('document');
     }else{
       //创建文件夹
       await folderApi.createFolderApi(knowledgeBaseId.value,newDocForm.name,currentDocId.value)

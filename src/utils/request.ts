@@ -10,7 +10,10 @@ const instance = axios.create({
 // 请求拦截
 instance.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token')
+    let token = ''
+    if (typeof window !== 'undefined') {
+      token = localStorage.getItem('token') || ''
+    }
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
@@ -78,5 +81,12 @@ instance.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+// SSR 阶段动态注入 token
+export function setSSRToken(token: string) {
+  if (token) {
+    instance.defaults.headers["Authorization"] = `Bearer ${token}`
+  }
+}
 
 export default instance

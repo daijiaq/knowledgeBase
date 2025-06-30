@@ -24,13 +24,18 @@ export const useKnowledgeBaseStore = defineStore('knowledgeBase', () => {
 
   // 获取所有知识库（获取可访问的知识库）
   const getAllKBs = async () => {
+    if (typeof window === 'undefined') {
+      return
+    }
     const res = await getAllKBsApi()
-   knowledgeBaseList.value = res.data
+    knowledgeBaseList.value = res.data
   }
-
 
   // 获取最近访问的知识库
   const getRecentKBs = async (limit: number) => {
+    if (typeof window === 'undefined') {
+      return
+    }
     const res = await getKBsRecentApi(limit)
     recentKBsList.value = res.data
   }
@@ -38,27 +43,55 @@ export const useKnowledgeBaseStore = defineStore('knowledgeBase', () => {
   //当前选中的文档或文件夹
   const currentDocId = ref<null|number>(null)
   const currentDocType = ref<'document'|'folder'>()
-  const storageId = localStorage.getItem('currentDocId')
-  const storageType = localStorage.getItem('currentDocType')
+  let storageId: string | null = null
+  let storageType: string | null = null
+  if (typeof window !== 'undefined') {
+    storageId = localStorage.getItem('currentDocId')
+    storageType = localStorage.getItem('currentDocType')
+  }
   currentDocId.value = storageId!=undefined&&storageId!='null'?Number(storageId):null
   currentDocType.value = storageType=='folder'||storageType=='document'?storageType:'folder'
 
   //更新当前选中的文档
   const selectDoc = (docId:number|null)=>{
     currentDocId.value = docId
-    localStorage.setItem('currentDocId',String(currentDocId.value))
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('currentDocId',String(currentDocId.value))
+    }
   }
   const selectDocType = (type:'document'|'folder')=>{
     currentDocType.value = type
-    localStorage.setItem('currentDocType',currentDocType.value)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('currentDocType',currentDocType.value)
+    }
   }
 
   //获取文件夹里面内容
   async function getFolderContent(folderId:number){
+    if (typeof window === 'undefined') {
+      return { folders: [], documents: [] }
+    }
     const res = await getFolderContentApi(folderId)
     return res.data
   }
 
+  // SSR: 支持服务端注入数据
+  function setState(state: Partial<{
+    knowledgeBaseList: allKnowledgeBase[]
+    recentKBsList: allKnowledgeBase[]
+    currentDocId: number | null
+    currentDocType: 'document' | 'folder' | undefined
+    knowledgeBaseContent: any // SSR 注入知识库页面内容
+  }>) {
+    if (state.knowledgeBaseList) knowledgeBaseList.value = state.knowledgeBaseList
+    if (state.recentKBsList) recentKBsList.value = state.recentKBsList
+    if (state.currentDocId !== undefined) currentDocId.value = state.currentDocId
+    if (state.currentDocType !== undefined) currentDocType.value = state.currentDocType
+    if (state.knowledgeBaseContent !== undefined) knowledgeBaseContent.value = state.knowledgeBaseContent
+  }
+
+  // SSR: 知识库页面内容
+  const knowledgeBaseContent = ref<any>(null)
 
   return {
     knowledgeBaseList,
@@ -70,6 +103,8 @@ export const useKnowledgeBaseStore = defineStore('knowledgeBase', () => {
     currentDocType,
     selectDoc,
     selectDocType,
-    getFolderContent
+    getFolderContent,
+    setState, // SSR 注入
+    knowledgeBaseContent // SSR 注入
   }
 })

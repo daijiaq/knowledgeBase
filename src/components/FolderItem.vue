@@ -4,7 +4,7 @@
       <div 
       class="doc-item"
       @click="selectFolder(item.id)"
-      :class="{ active: currentDocId === item.id }"
+      :class="{ active: currentDocId === item.id &&currentDocType === 'folder' }"
       >
         <!-- 展开/收起箭头 -->
         <span class="arrow-icon" @click.stop="selectFolder(item.id)">
@@ -74,7 +74,7 @@ import { ref,defineOptions, reactive,watch } from 'vue';
   import { deleteFolderApi,editFolderApi } from '../api/folder';
   import { ElMessage,ElMessageBox } from 'element-plus';
   const knowledgeBaseStore = useKnowledgeBaseStore()
-  const {currentDocId} = storeToRefs(knowledgeBaseStore)
+  const {currentDocId,currentDocType} = storeToRefs(knowledgeBaseStore)
   const {selectDoc,getFolderContent,selectDocType} = knowledgeBaseStore
   const children = reactive({
     folders:[],

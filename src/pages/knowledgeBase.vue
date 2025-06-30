@@ -30,7 +30,7 @@ const { knowledgeBaseList } = storeToRefs(knowledgeBaseStore) as {
 const router = useRouter()
 const route = useRoute()
 const userStore = useUserStore()
-const username = localStorage.getItem("username") || "用户";
+const username = typeof window !== 'undefined' ? (localStorage.getItem("username") || "用户") : "用户";
 //当前打开的menu
 const activeMenu =ref(route.params.knowledgeBaseId)
 watch(()=>route.params.knowledgeBaseId,(newValue)=>{
@@ -49,16 +49,18 @@ const handleClose = () => {
 };
 
 const logOut = ()=>{
-  localStorage.removeItem("token")
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem("token")
+  }
   userStore.logined = false
   ElMessage.success("已退出登录")
   router.replace('/login')
 }
-// 获取所有知识库（获取可访问的知识库）
-onMounted(async()=>{
-  await knowledgeBaseStore.getAllKBs()
-  await knowledgeBaseStore.getRecentKBs(5)
-})
+// 获取所有知识库（获取可访问的知识库）ssR时会调用所以不用onMounted
+// onMounted(async()=>{
+//   await knowledgeBaseStore.getAllKBs()
+//   await knowledgeBaseStore.getRecentKBs(5)
+// })
 
 const dialogFormVisible = ref(false)
 const editingId = ref<number | null>(null)
@@ -87,10 +89,14 @@ async function submitForm() {
   
   if(route.path === `/knowledgeBase/KnowledgeBaseMain`) {
     // 更新知识库列表
-    await knowledgeBaseStore.getAllKBs()
-    await getRecentKBs(5)
+    if (typeof window !== 'undefined') {
+      await knowledgeBaseStore.getAllKBs()
+      await getRecentKBs(5)
+    }
   } else{
-    await getAllKBs()
+    if (typeof window !== 'undefined') {
+      await getAllKBs()
+    }
   }
 }
 

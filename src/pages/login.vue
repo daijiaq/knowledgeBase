@@ -64,7 +64,7 @@
       <div class="card-body">
         <el-form
           ref="formRef"
-          v-model="formData"
+          :model="formData"
           :rules="rules"
           class="login-form"
         >
@@ -302,11 +302,15 @@ const handleSubmit = async () => {
     if (isLogin.value) {
       // 登录
       const res = await userLogin(formData.email, formData.password)
-      localStorage.setItem("token", res.data.token || "")
+      if (typeof window !== 'undefined') {
+        localStorage.setItem("token", res.data.token || "")
+        localStorage.setItem("username", res.data.username || '未知用户')
+        document.cookie = `token=${res.data.token}; path=/`;
+      }
       useStore.logined = true
-      localStorage.setItem("username", res.data.username || '未知用户'  )
       ElMessage.success("登录成功")
-      router.replace('/knowledgeBase/KnowledgeBaseMain')
+      // 使用 window.location.replace 强制刷新，便于 SSR 首次带上 cookie
+      window.location.replace('/knowledgeBase/KnowledgeBaseMain')
     } else {
       // 注册
       await userRegister(
