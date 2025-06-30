@@ -64,7 +64,7 @@
       <div class="card-body">
         <el-form
           ref="formRef"
-          v-model="formData"
+          :model="formData"
           :rules="rules"
           class="login-form"
         >
