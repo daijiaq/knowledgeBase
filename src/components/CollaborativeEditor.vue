@@ -30,7 +30,7 @@
       <editor-content
         :editor="editor"
         class="editor-content"
-        @click="getComment"
+        @click.native="getComment"
       />
     </div>
 

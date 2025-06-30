@@ -4,7 +4,6 @@
           <input
           ref="searchInput"
           v-model="searchQuery"
-          type="text"
           placeholder="搜索内容..."
           class="search-input"
           @keydown.enter="handleSearch"

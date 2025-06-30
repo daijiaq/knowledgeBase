@@ -34,98 +34,60 @@
             </el-button>
             <template #dropdown>
               <el-dropdown-menu>
-                <el-dropdown-item>重命名</el-dropdown-item>
-                <el-dropdown-item class="danger">删除</el-dropdown-item>
+                <el-dropdown-item @click="showEditDialog=true">重命名</el-dropdown-item>
+                <el-dropdown-item class="danger" @click="deleteDoc(item.id)">删除</el-dropdown-item>
               </el-dropdown-menu>
             </template>
           </el-dropdown>
         </div>
       </div>
+    <!-- 重命名对话框 -->
+    <EditNameDialog v-model="showEditDialog" :editName="editDocName"/>
 </template>
     
 <script lang='ts' setup name='DocumentItem'>
+import { ref } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useKnowledgeBaseStore } from '../stores/useKnowledgeBaseStore';
+import EditNameDialog from './EditNameDialog.vue';
+import * as documentApi from '../api/document';
 const knowledgeBaseStore = useKnowledgeBaseStore()
 const {currentDocId,currentDocType} = storeToRefs(knowledgeBaseStore)
+const {selectDoc,selectDocType} = knowledgeBaseStore
 const selectCurrentDoc = (id: number) => {
-  knowledgeBaseStore.selectDoc(id)
   knowledgeBaseStore.selectDocType('document')
+  knowledgeBaseStore.selectDoc(id)
 }
-const {item} = defineProps(['item'])
+const {item,getKBsContent} = defineProps(['item','getKBsContent'])
+const showEditDialog = ref(false)
+const editDocName = async(name: string) => {
+  await documentApi.editDocumentName(item.id, name)
+  showEditDialog.value = false
+  getKBsContent()
+}
+//删除文件夹
+async function deleteDoc(docId:number){
+    ElMessageBox.confirm("确定要删除该文档吗？此操作不可恢复", "警告", {
+    confirmButtonText: "确定",
+    cancelButtonText: "取消",
+    type: "warning",
+  }).then(async () => {
+      try {
+        await documentApi.deleteDocument(docId)
+        ElMessage.success("删除文档成功")
+        getKBsContent()
+        selectDocType('folder')
+        selectDoc(null)
+      } catch (error: any) {
+        ElMessage.error(error.message)
+        console.error("删除文档失败:", error) 
+      }
+    }) 
+  }
 
     
 </script>
     
 <style scoped>
-    .doc-item {
-        display: flex;
-        align-items: center;
-        padding: 8px 12px;
-        border-radius: 6px;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        margin-bottom: 2px;
-
-        /* 箭头图标样式 */
-        .arrow-icon {
-          display: flex;
-          align-items: center;
-          margin-right: 4px;
-          width: 16px;
-          height: 16px;
-          user-select: none;
-        }
-
-        &:hover {
-          background: var(--background-color);
-        }
-
-        &.active {
-          background: var(--primary-color);
-          color: white;
-
-          .doc-icon svg {
-            color: white;
-          }
-        }
-
-        .doc-icon {
-          width: 16px;
-          height: 16px;
-          margin-right: 8px;
-
-          svg {
-            width: 100%;
-            height: 100%;
-            color: var(--text-color-secondary);
-          }
-        }
-
-        .doc-title {
-          flex: 1;
-          font-size: 14px;
-          font-weight: 500;
-        }
-
-        .doc-actions {
-          opacity: 0;
-          transition: opacity 0.2s ease;
-
-          .el-button {
-            width: 20px;
-            height: 20px;
-            padding: 0;
-
-            svg {
-              width: 12px;
-              height: 12px;
-            }
-          }
-        }
-
-        &:hover .doc-actions {
-          opacity: 1;
-        }
-      }
+  @import '../css/doc-item.scss'
 </style>
