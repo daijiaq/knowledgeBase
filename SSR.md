@@ -1,11 +1,11 @@
- | `/src/entry-client.ts`  | ¿Í»§¶ËÈë¿ÚÎÄ¼ş             
-| `/src/entry-server.ts`  | SSR ·şÎñ¶ËäÖÈ¾Èë¿ÚÎÄ¼ş       
-| `/ssr-server/index.cjs` | SSR ·şÎñÆô¶¯½Å±¾£¨Express£© 
-| `/dist/`                | Vite ¹¹½¨ºóµÄ¿Í»§¶Ë¾²Ì¬×ÊÔ´    
-| `/dist-ssr/`            | SSR ¹¹½¨Éú³ÉµÄ·şÎñ¶Ë JS Ä£¿é  
-npm run build               # ¹¹½¨¿Í»§¶Ë×ÊÔ´£¬Êä³öµ½ dist/
-npm run build:ssr           # ¹¹½¨ SSR ·şÎñ¶ËÈë¿Ú£¬Êä³öµ½dist-ssr/
-node ssr-server/index.cjs   #Æô¶¯ssr·şÎñ
-http://localhost:3001       #Æô¶¯ºó·ÃÎÊµØÖ·
-Ö±½ÓÓÃnpm run dev²»ÓÃssrÒ²¿ÉÒÔ
+ | `/src/entry-client.ts`  | å®¢æˆ·ç«¯å…¥å£æ–‡ä»¶             
+| `/src/entry-server.ts`  | SSR æœåŠ¡ç«¯æ¸²æŸ“å…¥å£æ–‡ä»¶       
+| `/ssr-server/index.cjs` | SSR æœåŠ¡å¯åŠ¨è„šæœ¬ï¼ˆExpressï¼‰ 
+| `/dist/`                | Vite æ„å»ºåçš„å®¢æˆ·ç«¯é™æ€èµ„æº    
+| `/dist-ssr/`            | SSR æ„å»ºç”Ÿæˆçš„æœåŠ¡ç«¯ JS æ¨¡å—  
+npm run build               # æ„å»ºå®¢æˆ·ç«¯èµ„æºï¼Œè¾“å‡ºåˆ° dist/
+npm run build:ssr           # æ„å»º SSR æœåŠ¡ç«¯å…¥å£ï¼Œè¾“å‡ºåˆ°dist-ssr/
+node ssr-server/index.cjs   #å¯åŠ¨ssræœåŠ¡
+http://localhost:3001       #å¯åŠ¨åè®¿é—®åœ°å€
+ç›´æ¥ç”¨npm run devä¸ç”¨ssrä¹Ÿå¯ä»¥
 
