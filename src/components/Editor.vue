@@ -219,9 +219,8 @@
           <button
             @click="openSearchPanel"
             :class="{ 'is-active': showSearchPanel }"
-            title="搜索 (Ctrl+F)"
           >
-            搜素
+          <el-icon size="16" style="padding-top: 6px"><ZoomIn /></el-icon>
           </button>
           
           <el-dropdown placement="top-end" size="small">
@@ -242,19 +241,18 @@
               </el-dropdown-menu>
             </template>
           </el-dropdown>
+          <!-- 搜索面板 -->
+          <SearchPanel 
+            :visible="showSearchPanel"
+            :editor="editor"
+            @close="closeSearchPanel"
+          />
         </div>
         <editor-content
           v-if="showEditorContent"
           :editor="editor"
           class="editor-content"
           @click="getComment"
-        />
-        
-        <!-- 搜索面板 -->
-        <SearchPanel 
-          :visible="showSearchPanel"
-          :editor="editor"
-          @close="closeSearchPanel"
         />
       </div>
 </template>
@@ -271,10 +269,10 @@ import Underline from "@tiptap/extension-underline";
 import { Comment } from "../utils/comment-extension";
 import { Search } from "../utils/search-extension";
 import { useEditor, EditorContent, Editor as EditorType } from "@tiptap/vue-3";
-import { onBeforeUnmount, ref, computed, onMounted, nextTick, watch } from "vue";
+import { onBeforeUnmount, ref, computed, onMounted } from "vue";
 import type { ComputedRef } from "vue";
 import { nanoid } from "nanoid";
-import { ChatSquare, MoreFilled } from "@element-plus/icons-vue";
+import { ChatSquare, MoreFilled,ZoomIn } from "@element-plus/icons-vue";
 import EventBus from "../utils/event-bus";
 import { generatePDF } from "../utils/export-pdf";
 import { debounce } from "../utils/debounce";
@@ -348,8 +346,10 @@ const editor: ComputedRef<EditorType | null> = computed(() => {
 // 建立链接
 const setLink = () => {
   const previousUrl = editor.value?.getAttributes("link").href;
-  const url = window.prompt("URL", previousUrl);
-
+  let url = '';
+  if (typeof window !== 'undefined') {
+    url = window.prompt("URL", previousUrl) || '';
+  }
   if (url === null) return;
   if (url === "") {
     editor.value?.chain().focus().extendMarkRange("link").unsetLink().run();
@@ -374,25 +374,39 @@ const closeSearchPanel = () => {
 
 // 键盘快捷键处理
 const handleKeydown = (event: KeyboardEvent) => {
-  // 搜索快捷键
-  if ((event.ctrlKey || event.metaKey) && event.key === 'f') {
-    event.preventDefault()
-    openSearchPanel()
+  if (event.ctrlKey || event.metaKey) {
+    if (event.key === "f") {
+      event.preventDefault();
+      openSearchPanel();
+    } else if (event.key === "g") {
+      event.preventDefault();
+      if (event.shiftKey) {
+        prevMatch();
+      } else {
+        nextMatch();
+      }
+    }
+  } else if (event.key === "Escape" && showSearchPanel.value) {
+    closeSearchPanel();
   }
-  
-  // 其他快捷键处理...
+};
+
+// 监听全局搜索打开事件
+if (typeof window !== 'undefined') {
+  window.addEventListener("search:open", () => {
+    openSearchPanel();
+  });
+  // 监听键盘事件
+  window.addEventListener("keydown", handleKeydown);
 }
 
-// 监听键盘事件
-onMounted(() => {
-  window.addEventListener("keydown", handleKeydown)
-})
-
 const saveText = () => {
-  debouncedSubmit({
-    element: document.querySelector(".tiptap") as HTMLElement,
-    filename: "xxx.pdf",
-  });
+  if (typeof document !== 'undefined') {
+    debouncedSubmit({
+      element: document.querySelector(".tiptap") as HTMLElement,
+      filename: "xxx.pdf",
+    });
+  }
 };
 
 const handleWordUpload = async (event: Event) => {
@@ -522,7 +536,11 @@ const removeComment = () => {
 onBeforeUnmount(() => {
   editor.value?.destroy();
   EventBus.all.clear();
-  window.removeEventListener("keydown", handleKeydown)
+  if (typeof window !== 'undefined') {
+    // 清理事件监听器
+    window.removeEventListener("keydown", handleKeydown);
+    window.removeEventListener("search:open", openSearchPanel);
+  }
 });
 </script>
 
@@ -569,10 +587,20 @@ onBeforeUnmount(() => {
     }
   }
   text-align: center;
+  position: relative;
 }
 /* Basic editor styles */
 .tiptap {
   outline: none;
+  h1{
+    font-size: 30px;
+  }
+  hr{
+    margin: 15px 0;
+  }
+  li{
+    margin-left: 20px;
+  }
   code {
     font-family: "Consolas", monospace; /* 等宽字体 */
     background-color: #e0e0e0;
@@ -628,119 +656,6 @@ onBeforeUnmount(() => {
   // margin-top: 20px;
   height: 200px;
   padding: 5px;
-}
-
-/* 搜索面板样式 */
-.search-panel {
-  position: sticky;
-  top: 0;
-  background: #ffffff;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  padding: 12px;
-  margin: 10px 0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  z-index: 1000;
-}
-
-.search-input-group {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 8px;
-}
-
-.search-input {
-  flex: 1;
-  padding: 8px 12px;
-  border: 1px solid #d0d0d0;
-  border-radius: 4px;
-  font-size: 14px;
-  outline: none;
-  transition: border-color 0.2s;
-}
-
-.search-input:focus {
-  border-color: #958df1;
-  box-shadow: 0 0 0 2px rgba(149, 141, 241, 0.2);
-}
-
-.search-options {
-  display: flex;
-  gap: 16px;
-  font-size: 12px;
-  color: #666;
-}
-
-.search-options label {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  cursor: pointer;
-}
-
-.search-options input[type="checkbox"] {
-  margin: 0;
-}
-
-.search-controls {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.search-btn, .nav-btn, .close-btn, .test-btn {
-  padding: 6px 12px;
-  border: 1px solid #d0d0d0;
-  border-radius: 4px;
-  background: #ffffff;
-  cursor: pointer;
-  font-size: 12px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  transition: all 0.2s;
-}
-
-.search-btn:hover, .nav-btn:hover, .test-btn:hover {
-  background: #f5f5f5;
-  border-color: #b0b0b0;
-}
-
-.search-btn:disabled, .nav-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.test-btn {
-  background: #e3f2fd;
-  border-color: #2196f3;
-  color: #1976d2;
-}
-
-.test-btn:hover {
-  background: #bbdefb;
-  border-color: #1976d2;
-}
-
-.close-btn {
-  padding: 6px;
-  color: #999;
-}
-
-.close-btn:hover {
-  background: #f5f5f5;
-  color: #666;
-}
-
-.search-results {
-  margin-top: 8px;
-  font-size: 12px;
-  color: #666;
-}
-
-.search-results.no-results {
-  color: #ff6b6b;
 }
 
 /* 搜索高亮样式 */

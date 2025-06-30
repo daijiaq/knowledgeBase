@@ -10,7 +10,10 @@ const instance = axios.create({
 // 请求拦截
 instance.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token')
+    let token = ''
+    if (typeof window !== 'undefined') {
+      token = localStorage.getItem('token') || ''
+    }
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
