@@ -76,3 +76,14 @@ button:focus-visible {
     color: #747bff;
   }
 }
+.el-drawer__header {
+  height: 35px; 
+  display: flex; 
+  align-items: center; /* 垂直居中 */
+}
+
+
+.el-drawer__body {
+  padding: 20px;
+  background-color: #f5f5f5;
+}

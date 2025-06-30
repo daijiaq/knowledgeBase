@@ -28,12 +28,14 @@
     <!-- 编辑器容器 -->
     <div class="editor-container">
       <editor-content
+        v-if="!selectedContent"
         :editor="editor"
         class="editor-content"
         @click="getComment"
       />
+      <ReadonlyEditor v-if="selectedContent" :content="selectedContent" />
     </div>
-
+    <VersionDrawer v-model="showVersionDrawer" @restore="handleRestore" :docId="props.docId"/>
     <!-- 协同信息面板 -->
     <div class="collaboration-info">
       <div class="info-section">
@@ -49,7 +51,7 @@
         </p>
         <div class="editor-tool">
           <span class="update-time"
-            >更新于2025-6-25 13:45<span style="color: #7a72e0; cursor: pointer"
+            >更新于2025-6-25 13:45<span style="color: #7a72e0; cursor: pointer" @click="openDrawer()"
               >&nbsp;回退版本</span
             ></span
           >
@@ -121,7 +123,20 @@ import EventBus from "../utils/event-bus";
 import { Close } from "@element-plus/icons-vue";
 import { ElMessage, ElSkeleton, ElSkeletonItem } from "element-plus";
 import { generateSummary } from "../api/aiSummary";
+// 版本回退抽屉
+import VersionDrawer from "../components/VersionDrawer.vue";
 import { getDocumentContent , saveDocumentContent } from '../api/document'
+
+
+const showVersionDrawer = ref(false);
+const openDrawer = () => {
+  showVersionDrawer.value = true;
+};
+function handleRestore(content: string) {
+  // 这里将 content 设置到编辑器内容里
+  editor.value?.commands.setContent(content)
+}
+
 
 // ai
 const aiText = ref("");
@@ -150,6 +165,7 @@ const props = withDefaults(defineProps<Props>(), {
   // websocketUrl: "ws://192.168.31.119:1234",
   roomId: "collaborative-document",
   userName: "匿名用户",
+  docId: 1,
 });
 
 // 响应式数据
@@ -157,6 +173,7 @@ const connectionStatus = ref<ConnectionStatus>("disconnected");
 const onlineUsers = ref(0);
 const userId = ref<string>("");
 const userColor = ref<string>("");
+const selectedContent = ref<string | null>(null);
 
 // YJS 文档和提供者
 let ydoc: Y.Doc | null = null;
@@ -453,6 +470,9 @@ defineExpose({
 //   let retryCount = 0;
 //   // const maxRetries = 3;
 //   let eventSource: EventSource | null = null;
+// // 测试：传入文档文本
+// const documentText =
+// );
 
 //   const createEventSource = () => {
 //     // 重置状态
