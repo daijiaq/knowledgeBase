@@ -19,7 +19,7 @@ interface KnowledgeBaseCard {
   description: string
 }
 // 最近访问列表
-const {getRecentKBs,selectDoc,getAllKBs} = knowledgeBaseStore
+const {getRecentKBs,changKBs,getAllKBs} = knowledgeBaseStore
 const { recentKBsList } = storeToRefs(knowledgeBaseStore) as {
   recentKBsList: import('vue').Ref<KnowledgeBaseCard[]>
 };
@@ -37,7 +37,7 @@ watch(()=>route.params.knowledgeBaseId,(newValue)=>{
   activeMenu.value = newValue
 })
 watch(()=>route.path,()=>{
-  selectDoc(null)
+  changKBs()
 })
 const handleOpen = () => {
   console.log('打开');

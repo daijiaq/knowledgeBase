@@ -42,6 +42,7 @@ export const useKnowledgeBaseStore = defineStore('knowledgeBase', () => {
 
   //当前选中的文档或文件夹
   const currentDocId = ref<null|number>(null)
+  const selectDocId = ref<null|number>(null)//展示文档
   const currentDocType = ref<'document'|'folder'>()
   let storageId: string | null = null
   let storageType: string | null = null
@@ -58,6 +59,12 @@ export const useKnowledgeBaseStore = defineStore('knowledgeBase', () => {
     if (typeof window !== 'undefined') {
       localStorage.setItem('currentDocId',String(currentDocId.value))
     }
+    if(currentDocType.value === 'document'){selectDocId.value = docId}  
+  }
+  const changKBs = ()=>{
+    currentDocId.value = null
+    selectDocId.value = null
+    currentDocType.value = 'folder'
   }
   const selectDocType = (type:'document'|'folder')=>{
     currentDocType.value = type
@@ -100,6 +107,8 @@ export const useKnowledgeBaseStore = defineStore('knowledgeBase', () => {
     getAllKBs,
     getRecentKBs,
     currentDocId,
+    changKBs,
+    selectDocId,
     currentDocType,
     selectDoc,
     selectDocType,

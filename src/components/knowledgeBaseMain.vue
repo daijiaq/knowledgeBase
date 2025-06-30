@@ -139,7 +139,7 @@ onMounted(async () => {
           :description="item.description"
           :update-time="item.lastAccessedAt"
           :id="item.id"
-          @click="router.replace(`/knowledgeBase/${item.id}`)"
+          @click.native="router.replace(`/knowledgeBase/${item.id}`)"
           @edit="emits('edit', item.id)"
           @delete="emits('delete', item.id)"
         >

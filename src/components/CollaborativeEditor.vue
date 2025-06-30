@@ -31,7 +31,7 @@
         v-if="!selectedContent"
         :editor="editor"
         class="editor-content"
-        @click="getComment"
+        @click.native="getComment"
       />
       <ReadonlyEditor v-if="selectedContent" :content="selectedContent" />
     </div>
