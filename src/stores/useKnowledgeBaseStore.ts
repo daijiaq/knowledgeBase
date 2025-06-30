@@ -25,18 +25,15 @@ export const useKnowledgeBaseStore = defineStore('knowledgeBase', () => {
   // 获取所有知识库（获取可访问的知识库）
   const getAllKBs = async () => {
     if (typeof window === 'undefined') {
-      knowledgeBaseList.value = []
       return
     }
     const res = await getAllKBsApi()
     knowledgeBaseList.value = res.data
   }
 
-
   // 获取最近访问的知识库
   const getRecentKBs = async (limit: number) => {
     if (typeof window === 'undefined') {
-      recentKBsList.value = []
       return
     }
     const res = await getKBsRecentApi(limit)
@@ -78,6 +75,23 @@ export const useKnowledgeBaseStore = defineStore('knowledgeBase', () => {
     return res.data
   }
 
+  // SSR: 支持服务端注入数据
+  function setState(state: Partial<{
+    knowledgeBaseList: allKnowledgeBase[]
+    recentKBsList: allKnowledgeBase[]
+    currentDocId: number | null
+    currentDocType: 'document' | 'folder' | undefined
+    knowledgeBaseContent: any // SSR 注入知识库页面内容
+  }>) {
+    if (state.knowledgeBaseList) knowledgeBaseList.value = state.knowledgeBaseList
+    if (state.recentKBsList) recentKBsList.value = state.recentKBsList
+    if (state.currentDocId !== undefined) currentDocId.value = state.currentDocId
+    if (state.currentDocType !== undefined) currentDocType.value = state.currentDocType
+    if (state.knowledgeBaseContent !== undefined) knowledgeBaseContent.value = state.knowledgeBaseContent
+  }
+
+  // SSR: 知识库页面内容
+  const knowledgeBaseContent = ref<any>(null)
 
   return {
     knowledgeBaseList,
@@ -89,6 +103,8 @@ export const useKnowledgeBaseStore = defineStore('knowledgeBase', () => {
     currentDocType,
     selectDoc,
     selectDocType,
-    getFolderContent
+    getFolderContent,
+    setState, // SSR 注入
+    knowledgeBaseContent // SSR 注入
   }
 })

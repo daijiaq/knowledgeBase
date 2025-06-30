@@ -23,8 +23,7 @@ try {
 app.get('*', async (req, res) => {
   try {
     const url = req.originalUrl
-     console.log('Incoming URL for SSR render:', url)
-    const appHtml = await render(url)
+    const appHtml = await render(url, req.headers.cookie)
 
     const html = template.replace(`<!--app-html-->`, appHtml)
     res.status(200).set({ 'Content-Type': 'text/html' }).end(html)

@@ -305,10 +305,12 @@ const handleSubmit = async () => {
       if (typeof window !== 'undefined') {
         localStorage.setItem("token", res.data.token || "")
         localStorage.setItem("username", res.data.username || '未知用户')
+        document.cookie = `token=${res.data.token}; path=/`;
       }
       useStore.logined = true
       ElMessage.success("登录成功")
-      router.replace('/knowledgeBase/KnowledgeBaseMain')
+      // 使用 window.location.replace 强制刷新，便于 SSR 首次带上 cookie
+      window.location.replace('/knowledgeBase/KnowledgeBaseMain')
     } else {
       // 注册
       await userRegister(
