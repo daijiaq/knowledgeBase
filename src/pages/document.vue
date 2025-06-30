@@ -148,7 +148,7 @@
         <el-button @click="shareDoc">分享</el-button>
       </div>
       <p style="margin-top: 20px; font-size: 18px;">👋 欢迎来到知识库</p>
-    </div> -->
+    </div> 
 
     <!-- 新建文档对话框 -->
     <el-dialog v-model="showNewDocDialog" title="新建文档" width="400px">

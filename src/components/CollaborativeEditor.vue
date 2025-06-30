@@ -35,7 +35,7 @@
       />
       <ReadonlyEditor v-if="selectedContent" :content="selectedContent" />
     </div>
-    <VersionDrawer v-model="showVersionDrawer" @restore="handleRestore" />
+    <VersionDrawer v-model="showVersionDrawer" @restore="handleRestore" :docId="props.docId"/>
     <!-- 协同信息面板 -->
     <div class="collaboration-info">
       <div class="info-section">
@@ -149,6 +149,7 @@ interface Props {
   roomId?: string;
   /** 用户名称 */
   userName?: string;
+  docId?:number
 }
 
 // 定义连接状态类型
@@ -160,6 +161,7 @@ const props = withDefaults(defineProps<Props>(), {
   // websocketUrl: "ws://192.168.31.119:1234",
   roomId: "collaborative-document",
   userName: "匿名用户",
+  docId: 1,
 });
 
 // 响应式数据
