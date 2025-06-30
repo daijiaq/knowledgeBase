@@ -235,43 +235,43 @@ import type { FormInstance, FormRules } from "element-plus";
 import { ElMessage } from "element-plus";
 import { userLogin, userRegister } from "../api/user";
 import { useUserStore } from "../stores/useUserStore";
-const useStore= useUserStore()
+const useStore = useUserStore();
 const router = useRouter();
-const isLogin = ref(true)
-const loading = ref(false)
-const formRef = ref<FormInstance>()
+const isLogin = ref(true);
+const loading = ref(false);
+const formRef = ref<FormInstance>();
 
 const formData = reactive({
   username: "",
   email: "",
   password: "",
   confirmPassword: "",
-})
+});
 
 const validatePass = (_rule: any, value: string, callback: any) => {
   if (value === "") {
-    callback(new Error("请输入密码"))
+    callback(new Error("请输入密码"));
   } else if (value.length < 6 || value.length > 12) {
     callback(new Error("密码长度应为 6-12 位"));
   } else if (/[\u4e00-\u9fa5]/.test(value)) {
-    callback(new Error("密码不能包含中文")) 
+    callback(new Error("密码不能包含中文"));
   } else {
     if (!isLogin.value && formData.confirmPassword !== "") {
-      formRef.value?.validateField("confirmPassword") 
+      formRef.value?.validateField("confirmPassword");
     }
-    callback() 
+    callback();
   }
-} 
+};
 
 const validatePass2 = (_rule: any, value: string, callback: any) => {
   if (value === "") {
-    callback(new Error("请再次输入密码")) 
+    callback(new Error("请再次输入密码"));
   } else if (value !== formData.password) {
-    callback(new Error("两次输入密码不一致!")) 
+    callback(new Error("两次输入密码不一致!"));
   } else {
-    callback() 
+    callback();
   }
-} 
+};
 
 const rules = reactive<FormRules>({
   username: [
@@ -280,25 +280,29 @@ const rules = reactive<FormRules>({
   ],
   email: [
     { required: true, message: "请输入邮箱", trigger: "blur" },
-    { type: "email", message: "请输入正确的邮箱格式", trigger: ["blur", "change"] },
+    {
+      type: "email",
+      message: "请输入正确的邮箱格式",
+      trigger: ["blur", "change"],
+    },
   ],
   password: [{ required: true, validator: validatePass, trigger: "blur" }],
   confirmPassword: [
     { required: true, validator: validatePass2, trigger: "blur" },
   ],
-})
+});
 
 const setLoginMode = (mode: boolean) => {
-  isLogin.value = mode 
-  formRef.value?.resetFields() 
-} 
+  isLogin.value = mode;
+  formRef.value?.resetFields();
+};
 
 const handleSubmit = async () => {
-  if (!formRef.value) return
-  loading.value = true
+  if (!formRef.value) return;
+  loading.value = true;
 
   try {
-    await formRef.value.validate()
+    await formRef.value.validate();
     if (isLogin.value) {
       // 登录
       const res = await userLogin(formData.email, formData.password)
@@ -313,29 +317,25 @@ const handleSubmit = async () => {
       window.location.replace('/knowledgeBase/KnowledgeBaseMain')
     } else {
       // 注册
-      await userRegister(
-        formData.username,
-        formData.email,
-        formData.password
-      )
-      ElMessage.success("注册成功，请登录")
-      isLogin.value = true
+      await userRegister(formData.username, formData.email, formData.password);
+      ElMessage.success("注册成功，请登录");
+      isLogin.value = true;
     }
   } catch (error: any) {
     // 如果是表单校验错误，则显示具体的校验信息
     if (error && !error.isAxiosError) {
-      const errorFields = Object.values(error)
+      const errorFields = Object.values(error);
       if (errorFields.length > 0) {
-        const firstError: any = errorFields[0]
+        const firstError: any = errorFields[0];
         if (firstError?.[0]?.message) {
-          ElMessage.error(firstError[0].message)
+          ElMessage.error(firstError[0].message);
         }
       }
     }
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-}
+};
 </script>
 
 <style scoped lang="scss">
@@ -509,7 +509,7 @@ const handleSubmit = async () => {
           z-index: 1;
 
           &.active {
-            color:white;
+            color: white;
           }
         }
       }

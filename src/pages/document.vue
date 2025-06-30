@@ -44,7 +44,11 @@
         </el-button>
       </div>
 
-      <div class="sidebar-content" v-if="!sidebarCollapsed" @click="initParentId">
+      <div
+        class="sidebar-content"
+        v-if="!sidebarCollapsed"
+        @click="initParentId"
+      >
         <!-- 搜索框 -->
         <div class="search-box" @click.stop>
           <svg
@@ -144,7 +148,7 @@
         <el-button @click="shareDoc">分享</el-button>
       </div>
       <p style="margin-top: 20px; font-size: 18px;">👋 欢迎来到知识库</p>
-    </div>
+    </div> 
 
     <!-- 新建文档对话框 -->
     <el-dialog v-model="showNewDocDialog" :title="newDocForm.type==='document'?'新建文档':'新建文件夹'" width="400px">
@@ -173,9 +177,9 @@
           <div class="invite-form">
             <div style="width: 300px">
               <el-input
-              v-model="inviteEmail"
-              placeholder="输入邮箱地址"
-              @input="searchInviteUser"
+                v-model="inviteEmail"
+                placeholder="输入邮箱地址"
+                @input="searchInviteUser"
               />
               <div class="invite-list">
                 <template v-if="search_list.length">
@@ -184,9 +188,14 @@
                     :key="item.id"
                     class="invite-user-item"
                     :class="{ checked: item.checked }"
-                    @click="item.checked = !item.checked">
-                    <span class="user-name" :title="item.username">{{ item.username }}</span>
-                    <el-check-tag :checked="item.checked">{{ item.checked ? '已选' : '选择' }}</el-check-tag>
+                    @click="item.checked = !item.checked"
+                  >
+                    <span class="user-name" :title="item.username">{{
+                      item.username
+                    }}</span>
+                    <el-check-tag :checked="item.checked">{{
+                      item.checked ? "已选" : "选择"
+                    }}</el-check-tag>
                   </div>
                 </template>
                 <div v-else class="no-user">无匹配用户</div>
@@ -223,12 +232,15 @@ import { storeToRefs } from "pinia";
 
 const router = useRouter();
 const route = useRoute();
-const knowledgeBaseId = ref(Number(route.params.knowledgeBaseId))
+const knowledgeBaseId = ref(Number(route.params.knowledgeBaseId));
 //监听路由变化
-watch(()=>route.params.knowledgeBaseId,(newValue)=>{
-  knowledgeBaseId.value = Number(newValue)
-  getKBsContent()
-})
+watch(
+  () => route.params.knowledgeBaseId,
+  (newValue) => {
+    knowledgeBaseId.value = Number(newValue);
+    getKBsContent();
+  }
+);
 
 const knowledgeBaseStore =useKnowledgeBaseStore()
 const {currentDocId,currentDocType,selectDocId} = storeToRefs(knowledgeBaseStore)
@@ -250,55 +262,57 @@ function initParentId(){
 }
 
 //打开分享界面
-const shareDoc = ()=>{
-  showShareDialog.value = true
-}
+const shareDoc = () => {
+  showShareDialog.value = true;
+};
 //根据邮箱搜索用户
-const tt = ref(0)
-const search_list = ref<searchItem[]>([])
-const searchInviteUser = (keyword:string)=>{
-  tt.value&&clearTimeout(tt.value)
-  tt.value = setTimeout(async ()=>{
-    search_list.value = []
-    if(keyword){
-      const {data} = await userSearch(keyword,knowledgeBaseId.value)
-      data.forEach((item:userInfo)=>{
-        let checked = false
+const tt = ref(0);
+const search_list = ref<searchItem[]>([]);
+const searchInviteUser = (keyword: string) => {
+  tt.value && clearTimeout(tt.value);
+  tt.value = setTimeout(async () => {
+    search_list.value = [];
+    if (keyword) {
+      const { data } = await userSearch(keyword, knowledgeBaseId.value);
+      data.forEach((item: userInfo) => {
+        let checked = false;
         search_list.value.push({
           ...item,
-          checked
-        })
-      })
+          checked,
+        });
+      });
     }
-  },500)
-}
+  }, 500);
+};
 
 // 表单数据
-const newDocForm = reactive(({
+const newDocForm = reactive({
   name: "",
   type: "document",
   parentId: null,
-}) as {
-  name:string
-  type:'document'|'folder'
-  parentId:number|null
+} as {
+  name: string;
+  type: "document" | "folder";
+  parentId: number | null;
 });
 
 const inviteEmail = ref("");
 
 //获取当前知识库下的内容
-const rootFolders = ref<FolderInfo[]>()
-const rootDoc = ref()
-const currentKnowledgeBaseInfo = ref()
-const getKBsContent = async()=>{
-  try{
-    const {data:{documents,folders,knowledgeBaseInfo}} = await KBsApi.getKBsContentApi(knowledgeBaseId.value)
-    rootFolders.value = folders
-    rootDoc.value = documents
-    currentKnowledgeBaseInfo.value = knowledgeBaseInfo
-  }catch(error){
-    console.log('根据知识库id获取内容失败');
-    ElMessage.error('无法获取知识库')
+const rootFolders = ref<FolderInfo[]>();
+const rootDoc = ref();
+const currentKnowledgeBaseInfo = ref();
+const getKBsContent = async () => {
+  try {
+    const {
+      data: { documents, folders, knowledgeBaseInfo },
+    } = await KBsApi.getKBsContentApi(knowledgeBaseId.value);
+    rootFolders.value = folders;
+    rootDoc.value = documents;
+    currentKnowledgeBaseInfo.value = knowledgeBaseInfo;
+  } catch (error) {
+    console.log("根据知识库id获取内容失败");
+    ElMessage.error("无法获取知识库");
   }
 }
 if (typeof window !== 'undefined') {
@@ -317,7 +331,6 @@ const filterDocs = computed(()=>{
     doc.name.toLowerCase().includes(searchQuery.value.toLowerCase())
   );
 })
-
 
 // 折叠侧边栏
 const toggleSidebar = () => {
@@ -346,13 +359,17 @@ const createNewDoc = async() => {
       selectDocType('document');
     }else{
       //创建文件夹
-      await folderApi.createFolderApi(knowledgeBaseId.value,newDocForm.name,currentDocId.value)
+      await folderApi.createFolderApi(
+        knowledgeBaseId.value,
+        newDocForm.name,
+        currentDocId.value
+      );
     }
     expandFolder.value = currentDocId.value
     showNewDocDialog.value = false;
     newDocForm.name = "";
     newDocForm.type = "document";
-    newDocForm.parentId = null
+    newDocForm.parentId = null;
     ElMessage.success("创建成功");
     getKBsContent()
     if(folderItem.value){
@@ -374,17 +391,17 @@ const sendInvite = async () => {
     })
     if(checkedUser.length===0){
       ElMessage.error("请选择协作人");
-      return
+      return;
     }
     await Promise.all(checkedUser.map((id:number)=>{
       return KBsApi.inviteKBsCollaborator(id,knowledgeBaseId.value)//第二个参数是知识库id
     }))
     ElMessage.success("邀请成功");
     inviteEmail.value = "";
-    searchInviteUser(inviteEmail.value)
-    showShareDialog.value = false
-    getKBsContent()
-  }catch(error){
+    searchInviteUser(inviteEmail.value);
+    showShareDialog.value = false;
+    getKBsContent();
+  } catch (error) {
     ElMessage.error("邀请失败");
   }
 };
