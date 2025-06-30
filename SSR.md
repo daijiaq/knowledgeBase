@@ -1,4 +1,4 @@
- | `/src/entry-client.ts`  | 客户端入口文件             
+| `/src/entry-client.ts`  | 客户端入口文件             
 | `/src/entry-server.ts`  | SSR 服务端渲染入口文件       
 | `/ssr-server/index.cjs` | SSR 服务启动脚本（Express） 
 | `/dist/`                | Vite 构建后的客户端静态资源    
