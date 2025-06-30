@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import { generateHTML } from '@tiptap/core'
 import StarterKit from '@tiptap/starter-kit'
+import Heading from '@tiptap/extension-heading'
+import Highlight from '@tiptap/extension-highlight'
 import TextStyle from '@tiptap/extension-text-style'
 import Color from '@tiptap/extension-color'
+import Link from '@tiptap/extension-link'
 import { AddMark, RemoveMark } from '../utils/extension-diff-mark'
 import { watch, ref } from 'vue'
 const props = defineProps<{
@@ -16,17 +19,19 @@ watch(
   () => props.content,
   (val) => {
     try {
-      // 解析为 tiptap JSON
+      // 兼容对象和字符串
       const json = typeof val === 'string' ? JSON.parse(val) : val
       html.value = generateHTML(json, [
         StarterKit,
+        Heading,
+        Highlight,
         TextStyle,
         Color,
+        Link,
         AddMark,
         RemoveMark,
       ])
     } catch (e) {
-      // 不是 JSON，则直接当作 HTML 或纯文本显示
       html.value = val || ''
     }
   },

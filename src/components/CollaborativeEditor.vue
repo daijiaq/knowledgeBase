@@ -23,7 +23,7 @@
 
     <!-- 协同编辑工具栏 -->
     <!-- 使用 Editor 组件，传入协同编辑器实例，不显示其内容区域 -->
-    <Editor :external-editor="editor" :show-editor-content="false" />
+    <Editor :external-editor="editor" :docId="props.docId"/>
 
     <!-- 编辑器容器 -->
     <div class="editor-container">
@@ -68,7 +68,7 @@
               "
               >AI总结全文</el-button
             >
-            <el-button type="success" color="#7a72e0">保存</el-button>
+            <el-button type="success" color="#7a72e0" @click="saveDocument">保存</el-button>
           </div>
         </div>
       </div>
@@ -103,7 +103,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from "vue";
+import { ref, onMounted, onBeforeUnmount, watch } from "vue";
 import { EditorContent, useEditor } from "@tiptap/vue-3";
 import StarterKit from "@tiptap/starter-kit";
 import Collaboration from "@tiptap/extension-collaboration";
@@ -125,6 +125,9 @@ import { ElMessage, ElSkeleton, ElSkeletonItem } from "element-plus";
 import { generateSummary } from "../api/aiSummary";
 // 版本回退抽屉
 import VersionDrawer from "../components/VersionDrawer.vue";
+import { getDocumentContent , saveDocumentContent } from '../api/document'
+
+
 const showVersionDrawer = ref(false);
 const openDrawer = () => {
   showVersionDrawer.value = true;
@@ -133,7 +136,7 @@ function handleRestore(content: string) {
   // 这里将 content 设置到编辑器内容里
   editor.value?.commands.setContent(content)
 }
-// import OpenAI from "openai";
+
 
 // ai
 const aiText = ref("");
@@ -149,7 +152,8 @@ interface Props {
   roomId?: string;
   /** 用户名称 */
   userName?: string;
-  docId?:number
+  // 文档id
+  docId?: number;
 }
 
 // 定义连接状态类型
@@ -309,12 +313,12 @@ const editor = useEditor({
     Comment,
   ],
   content: "",
-  editorProps: {
+/*   editorProps: {
     attributes: {
       class: "prose focus:outline-none",
       "data-placeholder": "开始协同编辑...",
     },
-  },
+  }, */
   onUpdate: ({ editor }) => {
     // 编辑器内容变化时，清空搜索结果（可选）
     if (editor.commands.clearSearch) {
@@ -348,6 +352,37 @@ const editor = useEditor({
 //     }, 1000);
 //   }
 // };
+
+
+watch(
+  () => props.docId,
+  async (newVal) => {
+    // 调用获取文档
+    // 提醒修改
+    editor.value?.destroy();
+    if (typeof newVal !== 'undefined') {
+      const res = await getDocumentContent(newVal);
+      // console.log(newVal,res.data.content);
+      const content = res.data.content === ''?'' : JSON.parse(res.data.content);
+      editor.value?.commands.setContent(content);
+    }
+  },
+  { immediate: true }
+)
+
+const saveDocument = async() => {
+    const newContent = editor.value?.getJSON();
+    if (typeof props.docId === 'undefined') {
+        ElMessage.error("文档ID未定义，无法保存");
+        return;
+    }
+    const res = await saveDocumentContent(props.docId, JSON.stringify(newContent));
+    if(res.code === 200){
+      ElMessage.success('保存成功');
+    }else{
+      ElMessage.error('保存失败');
+    }
+}
 
 /**
  * 销毁协同编辑器
@@ -390,8 +425,10 @@ const getComment = (event: any) => {
   if (!target.classList.contains("tiptap-comment")) return;
   // 获取被点击的 comment Mark 的属性
   const textId = target.getAttribute("id");
+  console.log(target.textContent);
   EventBus.emit("getComment", {
     text_id: textId,
+    text: target.textContent,
   });
 };
 
@@ -550,6 +587,8 @@ const aiClickSummary = async (documentText: string) => {
     ElMessage.error("摘要生成失败");
   }
 };
+
+
 
 // 生命周期钩子
 onMounted(() => {
