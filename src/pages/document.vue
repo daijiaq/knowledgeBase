@@ -311,7 +311,9 @@ const getKBsContent = async()=>{
     ElMessage.error('无法获取知识库')
   }
 }
-getKBsContent()
+if (typeof window !== 'undefined') {
+  getKBsContent()
+}
 
 const filteredDocs = computed(() => {
   if (!searchQuery.value) return rootFolders.value;

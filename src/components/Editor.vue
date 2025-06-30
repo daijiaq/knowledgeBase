@@ -400,8 +400,10 @@ const editor: ComputedRef<EditorType | null> = computed(() => {
 // 建立链接
 const setLink = () => {
   const previousUrl = editor.value?.getAttributes("link").href;
-  const url = window.prompt("URL", previousUrl);
-
+  let url = '';
+  if (typeof window !== 'undefined') {
+    url = window.prompt("URL", previousUrl) || '';
+  }
   if (url === null) return;
   if (url === "") {
     editor.value?.chain().focus().extendMarkRange("link").unsetLink().run();
@@ -548,18 +550,21 @@ const handleKeydown = (event: KeyboardEvent) => {
 };
 
 // 监听全局搜索打开事件
-window.addEventListener("search:open", () => {
-  openSearchPanel();
-});
-
-// 监听键盘事件
-window.addEventListener("keydown", handleKeydown);
+if (typeof window !== 'undefined') {
+  window.addEventListener("search:open", () => {
+    openSearchPanel();
+  });
+  // 监听键盘事件
+  window.addEventListener("keydown", handleKeydown);
+}
 
 const saveText = () => {
-  debouncedSubmit({
-    element: document.querySelector(".tiptap") as HTMLElement,
-    filename: "xxx.pdf",
-  });
+  if (typeof document !== 'undefined') {
+    debouncedSubmit({
+      element: document.querySelector(".tiptap") as HTMLElement,
+      filename: "xxx.pdf",
+    });
+  }
 };
 
 const handleWordUpload = async (event: Event) => {
@@ -689,9 +694,11 @@ const removeComment = () => {
 onBeforeUnmount(() => {
   editor.value?.destroy();
   EventBus.all.clear();
-  // 清理事件监听器
-  window.removeEventListener("keydown", handleKeydown);
-  window.removeEventListener("search:open", openSearchPanel);
+  if (typeof window !== 'undefined') {
+    // 清理事件监听器
+    window.removeEventListener("keydown", handleKeydown);
+    window.removeEventListener("search:open", openSearchPanel);
+  }
 });
 </script>
 

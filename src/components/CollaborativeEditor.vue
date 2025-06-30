@@ -61,7 +61,7 @@
               @click="
                 aiClick = true;
                 aiClickSummary(
-                  '本次课程设计聚焦网络编程实践，我成功开发了基于 UDP 协议的 PingServer 与 PingClient 工具。不同于传统使用 ICMP 协议的 “ping” 工具，这组程序通过 UDP 协议实现网络连通性测试。在开发过程中，我系统掌握了网络编程的核心技术，深入理解了并发处理、数据包操作及错误处理等关键环节的实践要点。'
+                   '本次课程设计聚焦网络编程实践，我成功开发了基于 UDP 协议的 PingServer 与 PingClient 工具。不同于传统使用 ICMP 协议的 “ping” 工具，这组程序通过 UDP 协议实现网络连通性测试。在开发过程中，我系统掌握了网络编程的核心技术，深入理解了并发处理、数据包操作及错误处理等关键环节的实践要点。'
                 );
               "
               >AI总结全文</el-button
@@ -410,19 +410,20 @@ const aiClickSummary = async (documentText: string) => {
 // 生命周期钩子
 onMounted(() => {
   console.log("协同编辑器已挂载");
-
-  // 监听页面卸载事件
-  window.addEventListener("beforeunload", handleBeforeUnload);
-  window.addEventListener("unload", handleBeforeUnload);
+  if (typeof window !== 'undefined') {
+    // 监听页面卸载事件
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    window.addEventListener("unload", handleBeforeUnload);
+  }
 });
 
 onBeforeUnmount(() => {
   console.log("销毁协同编辑器...");
-
-  // 移除事件监听器
-  window.removeEventListener("beforeunload", handleBeforeUnload);
-  window.removeEventListener("unload", handleBeforeUnload);
-
+  if (typeof window !== 'undefined') {
+    // 移除事件监听器
+    window.removeEventListener("beforeunload", handleBeforeUnload);
+    window.removeEventListener("unload", handleBeforeUnload);
+  }
   destroyCollaboration();
 });
 </script>
