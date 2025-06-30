@@ -158,7 +158,7 @@ onMounted(async () => {
 
   <!-- 新建/编辑知识库弹出层 -->
   <el-dialog v-model="dialogFormVisible" title="新建知识库" width="500px">
-    <el-form v-model="form" :rules="rules" @keyup.enter.prevent>
+    <el-form :model="form" :rules="rules" @keyup.enter.prevent>
       <el-form-item
         label="知识库名称"
         :label-width="formLabelWidth"
