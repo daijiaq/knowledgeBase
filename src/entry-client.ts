@@ -1,12 +1,10 @@
 // src/entry-client.ts
 import { createApp } from './main'
 import { checkKnowledgeBaseAuth } from './api/knowledgeBase'
-
 const { app, router } = createApp()
 
 router.beforeEach(async (to, from, next) => {
   const isAuthenticated = localStorage.getItem('token')
-
   if (to.meta.requiresAuth) {
     if (!isAuthenticated) {
       next('/login')

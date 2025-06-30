@@ -4,11 +4,8 @@ import { createApp } from './main'
 
 export async function render(url: string) {
   const { app, router } = createApp(url)
-
-  console.log('SSR router.push url:', url)
   await router.push(url)
   await router.isReady()
-
   const html = await renderToString(app)
   return html
 }
