@@ -1,10 +1,10 @@
 import request from '../utils/request'
 
 //创建文档
-export const createDocument = (knowledgeBaseId: number, title: string, folderId: number|null): Promise<any> => {
+export const createDocument = (knowledgeBaseId: number, title: string, parentId: number|null,idType:'document'|'folder'): Promise<any> => {
   let data: any = {}
   //如果没有传入文件夹id，则创建在根目录下
-  if(folderId==null){
+  if(parentId==null){
     data = {
       title,
       knowledgeBaseId
@@ -13,10 +13,9 @@ export const createDocument = (knowledgeBaseId: number, title: string, folderId:
     data = {
       title,
       knowledgeBaseId,
-      folderId
+      parentId
   }} 
-  console.log(111,folderId);
-  
+  data.idType = idType==='document' ? 0 : 1 //0表示文档，1表示文件夹
   return request({
     url:'/documents/create',
     method: 'POST',

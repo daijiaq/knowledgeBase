@@ -43,12 +43,13 @@ export const useKnowledgeBaseStore = defineStore('knowledgeBase', () => {
   //当前选中的文档或文件夹
   const currentDocId = ref<null|number>(null)
   const selectDocId = ref<null|number>(null)//展示文档
-  const currentDocType = ref<'document'|'folder'>()
+  const currentDocType = ref<'document'|'folder'>('folder')
   let storageId: string | null = null
   let storageType: string | null = null
   if (typeof window !== 'undefined') {
     storageId = localStorage.getItem('currentDocId')
     storageType = localStorage.getItem('currentDocType')
+    if(storageType==='document' && storageId!=null){selectDocId.value = Number(storageId)}
   }
   currentDocId.value = storageId!=undefined&&storageId!='null'?Number(storageId):null
   currentDocType.value = storageType=='folder'||storageType=='document'?storageType:'folder'

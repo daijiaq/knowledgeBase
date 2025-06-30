@@ -51,7 +51,7 @@
       <!-- 子列表 -->
       <div class="children" v-if="showDetail" style="padding-left: 10px;">
         <FolderItem v-for="item in children.folders" :item="item" :getKBsContent="getKBsContent2" ref="folderItem" :key="item.id" :expandFolder="expandFolder"/>
-        <DocumentItem v-for="item in children.documents" :item="item" :getKBsContent="getKBsContent2" :key="item.id"/>
+        <DocumentItem v-for="item in children.documents" :item="item" :getKBsContent="getKBsContent2" :key="item.id" ref="docItem"/>
       </div>
     </div>
 
@@ -159,6 +159,7 @@ import { ref,defineOptions, reactive,watch } from 'vue';
     name:'FolderItem'
   })
   const folderItem = ref(null)
+  const docItem = ref(null)
   defineExpose({
     getKBsContent:()=>{
       getKBsContent()
@@ -169,7 +170,12 @@ import { ref,defineOptions, reactive,watch } from 'vue';
       }
       showDetail.value = true //刷新后展开文件夹
       getFolderChildren(item.id) //刷新当前文件夹内容
-    }
+      }
+      if(docItem.value){
+        for(let i=0;i<docItem.value.length;i++){
+          docItem.value[i].getKBsContent()
+        }
+      }
     }
   })
 </script>

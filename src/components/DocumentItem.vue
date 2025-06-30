@@ -85,6 +85,11 @@ async function deleteDoc(docId:number){
     }) 
   }
 
+  defineExpose({
+    getKBsContent:()=>{
+      getKBsContent()
+    }
+  })
     
 </script>
     

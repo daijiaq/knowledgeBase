@@ -1,13 +1,14 @@
 import request from '../utils/request'
 //创建文件夹
-export const createFolderApi = (knowledgeBaseId:number,name:string,parentFolderId:number|null)=>{
+export const createFolderApi = (knowledgeBaseId:number,name:string,parentId:number|null,idType:'document'|'folder')=>{
   return request({
       url:'/folders',
       method:'POST',
       data:{
           knowledgeBaseId,
           name,
-          parentFolderId
+          parentId,
+          idType:idType==='document' ? 0 : 1 //0表示文档，1表示文件夹
       }
   })
 }

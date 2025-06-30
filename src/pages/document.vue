@@ -347,22 +347,24 @@ const createNewDoc = async() => {
       return;
     }
 
+    let selectId = null
     if (newDocForm.type === "document") {
       //创建文档
       const {data} = await documentApi.createDocument(
         knowledgeBaseId.value,
         newDocForm.name,
-        currentDocId.value
+        currentDocId.value,
+        currentDocType.value
       );
-      //创建完后选中文档
-      selectDoc(data.id);
-      selectDocType('document');
+      //创建后选中文档
+      selectId = data.id
     }else{
       //创建文件夹
       await folderApi.createFolderApi(
         knowledgeBaseId.value,
         newDocForm.name,
-        currentDocId.value
+        currentDocId.value,
+        currentDocType.value
       );
     }
     expandFolder.value = currentDocId.value
@@ -376,6 +378,11 @@ const createNewDoc = async() => {
       for(let i=0;i<folderItem.value.length;i++){
         folderItem.value[i].getKBsContent()
       }
+    }
+    if(selectId!=null){
+      //创建完后选中文档
+      selectDoc(selectId);
+      selectDocType('document');
     }
   }catch(error){
     console.log('创建文档或文件夹失败',error);
