@@ -6,6 +6,8 @@
         <div class="kb-info" v-if="!sidebarCollapsed">
           <div class="kb-icon">
             <svg
+              width="20"
+              height="20"
               viewBox="0 0 24 24"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
@@ -29,6 +31,8 @@
         </div>
         <el-button @click="toggleSidebar"class="collapse-btn">
           <svg
+            width="16"
+            height="16"
             viewBox="0 0 24 24"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
@@ -53,6 +57,8 @@
         <div class="search-box" @click.stop>
           <svg
             class="search-icon"
+            width="16"
+            height="16"
             viewBox="0 0 24 24"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
@@ -77,6 +83,8 @@
             size="small"
           >
             <svg
+              width="14"
+              height="14"
               viewBox="0 0 24 24"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
@@ -104,6 +112,8 @@
             <el-button size="small">
               更多
               <svg
+                width="14"
+                height="14"
                 viewBox="0 0 24 24"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"

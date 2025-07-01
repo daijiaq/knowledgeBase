@@ -8,16 +8,12 @@
       >
         <!-- 展开/收起箭头 -->
         <span class="arrow-icon" @click.stop="selectFolder(item.id)">
-          <svg :style="{transform: showDetail ? 'rotate(90deg)' : 'rotate(0deg)'}" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <svg width="16" height="16" :style="{transform: showDetail ? 'rotate(90deg)' : 'rotate(0deg)'}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </span>
         <div class="doc-icon">
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path
               d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"
               stroke="currentColor"
@@ -29,11 +25,7 @@
         <div class="doc-actions" @click.stop>
           <el-dropdown trigger="click" @click.stop>
             <el-button size="small">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <circle cx="12" cy="12" r="1" fill="currentColor" />
                 <circle cx="12" cy="5" r="1" fill="currentColor" />
                 <circle cx="12" cy="19" r="1" fill="currentColor" />
