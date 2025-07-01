@@ -381,8 +381,8 @@ const createNewDoc = async() => {
     }
     if(selectId!=null){
       //创建完后选中文档
-      selectDoc(selectId);
       selectDocType('document');
+      selectDoc(selectId);
     }
   }catch(error){
     console.log('创建文档或文件夹失败',error);
