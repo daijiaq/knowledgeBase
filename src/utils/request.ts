@@ -12,7 +12,7 @@ instance.interceptors.request.use(
   (config) => {
     let token = ''
     if (typeof window !== 'undefined') {
-      token = localStorage.getItem('token') || ''
+      token = sessionStorage.getItem('token') || ''
     }
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
