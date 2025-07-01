@@ -124,12 +124,10 @@
         </div>
 
         <!-- 文档树 -->
-        <div class="doc-tree" @click.stop>
-          <!-- 文件夹 -->
-          <FolderItem v-for="item in filterFolders" :item="item" :key="item.id" :getKBsContent="getKBsContent" ref="folderItem" :expandFolder="expandFolder"/>
-          <!-- 文档 -->
-          <DocumentItem v-for="doc in filterDocs" :key="doc.id" :item="doc" :getKBsContent="getKBsContent"/>
-        </div>
+          <div class="doc-tree" @click.stop>
+            <FolderItem v-for="item in filterFolders" :item="item" :key="item.id" :getKBsContent="getKBsContent" />
+            <DocumentItem v-for="doc in filterDocs" :key="doc.id" :item="doc" :getKBsContent="getKBsContent"/>
+          </div>
       </div>
     </div>
 
@@ -215,7 +213,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, reactive } from "vue";
+import { ref, computed, watch, reactive, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { ElMessage } from "element-plus";
 import CollaborativeEditor from "../components/CollaborativeEditor.vue";
@@ -233,7 +231,30 @@ import { storeToRefs } from "pinia";
 const router = useRouter();
 const route = useRoute();
 const knowledgeBaseId = ref(Number(route.params.knowledgeBaseId));
-//监听路由变化
+
+const knowledgeBaseStore = useKnowledgeBaseStore()
+const { knowledgeBaseContent, currentDocId, currentDocType, selectDocId } = storeToRefs(knowledgeBaseStore)
+const { selectDoc, selectDocType } = knowledgeBaseStore
+
+const rootFolders = ref<FolderInfo[]>()
+const rootDoc = ref()
+const currentKnowledgeBaseInfo = ref()
+
+const sidebarCollapsed = ref(false);
+const searchQuery = ref("");
+const showNewDocDialog = ref(false);
+const showShareDialog = ref(false);
+//双击空白位置将parentId设置为null
+const isClickDouble = ref(true)
+
+// 只在客户端请求数据，不再消费 SSR 注入的数据
+onMounted(() => {
+  knowledgeBaseStore.getAllKBs();
+  knowledgeBaseStore.getRecentKBs(5);
+  getKBsContent();
+});
+
+// 路由变化自动请求
 watch(
   () => route.params.knowledgeBaseId,
   (newValue) => {
@@ -242,17 +263,6 @@ watch(
   }
 );
 
-const knowledgeBaseStore =useKnowledgeBaseStore()
-const {currentDocId,currentDocType,selectDocId} = storeToRefs(knowledgeBaseStore)
-const {selectDoc,selectDocType} = knowledgeBaseStore
-
-// 响应式数据
-const sidebarCollapsed = ref(false);
-const searchQuery = ref("");
-const showNewDocDialog = ref(false);
-const showShareDialog = ref(false);
-//双击空白位置将parentId设置为null
-const isClickDouble = ref(true)
 function initParentId(){
   isClickDouble.value = !isClickDouble.value
   if(isClickDouble.value===true){
@@ -299,9 +309,6 @@ const newDocForm = reactive({
 const inviteEmail = ref("");
 
 //获取当前知识库下的内容
-const rootFolders = ref<FolderInfo[]>();
-const rootDoc = ref();
-const currentKnowledgeBaseInfo = ref();
 const getKBsContent = async () => {
   try {
     const {
@@ -315,10 +322,8 @@ const getKBsContent = async () => {
     ElMessage.error("无法获取知识库");
   }
 }
-if (typeof window !== 'undefined') {
-  getKBsContent()
-}
 
+// 搜索过滤
 const filterFolders = computed(() => {
   if (!searchQuery.value) return rootFolders.value;
   return rootFolders.value?.filter((doc) =>
