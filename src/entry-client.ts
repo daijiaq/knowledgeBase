@@ -12,7 +12,7 @@ if (typeof window !== 'undefined' && window.__INITIAL_STATE__) {
 }
 
 router.beforeEach(async (to, from, next) => {
-  const isAuthenticated = localStorage.getItem('token')
+  const isAuthenticated = sessionStorage.getItem('token')
   if (to.meta.requiresAuth) {
     if (!isAuthenticated) {
       next('/login')

@@ -38,7 +38,7 @@ export const generateSummary = (
   onComplete: () => void,
   onError: (error: Error) => void
 ) => {
-  const userToken = localStorage.getItem("token");
+  const userToken = sessionStorage.getItem("token");
   let abortController = new AbortController();
 
   const fetchSSE = async () => {

@@ -47,8 +47,8 @@ export const useKnowledgeBaseStore = defineStore('knowledgeBase', () => {
   let storageId: string | null = null
   let storageType: string | null = null
   if (typeof window !== 'undefined') {
-    storageId = localStorage.getItem('currentDocId')
-    storageType = localStorage.getItem('currentDocType')
+    storageId = sessionStorage.getItem('currentDocId')
+    storageType = sessionStorage.getItem('currentDocType')
     if(storageType==='document' && storageId!=null){selectDocId.value = Number(storageId)}
   }
   currentDocId.value = storageId!=undefined&&storageId!='null'?Number(storageId):null
@@ -58,7 +58,7 @@ export const useKnowledgeBaseStore = defineStore('knowledgeBase', () => {
   const selectDoc = (docId:number|null)=>{
     currentDocId.value = docId
     if (typeof window !== 'undefined') {
-      localStorage.setItem('currentDocId',String(currentDocId.value))
+      sessionStorage.setItem('currentDocId',String(currentDocId.value))
     }
     if(currentDocType.value === 'document'){selectDocId.value = docId}  
   }
@@ -70,7 +70,7 @@ export const useKnowledgeBaseStore = defineStore('knowledgeBase', () => {
   const selectDocType = (type:'document'|'folder')=>{
     currentDocType.value = type
     if (typeof window !== 'undefined') {
-      localStorage.setItem('currentDocType',currentDocType.value)
+      sessionStorage.setItem('currentDocType',currentDocType.value)
     }
   }
 
