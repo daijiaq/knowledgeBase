@@ -230,13 +230,13 @@
 
 <script setup lang="ts">
 import { ref, reactive } from "vue";
-import { useRouter } from "vue-router";
+// import { useRouter } from "vue-router";
 import type { FormInstance, FormRules } from "element-plus";
 import { ElMessage } from "element-plus";
 import { userLogin, userRegister } from "../api/user";
 import { useUserStore } from "../stores/useUserStore";
 const useStore = useUserStore();
-const router = useRouter();
+// const router = useRouter();
 const isLogin = ref(true);
 const loading = ref(false);
 const formRef = ref<FormInstance>();
@@ -307,8 +307,8 @@ const handleSubmit = async () => {
       // 登录
       const res = await userLogin(formData.email, formData.password)
       if (typeof window !== 'undefined') {
-        localStorage.setItem("token", res.data.token || "")
-        localStorage.setItem("username", res.data.username || '未知用户')
+        sessionStorage.setItem("token", res.data.token || "")
+        sessionStorage.setItem("username", res.data.username || '未知用户')
         document.cookie = `token=${res.data.token}; path=/`;
       }
       useStore.logined = true
@@ -445,7 +445,7 @@ const handleSubmit = async () => {
           svg {
             width: 32px;
             height: 32px;
-            color: black;
+            color: white;
           }
         }
 
