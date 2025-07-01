@@ -28,17 +28,16 @@
     <!-- 编辑器容器 -->
     <div class="editor-container">
       <editor-content
-        v-if="!selectedContent"
         :editor="editor"
         class="editor-content"
         @click.native="getComment"
       />
-      <ReadonlyEditor v-if="selectedContent" :content="selectedContent" />
     </div>
     <VersionDrawer
       v-model="showVersionDrawer"
       @restore="handleRestore"
       :docId="props.docId"
+      ref="versionDrawerRef" 
     />
     <!-- 协同信息面板 -->
     <div class="collaboration-info">
@@ -134,9 +133,13 @@ const showVersionDrawer = ref(false);
 const openDrawer = () => {
   showVersionDrawer.value = true;
 };
-function handleRestore(content: string) {
-  // 这里将 content 设置到编辑器内容里
-  editor.value?.commands.setContent(content);
+async function handleRestore() {
+  // 重新获取当前文档内容
+  if (typeof props.docId !== "undefined") {
+    const res = await getDocumentContent(props.docId);
+    const content = res.data.content === "" ? "" : JSON.parse(res.data.content);
+    editor.value?.commands.setContent(content);
+  }
 }
 
 // ai
@@ -174,7 +177,6 @@ const connectionStatus = ref<ConnectionStatus>("disconnected");
 const onlineUsers = ref(0);
 const userId = ref<string>("");
 const userColor = ref<string>("");
-const selectedContent = ref<string | null>(null);
 
 // YJS 文档和提供者
 let ydoc: Y.Doc | null = null;
@@ -370,7 +372,8 @@ watch(
   },
   { immediate: true }
 );
-
+// 控制刷新历史版本
+const versionDrawerRef = ref()
 const saveDocument = async () => {
   const newContent = editor.value?.getJSON();
   if (typeof props.docId === "undefined") {
@@ -383,6 +386,7 @@ const saveDocument = async () => {
   );
   if (res.code === 200) {
     ElMessage.success("保存成功");
+    versionDrawerRef.value?.refreshHistory() // 刷新历史版本
   } else {
     ElMessage.error("保存失败");
   }
