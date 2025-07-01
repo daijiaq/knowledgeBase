@@ -42,8 +42,8 @@
       </div>
       <!-- 子列表 -->
       <div class="children" v-if="showDetail" style="padding-left: 10px;">
-        <FolderItem v-for="item in children.folders" :item="item" :getKBsContent="getKBsContent2" ref="folderItem" :key="item.id" :expandFolder="expandFolder"/>
-        <DocumentItem v-for="item in children.documents" :item="item" :getKBsContent="getKBsContent2" :key="item.id" ref="docItem"/>
+        <FolderItem v-for="item in children.folders" :item="item" :getKBsContent="getKBsContent2" ref="folderItem" :key="item.id" :expandFolder="expandFolder" :onSelectFolder="props.onSelectFolder" :onSelectDoc="props.onSelectDoc"/>
+        <DocumentItem v-for="item in children.documents" :item="item" :getKBsContent="getKBsContent2" :key="item.id" ref="docItem" :onSelectDoc="props.onSelectDoc"/>
       </div>
     </div>
 
@@ -66,17 +66,20 @@ import { ref,defineOptions, reactive,watch } from 'vue';
     folders:[],
     documents:[]
   })
-  const {item,getKBsContent,expandFolder} = defineProps(['item','getKBsContent','expandFolder'])
+  const props = defineProps(['item','getKBsContent','expandFolder','onSelectFolder','onSelectDoc'])
   
     //获取文件夹里面的内容
   const showDetail = ref(true)
-  getFolderChildren(item.id)
+  getFolderChildren(props.item.id)
   
   async function selectFolder(folderId:number){
-    selectDocType('folder')
-    selectDoc(folderId)
+    if (props.onSelectFolder) {
+      props.onSelectFolder(folderId)
+    } else {
+      selectDocType('folder')
+      selectDoc(folderId)
+    }
     if(showDetail.value==false){
-    //展示
       await getFolderChildren(folderId)
     }
     showDetail.value = !showDetail.value
@@ -94,10 +97,10 @@ import { ref,defineOptions, reactive,watch } from 'vue';
     }
   }
   //如果刚创建则把这个文件夹打开
-  watch(()=>expandFolder,(newValue)=>{
-    if(newValue===item.id&&showDetail.value===false){
+  watch(()=>props.expandFolder,(newValue)=>{
+    if(newValue===props.item.id&&showDetail.value===false){
       showDetail.value = true
-      getFolderChildren(item.id) //获取当前文件夹内容
+      getFolderChildren(props.item.id) //获取当前文件夹内容
     }
   })
   
@@ -112,7 +115,7 @@ import { ref,defineOptions, reactive,watch } from 'vue';
       try {
         await deleteFolderApi(folderId)
         ElMessage.success("删除文件夹成功")
-        getKBsContent()
+        props.getKBsContent()
         selectDocType('folder')
         selectDoc(null)
       } catch (error: any) {
@@ -126,10 +129,10 @@ import { ref,defineOptions, reactive,watch } from 'vue';
 
   async function editFolder(name:string){
     try{
-      await editFolderApi(item.id,name)
+      await editFolderApi(props.item.id,name)
       showEditDialog.value = false
       ElMessage.success('编辑文件夹成功')
-      getKBsContent()
+      props.getKBsContent()
     }catch(error){
       console.error('编辑文件夹失败:', error)
       ElMessage.error('编辑文件夹失败，请稍后再试')
@@ -138,8 +141,8 @@ import { ref,defineOptions, reactive,watch } from 'vue';
   }
   async function getKBsContent2() {
     try{
-      await getKBsContent()
-      await getFolderChildren(item.id)
+      await props.getKBsContent()
+      await getFolderChildren(props.item.id)
     }catch(error){
       console.error('获取文件夹内容失败:', error)
       ElMessage.error('获取文件夹内容失败，请稍后再试')
@@ -154,14 +157,14 @@ import { ref,defineOptions, reactive,watch } from 'vue';
   const docItem = ref(null)
   defineExpose({
     getKBsContent:()=>{
-      getKBsContent()
+      props.getKBsContent()
       // folderItem.value?.getKBsContent() //刷新文件夹内容
       if(folderItem.value){
       for(let i=0;i<folderItem.value.length;i++){
         folderItem.value[i].getKBsContent()
       }
       showDetail.value = true //刷新后展开文件夹
-      getFolderChildren(item.id) //刷新当前文件夹内容
+      getFolderChildren(props.item.id) //刷新当前文件夹内容
       }
       if(docItem.value){
         for(let i=0;i<docItem.value.length;i++){

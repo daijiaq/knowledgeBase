@@ -135,8 +135,8 @@
 
         <!-- 文档树 -->
           <div class="doc-tree" @click.stop>
-            <FolderItem v-for="item in filterFolders" :item="item" :key="item.id" :getKBsContent="getKBsContent" />
-            <DocumentItem v-for="doc in filterDocs" :key="doc.id" :item="doc" :getKBsContent="getKBsContent"/>
+            <FolderItem v-for="item in filterFolders" :item="item" :key="item.id" :getKBsContent="getKBsContent" :onSelectFolder="handleSelectFolder" :onSelectDoc="handleSelectDoc" />
+            <DocumentItem v-for="doc in filterDocs" :key="doc.id" :item="doc" :getKBsContent="getKBsContent" :onSelectDoc="handleSelectDoc"/>
           </div>
       </div>
     </div>
@@ -262,6 +262,15 @@ onMounted(() => {
   knowledgeBaseStore.getAllKBs();
   knowledgeBaseStore.getRecentKBs(5);
   getKBsContent();
+  if (route.params.docId) {
+    if (String(route.params.docId).startsWith('folder-')) {
+      selectDocType('folder');
+      selectDoc(Number(String(route.params.docId).replace('folder-', '')));
+    } else {
+      selectDocType('document');
+      selectDoc(Number(route.params.docId));
+    }
+  }
 });
 
 // 路由变化自动请求
@@ -270,6 +279,21 @@ watch(
   (newValue) => {
     knowledgeBaseId.value = Number(newValue);
     getKBsContent();
+  }
+);
+
+watch(
+  () => route.params.docId,
+  (newDocId) => {
+    if (newDocId) {
+      if (String(newDocId).startsWith('folder-')) {
+        selectDocType('folder');
+        selectDoc(Number(String(newDocId).replace('folder-', '')));
+      } else {
+        selectDocType('document');
+        selectDoc(Number(newDocId));
+      }
+    }
   }
 );
 
@@ -426,6 +450,19 @@ const sendInvite = async () => {
   } catch (error) {
     ElMessage.error("邀请失败");
   }
+};
+
+// 文档树点击事件，选中文档并同步路由
+const handleSelectDoc = (id:number) => {
+  selectDocType('document');
+  selectDoc(id);
+  router.push({ path: `/knowledgeBase/${knowledgeBaseId.value}/${id}` });
+};
+// 文件夹点击事件，选中文件夹并同步路由
+const handleSelectFolder = (id:number) => {
+  selectDocType('folder');
+  selectDoc(id);
+  router.push({ path: `/knowledgeBase/${knowledgeBaseId.value}/folder-${id}` });
 };
 </script>
 

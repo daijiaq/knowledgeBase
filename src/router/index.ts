@@ -28,7 +28,7 @@ const routes = [
         component: () => import('../components/knowledgeBaseMain.vue')
       },
       {
-        path: ':knowledgeBaseId',
+        path: ':knowledgeBaseId/:docId?',
         component: () => import('../pages/document.vue')
       },
       {

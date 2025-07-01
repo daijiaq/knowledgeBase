@@ -46,16 +46,20 @@ import * as documentApi from '../api/document';
 const knowledgeBaseStore = useKnowledgeBaseStore()
 const {currentDocId,currentDocType} = storeToRefs(knowledgeBaseStore)
 const {selectDoc,selectDocType} = knowledgeBaseStore
+const props = defineProps(['item','getKBsContent','onSelectDoc'])
 const selectCurrentDoc = (id: number) => {
-  knowledgeBaseStore.selectDocType('document')
-  knowledgeBaseStore.selectDoc(id)
+  if (props.onSelectDoc) {
+    props.onSelectDoc(id)
+  } else {
+    knowledgeBaseStore.selectDocType('document')
+    knowledgeBaseStore.selectDoc(id)
+  }
 }
-const {item,getKBsContent} = defineProps(['item','getKBsContent'])
 const showEditDialog = ref(false)
 const editDocName = async(name: string) => {
-  await documentApi.editDocumentName(item.id, name)
+  await documentApi.editDocumentName(props.item.id, name)
   showEditDialog.value = false
-  getKBsContent()
+  props.getKBsContent()
 }
 //删除文件夹
 async function deleteDoc(docId:number){
@@ -67,7 +71,7 @@ async function deleteDoc(docId:number){
       try {
         await documentApi.deleteDocument(docId)
         ElMessage.success("删除文档成功")
-        getKBsContent()
+        props.getKBsContent()
         selectDocType('folder')
         selectDoc(null)
       } catch (error: any) {
@@ -79,7 +83,7 @@ async function deleteDoc(docId:number){
 
   defineExpose({
     getKBsContent:()=>{
-      getKBsContent()
+      props.getKBsContent()
     }
   })
     
