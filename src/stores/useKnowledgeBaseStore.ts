@@ -63,9 +63,9 @@ export const useKnowledgeBaseStore = defineStore('knowledgeBase', () => {
     if(currentDocType.value === 'document'){selectDocId.value = docId}  
   }
   const changKBs = ()=>{
-    currentDocId.value = null
     selectDocId.value = null
-    currentDocType.value = 'folder'
+    selectDocType('folder')
+    selectDoc(null)
   }
   const selectDocType = (type:'document'|'folder')=>{
     currentDocType.value = type
