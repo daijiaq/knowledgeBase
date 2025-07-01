@@ -19,7 +19,7 @@ interface KnowledgeBaseCard {
   description: string
 }
 // 最近访问列表
-const {getRecentKBs,selectDoc,getAllKBs} = knowledgeBaseStore
+const {getRecentKBs,changKBs,getAllKBs} = knowledgeBaseStore
 const { recentKBsList } = storeToRefs(knowledgeBaseStore) as {
   recentKBsList: import('vue').Ref<KnowledgeBaseCard[]>
 };
@@ -37,7 +37,7 @@ watch(()=>route.params.knowledgeBaseId,(newValue)=>{
   activeMenu.value = newValue
 })
 watch(()=>route.path,()=>{
-  selectDoc(null)
+  changKBs()
 })
 const handleOpen = () => {
   console.log('打开');
@@ -56,11 +56,11 @@ const logOut = ()=>{
   ElMessage.success("已退出登录")
   router.replace('/login')
 }
-// 获取所有知识库（获取可访问的知识库）
-onMounted(async()=>{
-  await knowledgeBaseStore.getAllKBs()
-  await knowledgeBaseStore.getRecentKBs(5)
-})
+// 获取所有知识库（获取可访问的知识库）ssR时会调用所以不用onMounted
+// onMounted(async()=>{
+//   await knowledgeBaseStore.getAllKBs()
+//   await knowledgeBaseStore.getRecentKBs(5)
+// })
 
 const dialogFormVisible = ref(false)
 const editingId = ref<number | null>(null)
@@ -89,10 +89,14 @@ async function submitForm() {
   
   if(route.path === `/knowledgeBase/KnowledgeBaseMain`) {
     // 更新知识库列表
-    await knowledgeBaseStore.getAllKBs()
-    await getRecentKBs(5)
+    if (typeof window !== 'undefined') {
+      await knowledgeBaseStore.getAllKBs()
+      await getRecentKBs(5)
+    }
   } else{
-    await getAllKBs()
+    if (typeof window !== 'undefined') {
+      await getAllKBs()
+    }
   }
 }
 

@@ -43,5 +43,5 @@ export function createApp(url = '/') {
     app.provide(ZINDEX_INJECTION_KEY, { current: 0 })
   }
 
-  return { app, router }
+  return { app, router, pinia }
 }

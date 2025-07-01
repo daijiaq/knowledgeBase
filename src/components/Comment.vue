@@ -17,64 +17,49 @@
                 </el-icon>
             </div>
             <div class="comment-content" v-for="(comment,index) of getCommentContent" :key="index">
-                <h3>Total</h3>
-                <div class="text">{{ comment.text }}</div>
-                <div class="content">{{ comment.content }}</div>
+                <h3>{{ comment.username }}</h3>
+                <div class="text">{{ text }}</div>
+                <div class="content">{{ comment.comment }}</div>
             </div>
         </div>
     </Transition>
 
 </template>
 <script lang="ts" setup>
-import { ref , onBeforeUnmount ,reactive } from 'vue'
+import { ref , onBeforeUnmount } from 'vue'
 import EventBus from '../utils/event-bus'
 import { CloseBold } from '@element-plus/icons-vue'
+import { getCommentApi } from '../api/comment'
  
 interface CommentItem {
+    username: string;
     text: string;
-    content: string;
+    comment: string;
 }
+
 
 const commentContent = ref<string>('')
 const showCommentInput = ref<boolean>(false);
 const showCommentContent = ref<boolean>(false);
 const getCommentContent = ref<CommentItem[]>([])
+const text = ref<string>('')
 
 EventBus.on('showCommentInput', ((val: boolean) => {
     showCommentInput.value = val;
     showCommentContent.value = false;
 } ) as any);
 
-EventBus.on('getComment', ((val: any) => {
+EventBus.on('getComment', (async(val: any) => {
     showCommentInput.value = false;
     showCommentContent.value = true;
-    getCommentContent.value = [
-        {
-            text: "秋末的银杏叶落在青石板上，像被揉皱的金箔，风一掀，又轻轻旋起半寸，不肯急着归尘。",
-            content: "生命的从容往往藏在“不肯急”里——不必追赶季节的催促，不必慌忙与旧时光告别。飘落不是终点，而是用最舒展的姿态，完成与大地最后的对话。"
-        },
-        {
-            text: "黄昏把云絮染成蜜色时，老座钟的铜摆正晃过第七下，檐角的风铃却比它慢半拍——时间原是有温度的，烫在记忆里就成了琥珀。",
-            content: "机械的滴答声丈量的是物理长度，而那些“慢半拍”的温柔时刻，才是时间真正的重量。它不追求精准，只负责把心动、温暖、遗憾都封存在记忆里，成为往后反复摩挲的光。"
-        },
-        {
-            text: "雨夜里的窗灯最是温柔，晕开一团橘色的雾，把雨丝都焐暖了，像有人在等，又像在等的人本身就是暖。",
-            content: "等待与被等待从不是单向的消耗。那盏灯既是归人的指引，也是守灯人内心的投射——我们用温暖照亮他人时，自己也早已活成了光的形状。"
-        },
-        {
-            text: "种子顶开第一片土壳时，根须还在黑暗里摸索，它不急着炫耀绿芽，先把影子往地下扎得更深——所有向上的生长，都始于向下的沉淀。",
-            content: "世人总爱为“破土”鼓掌，却少有人看见地下根系的沉默。真正的成长从不是急功近利的攀爬，而是先学会在看不见的地方扎根，把脆弱熬成坚韧，再将积累化作向上的力量。"
-        },
-        {
-            text: "星子落进深潭，碎成满池磷火，游鱼衔起一片，又吐在波心——光明从不怕被打碎，它会在每个涟漪里重新亮起来。",
-            content: "生活总爱把期待摔成碎片，但光的特质是：碎了便成了千万个小太阳。那些被揉皱的希望、被击散的勇气，终会在某个涟漪里，重新聚成照亮前路的光。"
-        }
-    ]
-}) as any);
+    const res = await getCommentApi(val.text_id);
+    text.value = val.text;
+    getCommentContent.value = res.data;
+}))
 
-const confirmComment = () => {
+const confirmComment = async() => {
     if (!commentContent.value.trim()) return;
-    EventBus.emit('confirmComment',true)
+    EventBus.emit('confirmComment',commentContent.value.trim())
     showCommentInput.value = false;
     commentContent.value = '';
 }

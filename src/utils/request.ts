@@ -82,4 +82,11 @@ instance.interceptors.response.use(
   }
 );
 
+// SSR 阶段动态注入 token
+export function setSSRToken(token: string) {
+  if (token) {
+    instance.defaults.headers["Authorization"] = `Bearer ${token}`
+  }
+}
+
 export default instance

@@ -1,7 +1,6 @@
 import { Extension } from '@tiptap/core'
 import { Plugin, PluginKey } from '@tiptap/pm/state'
 import { Decoration, DecorationSet } from '@tiptap/pm/view'
-import { TextSelection } from '@tiptap/pm/state'
 
 export interface SearchOptions {
   highlightClass?: string
@@ -37,14 +36,6 @@ declare module '@tiptap/core' {
        * 上一个匹配
        */
       prevMatch: () => ReturnType
-      /**
-       * 替换当前匹配
-       */
-      replaceCurrent: (replacement: string) => ReturnType
-      /**
-       * 替换所有匹配
-       */
-      replaceAll: (replacement: string) => ReturnType
     }
   }
 }
@@ -158,38 +149,6 @@ export const Search = Extension.create<SearchOptions>({
         }
         return true
       },
-
-      replaceCurrent: (replacement: string) => ({ tr, dispatch, state }) => {
-        if (!searchPluginKey) return false
-        
-        const searchState = searchPluginKey.getState(state) as SearchState
-        if (!searchState || searchState.currentIndex < 0) return false
-
-        const match = searchState.matches[searchState.currentIndex]
-        if (!match) return false
-
-        if (dispatch) {
-          tr.replaceWith(match.from, match.to, state.schema.text(replacement))
-          tr.setSelection(TextSelection.create(tr.doc, match.from, match.from + replacement.length))
-        }
-        return true
-      },
-
-      replaceAll: (replacement: string) => ({ tr, dispatch, state }) => {
-        if (!searchPluginKey) return false
-        
-        const searchState = searchPluginKey.getState(state) as SearchState
-        if (!searchState || !searchState.matches.length) return false
-
-        if (dispatch) {
-          // 从后往前替换，避免位置偏移
-          for (let i = searchState.matches.length - 1; i >= 0; i--) {
-            const match = searchState.matches[i]
-            tr.replaceWith(match.from, match.to, state.schema.text(replacement))
-          }
-        }
-        return true
-      },
     }
   },
 
@@ -290,17 +249,6 @@ export const Search = Extension.create<SearchOptions>({
       hasMatches(): boolean {
         return this.getMatchCount() > 0
       },
-
-      // 添加调试方法
-      debugSearchState(): void {
-        const state = this.getSearchState()
-        console.log('Debug search state:', state)
-        if (state) {
-          console.log('Matches:', state.matches)
-          console.log('Current index:', state.currentIndex)
-          console.log('Query:', state.query)
-        }
-      }
     }
   },
 }) 

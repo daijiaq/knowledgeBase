@@ -4,14 +4,13 @@
       <div 
       class="doc-item"
       @click="selectFolder(item.id)"
-      :class="{ active: currentDocId === item.id }"
+      :class="{ active: currentDocId === item.id &&currentDocType === 'folder' }"
       >
         <!-- 展开/收起箭头 -->
         <span class="arrow-icon" @click.stop="selectFolder(item.id)">
-          <svg v-if="children.folders.length > 0 || children.documents.length > 0" :style="{transform: showDetail ? 'rotate(90deg)' : 'rotate(0deg)'}" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <svg :style="{transform: showDetail ? 'rotate(90deg)' : 'rotate(0deg)'}" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
-          <svg v-else width="16" height="16"></svg>
         </span>
         <div class="doc-icon">
           <svg
@@ -42,7 +41,7 @@
             </el-button>
             <template #dropdown>
               <el-dropdown-menu>
-                <el-dropdown-item @click="showEditDialog=true">重命名</el-dropdown-item>
+                <el-dropdown-item @click="showEditDialog=true;">重命名</el-dropdown-item>
                 <el-dropdown-item class="danger" @click="deleteFolder(item.id)">删除</el-dropdown-item>
               </el-dropdown-menu>
             </template>
@@ -52,19 +51,12 @@
       <!-- 子列表 -->
       <div class="children" v-if="showDetail" style="padding-left: 10px;">
         <FolderItem v-for="item in children.folders" :item="item" :getKBsContent="getKBsContent2" ref="folderItem" :key="item.id" :expandFolder="expandFolder"/>
+        <DocumentItem v-for="item in children.documents" :item="item" :getKBsContent="getKBsContent2" :key="item.id" ref="docItem"/>
       </div>
     </div>
 
     <!-- 重命名对话框 -->
-    <el-dialog v-model="showEditDialog" title="重命名" width="400px">
-      <el-form v-model="newDocName" label-width="80px">
-        <el-input v-model="newDocName" placeholder="请输入文档名称" />
-      </el-form>
-      <template #footer>
-        <el-button @click="showEditDialog = false">取消</el-button>
-        <el-button type="primary" @click="editFolder(item.id,newDocName)">确定</el-button>
-      </template>
-    </el-dialog>
+    <EditNameDialog v-model="showEditDialog" :editName="editFolder"/>
 </template>
     
 <script lang='ts' setup name='FolderItem'>
@@ -73,9 +65,11 @@ import { ref,defineOptions, reactive,watch } from 'vue';
   import { storeToRefs } from 'pinia';
   import { deleteFolderApi,editFolderApi } from '../api/folder';
   import { ElMessage,ElMessageBox } from 'element-plus';
+  import EditNameDialog from './EditNameDialog.vue';
   const knowledgeBaseStore = useKnowledgeBaseStore()
-  const {currentDocId} = storeToRefs(knowledgeBaseStore)
+  const {currentDocId,currentDocType} = storeToRefs(knowledgeBaseStore)
   const {selectDoc,getFolderContent,selectDocType} = knowledgeBaseStore
+  import DocumentItem from './DocumentItem.vue';
   const children = reactive({
     folders:[],
     documents:[]
@@ -87,6 +81,7 @@ import { ref,defineOptions, reactive,watch } from 'vue';
   getFolderChildren(item.id)
   
   async function selectFolder(folderId:number){
+    selectDocType('folder')
     selectDoc(folderId)
     if(showDetail.value==false){
     //展示
@@ -126,8 +121,8 @@ import { ref,defineOptions, reactive,watch } from 'vue';
         await deleteFolderApi(folderId)
         ElMessage.success("删除文件夹成功")
         getKBsContent()
-        selectDoc(null)
         selectDocType('folder')
+        selectDoc(null)
       } catch (error: any) {
         ElMessage.error(error.message)
         console.error("删除文件夹失败:", error) 
@@ -136,11 +131,10 @@ import { ref,defineOptions, reactive,watch } from 'vue';
   }
 
   const showEditDialog = ref(false)
-  const newDocName = ref(item.name)
 
-  async function editFolder(folderId:number,name:string){
+  async function editFolder(name:string){
     try{
-      await editFolderApi(folderId,name)
+      await editFolderApi(item.id,name)
       showEditDialog.value = false
       ElMessage.success('编辑文件夹成功')
       getKBsContent()
@@ -165,6 +159,7 @@ import { ref,defineOptions, reactive,watch } from 'vue';
     name:'FolderItem'
   })
   const folderItem = ref(null)
+  const docItem = ref(null)
   defineExpose({
     getKBsContent:()=>{
       getKBsContent()
@@ -175,80 +170,16 @@ import { ref,defineOptions, reactive,watch } from 'vue';
       }
       showDetail.value = true //刷新后展开文件夹
       getFolderChildren(item.id) //刷新当前文件夹内容
-    }
+      }
+      if(docItem.value){
+        for(let i=0;i<docItem.value.length;i++){
+          docItem.value[i].getKBsContent()
+        }
+      }
     }
   })
 </script>
     
 <style scoped>
-    .doc-item {
-        display: flex;
-        align-items: center;
-        padding: 8px 12px;
-        border-radius: 6px;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        margin-bottom: 2px;
-
-        /* 箭头图标样式 */
-        .arrow-icon {
-          display: flex;
-          align-items: center;
-          margin-right: 4px;
-          width: 16px;
-          height: 16px;
-          user-select: none;
-        }
-
-        &:hover {
-          background: var(--background-color);
-        }
-
-        &.active {
-          background: var(--primary-color);
-          color: white;
-
-          .doc-icon svg {
-            color: white;
-          }
-        }
-
-        .doc-icon {
-          width: 16px;
-          height: 16px;
-          margin-right: 8px;
-
-          svg {
-            width: 100%;
-            height: 100%;
-            color: var(--text-color-secondary);
-          }
-        }
-
-        .doc-title {
-          flex: 1;
-          font-size: 14px;
-          font-weight: 500;
-        }
-
-        .doc-actions {
-          opacity: 0;
-          transition: opacity 0.2s ease;
-
-          .el-button {
-            width: 20px;
-            height: 20px;
-            padding: 0;
-
-            svg {
-              width: 12px;
-              height: 12px;
-            }
-          }
-        }
-
-        &:hover .doc-actions {
-          opacity: 1;
-        }
-      }
+    @import '../css/doc-item.scss'
 </style>

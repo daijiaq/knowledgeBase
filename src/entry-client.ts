@@ -1,7 +1,15 @@
 // src/entry-client.ts
 import { createApp } from './main'
 import { checkKnowledgeBaseAuth } from './api/knowledgeBase'
-const { app, router } = createApp()
+import { createPinia } from 'pinia'
+import { useKnowledgeBaseStore } from './stores/useKnowledgeBaseStore'
+
+const { app, router, pinia } = createApp()
+
+// SSR hydration: 恢复 Pinia state
+if (typeof window !== 'undefined' && window.__INITIAL_STATE__) {
+  pinia.state.value = window.__INITIAL_STATE__
+}
 
 router.beforeEach(async (to, from, next) => {
   const isAuthenticated = localStorage.getItem('token')

@@ -27,7 +27,7 @@
             <h3>{{ currentKnowledgeBaseInfo?.name }}</h3>
           </div>
         </div>
-        <el-button @click="toggleSidebar" type="text" class="collapse-btn">
+        <el-button @click="toggleSidebar"class="collapse-btn">
           <svg
             viewBox="0 0 24 24"
             fill="none"
@@ -44,7 +44,11 @@
         </el-button>
       </div>
 
-      <div class="sidebar-content" v-if="!sidebarCollapsed" @click="initParentId">
+      <div
+        class="sidebar-content"
+        v-if="!sidebarCollapsed"
+        @click="initParentId"
+      >
         <!-- 搜索框 -->
         <div class="search-box" @click.stop>
           <svg
@@ -62,7 +66,7 @@
             />
             <path d="m21 21-4.35-4.35" stroke="currentColor" stroke-width="2" />
           </svg>
-          <input type="text" placeholder="搜索文档..." v-model="searchQuery" />
+          <input placeholder="搜索文档..." v-model="searchQuery" />
         </div>
 
         <!-- 工具栏 -->
@@ -122,15 +126,16 @@
         <!-- 文档树 -->
         <div class="doc-tree" @click.stop>
           <!-- 文件夹 -->
-          <FolderItem v-for="item in filteredDocs" :item="item"/>
+          <FolderItem v-for="item in filterFolders" :item="item" :key="item.id" :getKBsContent="getKBsContent" ref="folderItem" :expandFolder="expandFolder"/>
           <!-- 文档 -->
+          <DocumentItem v-for="doc in filterDocs" :key="doc.id" :item="doc" :getKBsContent="getKBsContent"/>
         </div>
       </div>
     </div>
 
     <!-- 主内容区 -->
-    <template v-if="currentDocId!==null&&currentDocType=='document'">
-      <CollaborativeEditor/>
+    <template v-if="selectDocId!==null">
+      <CollaborativeEditor :docId="selectDocId"/>
       <Comment />
     </template>
     <div v-else style="width: 890px;padding: 20px;
@@ -143,18 +148,18 @@
         <el-button @click="shareDoc">分享</el-button>
       </div>
       <p style="margin-top: 20px; font-size: 18px;">👋 欢迎来到知识库</p>
-    </div>
+    </div> 
 
     <!-- 新建文档对话框 -->
-    <el-dialog v-model="showNewDocDialog" title="新建文档" width="400px">
-      <el-form :model="newDocForm" label-width="80px">
-        <el-form-item label="文档名称">
-          <el-input v-model="newDocForm.name" placeholder="请输入文档名称" />
+    <el-dialog v-model="showNewDocDialog" :title="newDocForm.type==='document'?'新建文档':'新建文件夹'" width="400px">
+      <el-form v-model="newDocForm" label-width="80px">
+        <el-form-item label="名称">
+          <el-input v-model="newDocForm.name" :placeholder="newDocForm.type==='document'?'请输入文档名称':'请输入文件夹名称'" />
         </el-form-item>
-        <el-form-item label="文档类型">
+        <el-form-item label="类型">
           <el-radio-group v-model="newDocForm.type">
-            <el-radio label="document">文档</el-radio>
-            <el-radio label="folder">文件夹</el-radio>
+            <el-radio value="document">文档</el-radio>
+            <el-radio value="folder">文件夹</el-radio>
           </el-radio-group>
         </el-form-item>
       </el-form>
@@ -172,9 +177,9 @@
           <div class="invite-form">
             <div style="width: 300px">
               <el-input
-              v-model="inviteEmail"
-              placeholder="输入邮箱地址"
-              @input="searchInviteUser"
+                v-model="inviteEmail"
+                placeholder="输入邮箱地址"
+                @input="searchInviteUser"
               />
               <div class="invite-list">
                 <template v-if="search_list.length">
@@ -183,9 +188,14 @@
                     :key="item.id"
                     class="invite-user-item"
                     :class="{ checked: item.checked }"
-                    @click="item.checked = !item.checked">
-                    <span class="user-name" :title="item.username">{{ item.username }}</span>
-                    <el-check-tag :checked="item.checked">{{ item.checked ? '已选' : '选择' }}</el-check-tag>
+                    @click="item.checked = !item.checked"
+                  >
+                    <span class="user-name" :title="item.username">{{
+                      item.username
+                    }}</span>
+                    <el-check-tag :checked="item.checked">{{
+                      item.checked ? "已选" : "选择"
+                    }}</el-check-tag>
                   </div>
                 </template>
                 <div v-else class="no-user">无匹配用户</div>
@@ -197,13 +207,6 @@
               style="margin-left: 10px"
               >邀请</el-button
             >
-          </div>
-        </div>
-        <div class="share-section">
-          <h4>分享链接</h4>
-          <div class="share-link">
-            <el-input v-model="shareLink" readonly />
-            <el-button @click="copyShareLink">复制链接</el-button>
           </div>
         </div>
       </div>
@@ -219,23 +222,28 @@ import CollaborativeEditor from "../components/CollaborativeEditor.vue";
 import { userSearch } from "../api/user";
 import * as KBsApi from "../api/knowledgeBase";
 import * as folderApi from '../api/folder'
+import * as documentApi from '../api/document'
 import type { userInfo,searchItem } from "../types/user";
 import type{ FolderInfo } from "../types/knowledgeBase";
 import FolderItem from "../components/FolderItem.vue";
+import DocumentItem from "../components/DocumentItem.vue"
 import { useKnowledgeBaseStore } from "../stores/useKnowledgeBaseStore";
 import { storeToRefs } from "pinia";
 
 const router = useRouter();
 const route = useRoute();
-const knowledgeBaseId = ref(Number(route.params.knowledgeBaseId))
+const knowledgeBaseId = ref(Number(route.params.knowledgeBaseId));
 //监听路由变化
-watch(()=>route.params.knowledgeBaseId,(newValue)=>{
-  knowledgeBaseId.value = Number(newValue)
-  getKBsContent()
-})
+watch(
+  () => route.params.knowledgeBaseId,
+  (newValue) => {
+    knowledgeBaseId.value = Number(newValue);
+    getKBsContent();
+  }
+);
 
 const knowledgeBaseStore =useKnowledgeBaseStore()
-const {currentDocId,currentDocType} = storeToRefs(knowledgeBaseStore)
+const {currentDocId,currentDocType,selectDocId} = storeToRefs(knowledgeBaseStore)
 const {selectDoc,selectDocType} = knowledgeBaseStore
 
 // 响应式数据
@@ -248,81 +256,90 @@ const isClickDouble = ref(true)
 function initParentId(){
   isClickDouble.value = !isClickDouble.value
   if(isClickDouble.value===true){
-    selectDoc(null)
     selectDocType('folder')
+    selectDoc(null)
   }
 }
 
 //打开分享界面
-const shareDoc = ()=>{
-  showShareDialog.value = true
-}
+const shareDoc = () => {
+  showShareDialog.value = true;
+};
 //根据邮箱搜索用户
-const tt = ref(0)
-const search_list = ref<searchItem[]>([])
-const searchInviteUser = (keyword:string)=>{
-  tt.value&&clearTimeout(tt.value)
-  tt.value = setTimeout(async ()=>{
-    search_list.value = []
-    if(keyword){
-      const {data} = await userSearch(keyword,knowledgeBaseId.value)
-      data.forEach((item:userInfo)=>{
-        let checked = false
+const tt = ref(0);
+const search_list = ref<searchItem[]>([]);
+const searchInviteUser = (keyword: string) => {
+  tt.value && clearTimeout(tt.value);
+  tt.value = setTimeout(async () => {
+    search_list.value = [];
+    if (keyword) {
+      const { data } = await userSearch(keyword, knowledgeBaseId.value);
+      data.forEach((item: userInfo) => {
+        let checked = false;
         search_list.value.push({
           ...item,
-          checked
-        })
-      })
+          checked,
+        });
+      });
     }
-  },500)
-}
+  }, 500);
+};
 
 // 表单数据
-const newDocForm = reactive(({
+const newDocForm = reactive({
   name: "",
   type: "document",
   parentId: null,
-}) as {
-  name:string
-  type:'document'|'folder'
-  parentId:number|null
+} as {
+  name: string;
+  type: "document" | "folder";
+  parentId: number | null;
 });
 
 const inviteEmail = ref("");
-const shareLink = ref("https://example.com/share/abc123");
 
 //获取当前知识库下的内容
-const rootFolders = ref<FolderInfo[]>()
-const rootDoc = ref()
-const currentKnowledgeBaseInfo = ref()
-const getKBsContent = async()=>{
-  try{
-    const {data:{documents,folders,knowledgeBaseInfo}} = await KBsApi.getKBsContentApi(knowledgeBaseId.value)
-    rootFolders.value = folders
-    rootDoc.value = documents
-    currentKnowledgeBaseInfo.value = knowledgeBaseInfo
-  }catch(error){
-    console.log('根据知识库id获取内容失败');
-    ElMessage.error('无法获取知识库')
+const rootFolders = ref<FolderInfo[]>();
+const rootDoc = ref();
+const currentKnowledgeBaseInfo = ref();
+const getKBsContent = async () => {
+  try {
+    const {
+      data: { documents, folders, knowledgeBaseInfo },
+    } = await KBsApi.getKBsContentApi(knowledgeBaseId.value);
+    rootFolders.value = folders;
+    rootDoc.value = documents;
+    currentKnowledgeBaseInfo.value = knowledgeBaseInfo;
+  } catch (error) {
+    console.log("根据知识库id获取内容失败");
+    ElMessage.error("无法获取知识库");
   }
 }
 if (typeof window !== 'undefined') {
   getKBsContent()
 }
 
-const filteredDocs = computed(() => {
+const filterFolders = computed(() => {
   if (!searchQuery.value) return rootFolders.value;
   return rootFolders.value?.filter((doc) =>
     doc.name.toLowerCase().includes(searchQuery.value.toLowerCase())
   );
 });
-
+const filterDocs = computed(()=>{
+  if (!searchQuery.value) return rootDoc.value;
+  return rootDoc.value?.filter((doc) =>
+    doc.name.toLowerCase().includes(searchQuery.value.toLowerCase())
+  );
+})
 
 // 折叠侧边栏
 const toggleSidebar = () => {
   sidebarCollapsed.value = !sidebarCollapsed.value;
 };
 
+const expandFolder = ref<null|number>(null)
+import type FolderItemComponent from "../components/FolderItem.vue";
+const folderItem = ref<InstanceType<typeof FolderItemComponent>[]>([])
 const createNewDoc = async() => {
   try{
     if (!newDocForm.name.trim()) {
@@ -330,20 +347,43 @@ const createNewDoc = async() => {
       return;
     }
 
+    let selectId = null
     if (newDocForm.type === "document") {
       //创建文档
-      //创建完后选中文档
+      const {data} = await documentApi.createDocument(
+        knowledgeBaseId.value,
+        newDocForm.name,
+        currentDocId.value,
+        currentDocType.value
+      );
+      //创建后选中文档
+      selectId = data.id
     }else{
       //创建文件夹
-      await folderApi.createFolderApi(knowledgeBaseId.value,newDocForm.name,currentDocId.value)
+      await folderApi.createFolderApi(
+        knowledgeBaseId.value,
+        newDocForm.name,
+        currentDocId.value,
+        currentDocType.value
+      );
     }
-
+    expandFolder.value = currentDocId.value
     showNewDocDialog.value = false;
     newDocForm.name = "";
     newDocForm.type = "document";
-    newDocForm.parentId = null
+    newDocForm.parentId = null;
     ElMessage.success("创建成功");
-    location.reload()
+    getKBsContent()
+    if(folderItem.value){
+      for(let i=0;i<folderItem.value.length;i++){
+        folderItem.value[i].getKBsContent()
+      }
+    }
+    if(selectId!=null){
+      //创建完后选中文档
+      selectDoc(selectId);
+      selectDocType('document');
+    }
   }catch(error){
     console.log('创建文档或文件夹失败',error);
     ElMessage.error('创建失败')
@@ -356,26 +396,21 @@ const sendInvite = async () => {
     search_list.value.filter(item=>item.checked===true).forEach((ele:searchItem)=>{
       checkedUser.push(ele.id)
     })
-    if(Boolean(checkedUser)==false){
+    if(checkedUser.length===0){
       ElMessage.error("请选择协作人");
-      return
+      return;
     }
     await Promise.all(checkedUser.map((id:number)=>{
       return KBsApi.inviteKBsCollaborator(id,knowledgeBaseId.value)//第二个参数是知识库id
     }))
-    ElMessage.success("邀请已发送");
+    ElMessage.success("邀请成功");
     inviteEmail.value = "";
-    searchInviteUser(inviteEmail.value)
-    showShareDialog.value = false
-    getKBsContent()
-  }catch(error){
+    searchInviteUser(inviteEmail.value);
+    showShareDialog.value = false;
+    getKBsContent();
+  } catch (error) {
     ElMessage.error("邀请失败");
   }
-};
-
-const copyShareLink = () => {
-  navigator.clipboard.writeText(shareLink.value);
-  ElMessage.success("链接已复制");
 };
 </script>
 
@@ -595,15 +630,6 @@ const copyShareLink = () => {
     .invite-form {
       display: flex;
       align-items: flex-start;
-    }
-
-    .share-link {
-      display: flex;
-      gap: 8px;
-
-      .el-input {
-        flex: 1;
-      }
     }
   }
 }
