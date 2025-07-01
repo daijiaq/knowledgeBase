@@ -41,10 +41,12 @@ const getMenuId = (id: string | string[] | undefined): string => {
 const activeMenu = ref(getMenuId(route.params.knowledgeBaseId));
 watch(() => route.params.knowledgeBaseId, (newValue) => {
   activeMenu.value = getMenuId(newValue);
-});
-watch(()=>route.path,()=>{
   changKBs()
-})
+});
+/* watch(()=>route.path,()=>{
+  console.log(route.path);
+  changKBs()
+}) */
 const handleOpen = () => {
   console.log('打开');
   

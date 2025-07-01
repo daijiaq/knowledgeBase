@@ -17,7 +17,9 @@
                 </el-icon>
             </div>
             <div class="comment-content" v-for="(comment,index) of getCommentContent" :key="index">
-                <h3>{{ comment.username }}</h3>
+                <div class="user">
+                    <span class="username">{{ comment.username }}</span><span class="del-comment" v-if="userId === comment.userId"><el-icon @click="deleteComment(comment.id)"><Delete /></el-icon></span>
+                </div>
                 <div class="text">{{ text }}</div>
                 <div class="content">{{ comment.comment }}</div>
             </div>
@@ -26,15 +28,18 @@
 
 </template>
 <script lang="ts" setup>
-import { ref , onBeforeUnmount } from 'vue'
+import { ref , onBeforeUnmount , onMounted } from 'vue'
 import EventBus from '../utils/event-bus'
-import { CloseBold } from '@element-plus/icons-vue'
-import { getCommentApi } from '../api/comment'
+import { CloseBold, Delete } from '@element-plus/icons-vue'
+import { getCommentApi, removeCommentApi } from '../api/comment'
+import { getUserInfo } from '../api/user'
  
 interface CommentItem {
     username: string;
     text: string;
     comment: string;
+    userId:number;
+    id: number;
 }
 
 
@@ -42,6 +47,7 @@ const commentContent = ref<string>('')
 const showCommentInput = ref<boolean>(false);
 const showCommentContent = ref<boolean>(false);
 const getCommentContent = ref<CommentItem[]>([])
+const userId = ref<number>(0)
 const text = ref<string>('')
 
 EventBus.on('showCommentInput', ((val: boolean) => {
@@ -73,6 +79,23 @@ const cancelComment = () => {
 const removeCommentBox = () =>{
     showCommentContent.value = false;
 }
+
+const deleteComment = async(id:number) =>{
+    const res = await removeCommentApi(id);
+    if(res.code === 200){
+        getCommentContent.value = getCommentContent.value.filter(comment => comment.id !== id);
+        ElMessage.success('删除成功');
+    }else{
+        ElMessage.error('删除失败');
+    }
+}
+
+onMounted(async() => {
+    //获取我的个人信息
+    const res = await getUserInfo();
+    userId.value = res.data.id;
+    
+}),
 
 onBeforeUnmount(()=>{
     //取消全部监听
@@ -150,14 +173,13 @@ onBeforeUnmount(()=>{
 
         .content {
             padding: 3px 5px;
-            // overflow: hidden;
-            /* 隐藏溢出内容 */
-            // display: -webkit-box;
-            /* 必须声明为弹性盒模型（旧版） */
-            // -webkit-box-orient: vertical;
-            /* 子元素垂直排列 */
-            // -webkit-line-clamp: 2;
-            /* 限制显示的行数（可修改为其他数值） */
+        }
+        .username{
+            font-size: 16px;
+            font-weight: 600;
+        }
+        .del-comment{
+            float: right;
         }
     }
 }

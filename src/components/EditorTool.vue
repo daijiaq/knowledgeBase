@@ -208,8 +208,8 @@
             <template #dropdown>
               <el-dropdown-menu>
                 <el-dropdown-item @click="addComment"> 添加评论 </el-dropdown-item>
-                <el-dropdown-item @click="removeComment">
-                  取消延续
+                <el-dropdown-item @click="dialogVisible = true">
+                  清空评论
                 </el-dropdown-item>
               </el-dropdown-menu>
             </template>
@@ -248,7 +248,23 @@
             @close="closeSearchPanel"
           />
         </div>
+        <el-dialog
+          v-model="dialogVisible"
+          title="Tips"
+          width="500"
+        >
+          <span>确定要清空该标记的评论区吗</span>
+          <template #footer>
+            <div class="dialog-footer">
+              <el-button @click="dialogVisible = false">取消</el-button>
+              <el-button type="primary" @click="removeComment">
+                确定
+              </el-button>
+            </div>
+          </template>
+        </el-dialog>
     </div>
+    
 </template>
 
 <script setup lang="ts">
@@ -274,11 +290,13 @@ import * as mammoth from "mammoth";
 import { ElMessage } from "element-plus";
 import SearchPanel from "./SearchPanel.vue";
 import { createCommentApi } from "../api/comment";
+import { saveDocumentContent } from "../api/document";
 
 // Props 类型声明
 interface EditorProps {
   externalEditor?: EditorType | null;
   docId?:number;
+  docTitle?: string;
 }
 
 // 创建立即执行的防抖函数（等待 5s）
@@ -286,6 +304,8 @@ interface EditorProps {
 const debouncedSubmit = debounce(generatePDF, 5000, true);
 
 const props = defineProps<EditorProps>();
+
+const dialogVisible = ref<boolean>(false)
 
 // 颜色列表
 const highlightColors = ref<string[]>([
@@ -394,7 +414,7 @@ const exportPdf = () => {
   if (typeof document !== 'undefined') {
     debouncedSubmit({
       element: document.querySelector(".tiptap") as HTMLElement,
-      filename: "xxx.pdf",
+      filename: `${props.docTitle}.pdf`,
     });
   }
 };
@@ -495,12 +515,26 @@ const confirmComment = async(comment:string) => {
   editor.value?.chain().focus().setMark("comment", attributes).run();
   //保存评论接口
   const res = await createCommentApi(attributes.id, comment, props.docId ?? 0);
-  if(res.code === 200){
+  const saveCode = await saveDocument();
+  if(res.code === 200 && saveCode === 200){
     ElMessage.success('评论成功');
   }else{
     ElMessage.error('评论失败');
   }
   selectedRange = null;
+};
+
+const saveDocument = async () => {
+  const newContent = editor.value?.getJSON();
+  if (typeof props.docId === "undefined") {
+    ElMessage.error("文档ID未定义，无法保存");
+    return;
+  }
+  const res = await saveDocumentContent(
+    props.docId,
+    JSON.stringify(newContent)
+  );
+  return res.code;
 };
 
 EventBus.on("confirmComment", (val: unknown) => {
@@ -513,12 +547,12 @@ EventBus.on("confirmComment", (val: unknown) => {
 });
 
 // 删除当前选中范围的评论
-const removeComment = () => {
-  const { from, to } = editor.value!.state.selection;
-  if (from === to) {
-    editor.value?.chain().focus().unsetMark("comment").run();
-  } else {
-    ElMessage.info("请在评论区中选择自己所写评论删除噢~");
+const removeComment = async() => {
+  editor.value?.chain().focus().unsetMark("comment").run();
+  dialogVisible.value = false;
+  const saveCode = await saveDocument();
+  if(saveCode === 200){
+    ElMessage.success('清空成功！');
   }
 };
 
@@ -636,6 +670,15 @@ onBeforeUnmount(() => {
     background-color: #fffbcd; /* 黄色背景 */
     border-radius: 2px;
     padding: 0 2px;
+  }
+  ::selection {
+    background-color: #958df1;
+    color: #ffffff;
+  }
+  
+  ::-moz-selection {
+    background-color: #958df1;
+    color: #ffffff;
   }
 }
 

@@ -46,18 +46,27 @@
 </template>
     
 <script lang='ts' setup name='DocumentItem'>
-import { ref } from 'vue';
+import { ref, inject } from 'vue';
 import { storeToRefs } from 'pinia';
+import { useRouter } from 'vue-router'
 import { useKnowledgeBaseStore } from '../stores/useKnowledgeBaseStore';
 import EditNameDialog from './EditNameDialog.vue';
 import * as documentApi from '../api/document';
+const router = useRouter()
 const knowledgeBaseStore = useKnowledgeBaseStore()
 const {currentDocId,currentDocType} = storeToRefs(knowledgeBaseStore)
 const {selectDoc,selectDocType} = knowledgeBaseStore
+import type { Ref } from 'vue';
+const knowledgeBaseId = inject<Ref<string | number> | undefined>('knowledgeBaseId');
 const selectCurrentDoc = (id: number) => {
   knowledgeBaseStore.selectDocType('document')
   knowledgeBaseStore.selectDoc(id)
+  if (knowledgeBaseId) {
+    console.log(knowledgeBaseId, id);
+    router.replace(`/knowledgeBase/${knowledgeBaseId.value}/${id}`);
+  }
 }
+
 const {item,getKBsContent} = defineProps(['item','getKBsContent'])
 const showEditDialog = ref(false)
 const editDocName = async(name: string) => {

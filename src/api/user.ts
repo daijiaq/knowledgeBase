@@ -26,3 +26,10 @@ export const userSearch = (keyword:string,knowledgeBaseId:number)=>{
         }
     })
 }
+
+export const getUserInfo = (): Promise<any> => {
+    return request({
+        url:'/users/profile',
+        method:'GET',
+    })
+}

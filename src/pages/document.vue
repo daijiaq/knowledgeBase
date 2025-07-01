@@ -135,8 +135,7 @@
 
     <!-- 主内容区 -->
     <template v-if="selectDocId!==null">
-      <CollaborativeEditor :docId="selectDocId"/>
-      <Comment />
+      <router-view></router-view>
     </template>
     <div v-else style="width: 890px;padding: 20px;
     border: 1px solid #e5e7eb;
@@ -215,7 +214,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, reactive } from "vue";
+import { ref, computed, watch, reactive, provide } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { ElMessage } from "element-plus";
 import CollaborativeEditor from "../components/CollaborativeEditor.vue";
@@ -233,6 +232,7 @@ import { storeToRefs } from "pinia";
 const router = useRouter();
 const route = useRoute();
 const knowledgeBaseId = ref(Number(route.params.knowledgeBaseId));
+provide('knowledgeBaseId', knowledgeBaseId);
 //监听路由变化
 watch(
   () => route.params.knowledgeBaseId,
@@ -327,7 +327,7 @@ const filterFolders = computed(() => {
 });
 const filterDocs = computed(()=>{
   if (!searchQuery.value) return rootDoc.value;
-  return rootDoc.value?.filter((doc) =>
+  return rootDoc.value?.filter((doc:any) =>
     doc.name.toLowerCase().includes(searchQuery.value.toLowerCase())
   );
 })

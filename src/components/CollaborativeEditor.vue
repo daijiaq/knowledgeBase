@@ -23,7 +23,7 @@
 
     <!-- 协同编辑工具栏 -->
     <!-- 使用 Editor 组件，传入协同编辑器实例，不显示其内容区域 -->
-    <Editor :external-editor="editor" :docId="props.docId" />
+    <EditorTool :external-editor="editor" :docId="props.docId" :docTitle="documentTitle"/>
 
     <!-- 编辑器容器 -->
     <div class="editor-container">
@@ -55,7 +55,7 @@
         </p>
         <div class="editor-tool">
           <span class="update-time"
-            >更新于2025-6-25 13:45<span
+            >更新于{{ documentUpdateTime }}<span
               style="color: #7a72e0; cursor: pointer"
               @click="openDrawer()"
               >&nbsp;回退版本</span
@@ -129,6 +129,7 @@ import { generateSummary } from "../api/aiSummary";
 // 版本回退抽屉
 import VersionDrawer from "../components/VersionDrawer.vue";
 import { getDocumentContent, saveDocumentContent } from "../api/document";
+import EditorTool from "./EditorTool.vue";
 
 const showVersionDrawer = ref(false);
 const openDrawer = () => {
@@ -354,7 +355,17 @@ const editor = useEditor({
 //   }
 // };
 
-watch(
+ // 时间转换
+ function formatTime(timeStr: string) {
+  const date = new Date(timeStr)
+  return `${date.getFullYear()}-${(date.getMonth()+1).toString().padStart(2,'0')}-${date.getDate().toString().padStart(2,'0')} ${date.getHours().toString().padStart(2,'0')}:${date.getMinutes().toString().padStart(2,'0')}`
+}
+
+const documentTitle = ref<string>()
+
+const documentUpdateTime = ref<string>('')
+
+/* watch(
   () => props.docId,
   async (newVal) => {
     // 调用获取文档
@@ -363,13 +374,23 @@ watch(
     if (typeof newVal !== "undefined") {
       const res = await getDocumentContent(newVal);
       // console.log(newVal,res.data.content);
-      const content =
-        res.data.content === "" ? "" : JSON.parse(res.data.content);
+      documentTitle.value = res.data.title;
+      // console.log(res.data);
+      
+      documentUpdateTime.value = formatTime(res.data.updatedAt);
+      const content = res.data.content === "" ? "" : JSON.parse(res.data.content);
       editor.value?.commands.setContent(content);
     }
   },
   { immediate: true }
-);
+); */
+onMounted(async()=>{
+  const res = await getDocumentContent(props.docId);
+  documentUpdateTime.value = formatTime(res.data.updatedAt);
+  documentTitle.value = res.data.title;
+  const content = res.data.content === "" ? "" : JSON.parse(res.data.content);
+  editor.value?.commands.setContent(content);
+})
 
 const saveDocument = async () => {
   const newContent = editor.value?.getJSON();

@@ -1,3 +1,4 @@
+
 // src/router/index.ts
 import {
   createRouter as _createRouter,
@@ -29,7 +30,13 @@ const routes = [
       },
       {
         path: ':knowledgeBaseId',
-        component: () => import('../pages/document.vue')
+        component: () => import('../pages/document.vue'),
+        children: [
+          {
+            path:':documentId',
+            component: () => import('../pages/editor.vue'),
+          }
+        ]
       },
       {
         path: '',

@@ -44,7 +44,8 @@ declare module '@tiptap/core' {
 let searchPluginKey: PluginKey | null = null
 
 // 辅助函数：查找匹配项
-function findMatches(doc: any, query: string, options: SearchOptions): Array<{ from: number; to: number; text: string }> {
+// 增加最大匹配数限制，避免极端情况下内存暴涨
+function findMatches(doc: any, query: string, options: SearchOptions, maxMatches = 500): Array<{ from: number; to: number; text: string }> {
   const matches: Array<{ from: number; to: number; text: string }> = []
   const { caseSensitive, wholeWord, regex } = options
 
@@ -69,6 +70,7 @@ function findMatches(doc: any, query: string, options: SearchOptions): Array<{ f
       let match
 
       while ((match = searchRegex.exec(text)) !== null) {
+        if (matches.length >= maxMatches) break;
         matches.push({
           from: pos + match.index,
           to: pos + match.index + match[0].length,
@@ -251,4 +253,4 @@ export const Search = Extension.create<SearchOptions>({
       },
     }
   },
-}) 
+})

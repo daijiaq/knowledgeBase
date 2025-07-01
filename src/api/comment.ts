@@ -12,13 +12,10 @@ export const createCommentApi = (textNanoid:string,comment:string,documentId:num
     })
 }
 
-export const removeCommentApi = (commentId:number,textNanoid:number): Promise<any> => {
+export const removeCommentApi = (commentId:number): Promise<any> => {
     return request({
         url: `/text-comments/${commentId}`,
         method:'DELETE',
-        data:{
-            textNanoid:textNanoid,
-        }
     })
 }
 

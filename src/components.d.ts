@@ -12,7 +12,7 @@ declare module 'vue' {
     Comment: typeof import('./components/Comment.vue')['default']
     DocumentItem: typeof import('./components/DocumentItem.vue')['default']
     EditNameDialog: typeof import('./components/EditNameDialog.vue')['default']
-    Editor: typeof import('./components/Editor.vue')['default']
+    EditorTool: typeof import('./components/EditorTool.vue')['default']
     ElAside: typeof import('element-plus/es')['ElAside']
     ElButton: typeof import('element-plus/es')['ElButton']
     ElCheckTag: typeof import('element-plus/es')['ElCheckTag']
