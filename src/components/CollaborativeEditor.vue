@@ -23,7 +23,7 @@
 
     <!-- 协同编辑工具栏 -->
     <!-- 使用 Editor 组件，传入协同编辑器实例，不显示其内容区域 -->
-    <Editor :external-editor="editor" :docId="props.docId"/>
+    <Editor :external-editor="editor" :docId="props.docId" />
 
     <!-- 编辑器容器 -->
     <div class="editor-container">
@@ -35,7 +35,11 @@
       />
       <ReadonlyEditor v-if="selectedContent" :content="selectedContent" />
     </div>
-    <VersionDrawer v-model="showVersionDrawer" @restore="handleRestore" :docId="props.docId"/>
+    <VersionDrawer
+      v-model="showVersionDrawer"
+      @restore="handleRestore"
+      :docId="props.docId"
+    />
     <!-- 协同信息面板 -->
     <div class="collaboration-info">
       <div class="info-section">
@@ -51,7 +55,9 @@
         </p>
         <div class="editor-tool">
           <span class="update-time"
-            >更新于2025-6-25 13:45<span style="color: #7a72e0; cursor: pointer" @click="openDrawer()"
+            >更新于2025-6-25 13:45<span
+              style="color: #7a72e0; cursor: pointer"
+              @click="openDrawer()"
               >&nbsp;回退版本</span
             ></span
           >
@@ -60,15 +66,12 @@
               type="success"
               class="aiSummarize"
               color="#7a72e0"
-              @click="
-                aiClick = true;
-                aiClickSummary(
-                   '本次课程设计聚焦网络编程实践，我成功开发了基于 UDP 协议的 PingServer 与 PingClient 工具。不同于传统使用 ICMP 协议的 “ping” 工具，这组程序通过 UDP 协议实现网络连通性测试。在开发过程中，我系统掌握了网络编程的核心技术，深入理解了并发处理、数据包操作及错误处理等关键环节的实践要点。'
-                );
-              "
+              @click="handleAIClick()"
               >AI总结全文</el-button
             >
-            <el-button type="success" color="#7a72e0" @click="saveDocument">保存</el-button>
+            <el-button type="success" color="#7a72e0" @click="saveDocument"
+              >保存</el-button
+            >
           </div>
         </div>
       </div>
@@ -125,8 +128,7 @@ import { ElMessage, ElSkeleton, ElSkeletonItem } from "element-plus";
 import { generateSummary } from "../api/aiSummary";
 // 版本回退抽屉
 import VersionDrawer from "../components/VersionDrawer.vue";
-import { getDocumentContent , saveDocumentContent } from '../api/document'
-
+import { getDocumentContent, saveDocumentContent } from "../api/document";
 
 const showVersionDrawer = ref(false);
 const openDrawer = () => {
@@ -134,9 +136,8 @@ const openDrawer = () => {
 };
 function handleRestore(content: string) {
   // 这里将 content 设置到编辑器内容里
-  editor.value?.commands.setContent(content)
+  editor.value?.commands.setContent(content);
 }
-
 
 // ai
 const aiText = ref("");
@@ -313,7 +314,7 @@ const editor = useEditor({
     Comment,
   ],
   content: "",
-/*   editorProps: {
+  /*   editorProps: {
     attributes: {
       class: "prose focus:outline-none",
       "data-placeholder": "开始协同编辑...",
@@ -353,36 +354,39 @@ const editor = useEditor({
 //   }
 // };
 
-
 watch(
   () => props.docId,
   async (newVal) => {
     // 调用获取文档
     // 提醒修改
-    editor.value?.destroy();
-    if (typeof newVal !== 'undefined') {
+    // editor.value?.destroy();
+    if (typeof newVal !== "undefined") {
       const res = await getDocumentContent(newVal);
       // console.log(newVal,res.data.content);
-      const content = res.data.content === ''?'' : JSON.parse(res.data.content);
+      const content =
+        res.data.content === "" ? "" : JSON.parse(res.data.content);
       editor.value?.commands.setContent(content);
     }
   },
   { immediate: true }
-)
+);
 
-const saveDocument = async() => {
-    const newContent = editor.value?.getJSON();
-    if (typeof props.docId === 'undefined') {
-        ElMessage.error("文档ID未定义，无法保存");
-        return;
-    }
-    const res = await saveDocumentContent(props.docId, JSON.stringify(newContent));
-    if(res.code === 200){
-      ElMessage.success('保存成功');
-    }else{
-      ElMessage.error('保存失败');
-    }
-}
+const saveDocument = async () => {
+  const newContent = editor.value?.getJSON();
+  if (typeof props.docId === "undefined") {
+    ElMessage.error("文档ID未定义，无法保存");
+    return;
+  }
+  const res = await saveDocumentContent(
+    props.docId,
+    JSON.stringify(newContent)
+  );
+  if (res.code === 200) {
+    ElMessage.success("保存成功");
+  } else {
+    ElMessage.error("保存失败");
+  }
+};
 
 /**
  * 销毁协同编辑器
@@ -588,12 +592,10 @@ const aiClickSummary = async (documentText: string) => {
   }
 };
 
-
-
 // 生命周期钩子
 onMounted(() => {
   console.log("协同编辑器已挂载");
-  if (typeof window !== 'undefined') {
+  if (typeof window !== "undefined") {
     // 监听页面卸载事件
     window.addEventListener("beforeunload", handleBeforeUnload);
     window.addEventListener("unload", handleBeforeUnload);
@@ -602,7 +604,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   console.log("销毁协同编辑器...");
-  if (typeof window !== 'undefined') {
+  if (typeof window !== "undefined") {
     // 移除事件监听器
     window.removeEventListener("beforeunload", handleBeforeUnload);
     window.removeEventListener("unload", handleBeforeUnload);
