@@ -73,20 +73,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { getHistoryVersion, getVersionContent } from '../api/version'
 import { ElMessageBox, ElMessage } from 'element-plus'
 import { deleteVersion as apiDeleteVersion,revertToVersion,compareVersions } from '../api/version' 
 import ReadonlyEditor from './ReadonlyEditor.vue'
 const props = defineProps({
-  modelValue: Boolean,
   docId:Number // 文档ID作为prop传入
 })
-const emits = defineEmits(['update:modelValue', 'restore'])
+const emits = defineEmits([ 'restore'])
+const drawerVisible = ref(false)
 
-const drawerVisible = ref(props.modelValue)
-watch(() => props.modelValue, val => { drawerVisible.value = val })
-watch(drawerVisible, val => { emits('update:modelValue', val) })
 
 interface VersionItem {
   id: number | string
@@ -104,8 +101,13 @@ const selected = computed(() => {
   return versionList.value.find(item => item.versionNumber === selectedId.value) || null
 })
 
-// 组件挂载获取版本列表
-onMounted(async () => {
+// 暴露刷新方法给父组件
+defineExpose({
+  refreshHistory
+})
+
+// 获取历史版本
+async function refreshHistory() {
   if (props.docId !== undefined) {
     const res = await getHistoryVersion(props.docId!)
     versionList.value = res.data || []
@@ -113,6 +115,11 @@ onMounted(async () => {
       selectVersion(versionList.value[0])
     }
   }
+}
+
+// 组件挂载获取版本列表
+onMounted(async () => {
+  refreshHistory()
 })
 
 const filteredList = computed(() => {
@@ -161,13 +168,11 @@ async function restoreVersion() {
     if (props.docId !== undefined) {
       await revertToVersion(props.docId, Number(selectedId.value))
       ElMessage.success('回退成功')
-      emits('restore', selectedContent.value) // 通知父组件
+      emits('restore') // 通知父组件
       // 刷新历史列表
       const res = await getHistoryVersion(props.docId)
       versionList.value = res.data || []
       if (versionList.value.length > 0) {
-        console.log(versionList.value)
-        console.log(versionList.value[0])
         selectVersion(versionList.value[0])
       }
       drawerVisible.value = false
@@ -185,7 +190,7 @@ async function deleteVersion(item: VersionItem) {
       ElMessage.error('文档ID不存在，无法删除版本')
       return
     }
-    await apiDeleteVersion(props.docId, Number(item.id)) 
+    await apiDeleteVersion(props.docId, Number(item.versionNumber)) 
     versionList.value = versionList.value.filter(v => v.id !== item.id)
     ElMessage.success('删除成功')
     // 如果删除的是当前选中项，自动选中第一个
@@ -260,7 +265,8 @@ function formatTime(timeStr: string) {
   background: #fff;
   border-radius: 8px;
   padding: 24px;
-  min-height: 200px;
+  height: 700px;    
+  overflow-y: auto;       /* 超出时滚动 */
   box-shadow: 0 1px 4px rgba(0,0,0,0.03);
 }
 .drawer-header-flex {

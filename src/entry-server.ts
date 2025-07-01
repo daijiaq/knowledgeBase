@@ -25,8 +25,8 @@ export async function render(url: string, cookie?: string) {
   const matched = router.currentRoute.value.matched
   const route = router.currentRoute.value
   const knowledgeBaseStore = useKnowledgeBaseStore()
-  // 只对 /knowledgeBase 页面及其子路由做数据预取
-  if (matched.some(r => r.path.startsWith('/knowledgeBase'))) {
+  // 只对 KnowledgeBaseMain 页面做数据预取
+  if (route.name === 'KnowledgeBaseMain') {
     // 预取知识库列表和最近访问
     const [allKBs, recentKBs] = await Promise.all([
       getAllKBsApi().then(res => {
@@ -46,17 +46,6 @@ export async function render(url: string, cookie?: string) {
       knowledgeBaseList: allKBs,
       recentKBsList: recentKBs
     })
-    // 如果是文档页面，预取知识库内容
-    if (route.name !== 'KnowledgeBaseMain' && route.params.knowledgeBaseId) {
-      const kbId = Number(route.params.knowledgeBaseId)
-      if (!isNaN(kbId)) {
-        const kbContent = await getKBsContentApi(kbId).then(res => res.data).catch(err => {
-          console.error(`[SSR Error] getKBsContentApi for id ${kbId} failed:`, err)
-          return null
-        })
-        knowledgeBaseStore.setState({ knowledgeBaseContent: kbContent })
-      }
-    }
   }
 
   const html = await renderToString(app)

@@ -6,6 +6,8 @@
         <div class="kb-info" v-if="!sidebarCollapsed">
           <div class="kb-icon">
             <svg
+              width="20"
+              height="20"
               viewBox="0 0 24 24"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
@@ -29,6 +31,8 @@
         </div>
         <el-button @click="toggleSidebar"class="collapse-btn">
           <svg
+            width="16"
+            height="16"
             viewBox="0 0 24 24"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
@@ -53,6 +57,8 @@
         <div class="search-box" @click.stop>
           <svg
             class="search-icon"
+            width="16"
+            height="16"
             viewBox="0 0 24 24"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
@@ -77,6 +83,8 @@
             size="small"
           >
             <svg
+              width="14"
+              height="14"
               viewBox="0 0 24 24"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
@@ -104,6 +112,8 @@
             <el-button size="small">
               更多
               <svg
+                width="14"
+                height="14"
                 viewBox="0 0 24 24"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
@@ -124,12 +134,10 @@
         </div>
 
         <!-- 文档树 -->
-        <div class="doc-tree" @click.stop>
-          <!-- 文件夹 -->
-          <FolderItem v-for="item in filterFolders" :item="item" :key="item.id" :getKBsContent="getKBsContent" ref="folderItem" :expandFolder="expandFolder"/>
-          <!-- 文档 -->
-          <DocumentItem v-for="doc in filterDocs" :key="doc.id" :item="doc" :getKBsContent="getKBsContent"/>
-        </div>
+          <div class="doc-tree" @click.stop>
+            <FolderItem v-for="item in filterFolders" :item="item" :key="item.id" :getKBsContent="getKBsContent" :onSelectFolder="handleSelectFolder" :onSelectDoc="handleSelectDoc" />
+            <DocumentItem v-for="doc in filterDocs" :key="doc.id" :item="doc" :getKBsContent="getKBsContent" :onSelectDoc="handleSelectDoc"/>
+          </div>
       </div>
     </div>
 
@@ -214,7 +222,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, reactive, provide } from "vue";
+import { ref, computed, watch, reactive, onMounted, provide } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { ElMessage } from "element-plus";
 import CollaborativeEditor from "../components/CollaborativeEditor.vue";
@@ -233,7 +241,39 @@ const router = useRouter();
 const route = useRoute();
 const knowledgeBaseId = ref(Number(route.params.knowledgeBaseId));
 provide('knowledgeBaseId', knowledgeBaseId);
-//监听路由变化
+
+const knowledgeBaseStore = useKnowledgeBaseStore()
+const { knowledgeBaseContent, currentDocId, currentDocType, selectDocId } = storeToRefs(knowledgeBaseStore)
+const { selectDoc, selectDocType } = knowledgeBaseStore
+
+const rootFolders = ref<FolderInfo[]>()
+const rootDoc = ref()
+const currentKnowledgeBaseInfo = ref()
+
+const sidebarCollapsed = ref(false);
+const searchQuery = ref("");
+const showNewDocDialog = ref(false);
+const showShareDialog = ref(false);
+//双击空白位置将parentId设置为null
+const isClickDouble = ref(true)
+
+// 只在客户端请求数据，不再消费 SSR 注入的数据
+onMounted(() => {
+  knowledgeBaseStore.getAllKBs();
+  knowledgeBaseStore.getRecentKBs(5);
+  getKBsContent();
+  if (route.params.docId) {
+    if (String(route.params.docId).startsWith('folder-')) {
+      selectDocType('folder');
+      selectDoc(Number(String(route.params.docId).replace('folder-', '')));
+    } else {
+      selectDocType('document');
+      selectDoc(Number(route.params.docId));
+    }
+  }
+});
+
+// 路由变化自动请求
 watch(
   () => route.params.knowledgeBaseId,
   (newValue) => {
@@ -242,17 +282,21 @@ watch(
   }
 );
 
-const knowledgeBaseStore =useKnowledgeBaseStore()
-const {currentDocId,currentDocType,selectDocId} = storeToRefs(knowledgeBaseStore)
-const {selectDoc,selectDocType} = knowledgeBaseStore
+watch(
+  () => route.params.docId,
+  (newDocId) => {
+    if (newDocId) {
+      if (String(newDocId).startsWith('folder-')) {
+        selectDocType('folder');
+        selectDoc(Number(String(newDocId).replace('folder-', '')));
+      } else {
+        selectDocType('document');
+        selectDoc(Number(newDocId));
+      }
+    }
+  }
+);
 
-// 响应式数据
-const sidebarCollapsed = ref(false);
-const searchQuery = ref("");
-const showNewDocDialog = ref(false);
-const showShareDialog = ref(false);
-//双击空白位置将parentId设置为null
-const isClickDouble = ref(true)
 function initParentId(){
   isClickDouble.value = !isClickDouble.value
   if(isClickDouble.value===true){
@@ -299,9 +343,6 @@ const newDocForm = reactive({
 const inviteEmail = ref("");
 
 //获取当前知识库下的内容
-const rootFolders = ref<FolderInfo[]>();
-const rootDoc = ref();
-const currentKnowledgeBaseInfo = ref();
 const getKBsContent = async () => {
   try {
     const {
@@ -315,10 +356,8 @@ const getKBsContent = async () => {
     ElMessage.error("无法获取知识库");
   }
 }
-if (typeof window !== 'undefined') {
-  getKBsContent()
-}
 
+// 搜索过滤
 const filterFolders = computed(() => {
   if (!searchQuery.value) return rootFolders.value;
   return rootFolders.value?.filter((doc) =>
@@ -411,6 +450,19 @@ const sendInvite = async () => {
   } catch (error) {
     ElMessage.error("邀请失败");
   }
+};
+
+// 文档树点击事件，选中文档并同步路由
+const handleSelectDoc = (id:number) => {
+  selectDocType('document');
+  selectDoc(id);
+  router.push({ path: `/knowledgeBase/${knowledgeBaseId.value}/${id}` });
+};
+// 文件夹点击事件，选中文件夹并同步路由
+const handleSelectFolder = (id:number) => {
+  selectDocType('folder');
+  selectDoc(id);
+  router.push({ path: `/knowledgeBase/${knowledgeBaseId.value}/folder-${id}` });
 };
 </script>
 
