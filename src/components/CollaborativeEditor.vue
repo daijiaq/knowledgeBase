@@ -134,9 +134,14 @@ const showVersionDrawer = ref(false);
 const openDrawer = () => {
   showVersionDrawer.value = true;
 };
-function handleRestore(content: string) {
-  // 这里将 content 设置到编辑器内容里
-  editor.value?.commands.setContent(content);
+async function handleRestore() {
+  // 重新获取当前文档内容
+  if (typeof props.docId !== "undefined") {
+    const res = await getDocumentContent(props.docId);
+    const content = res.data.content === "" ? "" : JSON.parse(res.data.content);
+    editor.value?.commands.setContent(content);
+    selectedContent.value = null; // 关闭只读模式，回到编辑模式
+  }
 }
 
 // ai
