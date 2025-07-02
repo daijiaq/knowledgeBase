@@ -151,6 +151,10 @@ const handleLogoClick = async () => {
   await knowledgeBaseStore.getRecentKBs(5)
   router.replace('/knowledgeBase/KnowledgeBaseMain')
 }
+
+const changToKB = (id:number) => {
+  router.replace(`/knowledgeBase/${id}`);
+}
 </script>
 
 <template>
@@ -190,7 +194,6 @@ const handleLogoClick = async () => {
             @open="handleOpen"
             @close="handleClose"
             active-text-color="rgba(140, 122, 230)"
-            router
           > <el-sub-menu index="1">
               <template #title>
                 <el-icon>
@@ -203,6 +206,7 @@ const handleLogoClick = async () => {
               :key="item.id"
               :index="`${item.id}`"
               style="display: flex; align-items: center;"
+              @click="changToKB(item.id)"
             >
               <div style="display: flex; align-items: center; flex: 1;">
                 <el-icon><Folder /></el-icon>
