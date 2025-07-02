@@ -8,6 +8,8 @@ import Color from '@tiptap/extension-color'
 import Link from '@tiptap/extension-link'
 import { AddMark, RemoveMark } from '../utils/extension-diff-mark'
 import { watch, ref } from 'vue'
+import DOMPurify from 'dompurify'
+
 const props = defineProps<{
   content: string
 }>()
@@ -21,7 +23,7 @@ watch(
     try {
       // 兼容对象和字符串
       const json = typeof val === 'string' ? JSON.parse(val) : val
-      html.value = generateHTML(json, [
+      const rawHtml = generateHTML(json, [
         StarterKit,
         Heading,
         Highlight,
@@ -31,8 +33,9 @@ watch(
         AddMark,
         RemoveMark,
       ])
+      html.value = DOMPurify.sanitize(rawHtml)
     } catch (e) {
-      html.value = val || ''
+      html.value = DOMPurify.sanitize(val || '')
     }
   },
   { immediate: true }
