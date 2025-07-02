@@ -1,5 +1,5 @@
 <template>
-   <div v-if="!hydrated" class="main-loading">
+  <div v-if="!hydrated" class="main-loading">
     <el-skeleton :rows="8" animated />
   </div>
   <div v-else class="collaborative-editor">
@@ -26,7 +26,11 @@
 
     <!-- 协同编辑工具栏 -->
     <!-- 使用 Editor 组件，传入协同编辑器实例，不显示其内容区域 -->
-    <EditorTool :external-editor="editor" :docId="props.docId" :docTitle="documentTitle"/>
+    <EditorTool
+      :external-editor="editor"
+      :docId="props.docId"
+      :docTitle="documentTitle"
+    />
 
     <!-- 编辑器容器 -->
     <div class="editor-container">
@@ -40,7 +44,7 @@
       v-model="showVersionDrawer"
       @restore="handleRestore"
       :docId="props.docId"
-      ref="versionDrawerRef" 
+      ref="versionDrawerRef"
     />
     <!-- 协同信息面板 -->
     <div class="collaboration-info">
@@ -57,7 +61,8 @@
         </p>
         <div class="editor-tool">
           <span class="update-time"
-            >更新于{{ documentUpdateTime }}<span
+            >更新于{{ documentUpdateTime
+            }}<span
               style="color: #7a72e0; cursor: pointer"
               @click="openDrawer()"
               >&nbsp;回退版本</span
@@ -133,7 +138,6 @@ import VersionDrawer from "../components/VersionDrawer.vue";
 import { getDocumentContent, saveDocumentContent } from "../api/document";
 import EditorTool from "./EditorTool.vue";
 
-
 // ai
 const aiText = ref("");
 const isAISummaryLoading = ref(true);
@@ -160,7 +164,7 @@ const props = withDefaults(defineProps<Props>(), {
   websocketUrl: "ws://localhost:1234",
   // websocketUrl: "ws://192.168.31.119:1234",
   roomId: "collaborative-document",
-  userName: '用户',
+  userName: "用户",
   docId: 1,
 });
 
@@ -322,7 +326,6 @@ const editor = useEditor({
   },
 });
 
-
 const showVersionDrawer = ref(false);
 const openDrawer = () => {
   showVersionDrawer.value = true;
@@ -362,21 +365,27 @@ async function handleRestore() {
 //   }
 // };
 
- // 时间转换
- function formatTime(timeStr: string) {
-  const date = new Date(timeStr)
-  return `${date.getFullYear()}-${(date.getMonth()+1).toString().padStart(2,'0')}-${date.getDate().toString().padStart(2,'0')} ${date.getHours().toString().padStart(2,'0')}:${date.getMinutes().toString().padStart(2,'0')}`
+// 时间转换
+function formatTime(timeStr: string) {
+  const date = new Date(timeStr);
+  return `${date.getFullYear()}-${(date.getMonth() + 1)
+    .toString()
+    .padStart(2, "0")}-${date.getDate().toString().padStart(2, "0")} ${date
+    .getHours()
+    .toString()
+    .padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}`;
 }
 
-let oldContent = '{"type":"doc","content":[{"type":"paragraph","attrs":{"textAlign":null}}]}';
+let oldContent =
+  '{"type":"doc","content":[{"type":"paragraph","attrs":{"textAlign":null}}]}';
 
-const documentTitle = ref<string>()
+const documentTitle = ref<string>();
 
-const documentUpdateTime = ref<string>('')
-const hydrated = ref(false)
+const documentUpdateTime = ref<string>("");
+const hydrated = ref(false);
 
 // 控制刷新历史版本
-const versionDrawerRef = ref()
+const versionDrawerRef = ref();
 const saveDocument = async () => {
   const newContent = editor.value?.getJSON();
   if (typeof props.docId === "undefined") {
@@ -388,8 +397,8 @@ const saveDocument = async () => {
     JSON.stringify(newContent)
   );
   if (res.code === 200) {
-    ElMessage.success("保存成功");
-    versionDrawerRef.value?.refreshHistory() // 刷新历史版本
+    ElMessage.success("自动保存成功");
+    versionDrawerRef.value?.refreshHistory(); // 刷新历史版本
     oldContent = JSON.stringify(newContent);
   } else {
     ElMessage.error("保存失败");
@@ -601,13 +610,19 @@ const aiClickSummary = async (documentText: string) => {
 };
 
 // 生命周期钩子
-onMounted(async() => {
+onMounted(async () => {
   console.log("协同编辑器已挂载");
   const res = await getDocumentContent(props.docId);
   documentUpdateTime.value = formatTime(res.data.updatedAt);
   documentTitle.value = res.data.title;
   const content = res.data.content === "" ? "" : JSON.parse(res.data.content);
-  oldContent = res.data.content === ""? JSON.stringify({"type":"doc","content":[{"type":"paragraph","attrs":{"textAlign":null}}]} ): res.data.content;
+  oldContent =
+    res.data.content === ""
+      ? JSON.stringify({
+          type: "doc",
+          content: [{ type: "paragraph", attrs: { textAlign: null } }],
+        })
+      : res.data.content;
   editor.value?.commands.setContent(content);
   hydrated.value = true;
   if (typeof window !== "undefined") {
@@ -618,8 +633,8 @@ onMounted(async() => {
 });
 
 onBeforeUnmount(() => {
-  console.log(JSON.stringify(editor.value?.getJSON()),oldContent)
-  if(JSON.stringify(editor.value?.getJSON()) !== oldContent){
+  console.log(JSON.stringify(editor.value?.getJSON()), oldContent);
+  if (JSON.stringify(editor.value?.getJSON()) !== oldContent) {
     saveDocument();
   }
   console.log("销毁协同编辑器...");

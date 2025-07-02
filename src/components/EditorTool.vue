@@ -1,270 +1,264 @@
 <template>
-    <div v-if="editor" class="container">
-        <div class="button-group">
-          <button
-            @click="editor.chain().focus().undo().run()"
-            :disabled="!editor.can().chain().focus().undo().run()"
-          >
-            <span class="iconfont icon-25chehui"></span>
-          </button>
-          <button
-            @click="editor.chain().focus().redo().run()"
-            :disabled="!editor.can().chain().focus().redo().run()"
-          >
-            <span class="iconfont icon-26quxiaochehui"></span>
-          </button>
-          <button
-            @click="editor.chain().focus().toggleBold().run()"
-            :disabled="!editor.can().chain().focus().toggleBold().run()"
-            :class="{ 'is-active': editor.isActive('bold') }"
-          >
-            <span class="iconfont icon-bold"></span>
-          </button>
-          <button
-            @click="editor.chain().focus().toggleItalic().run()"
-            :disabled="!editor.can().chain().focus().toggleItalic().run()"
-            :class="{ 'is-active': editor.isActive('italic') }"
-          >
-            <span class="iconfont icon-italic"></span>
-          </button>
-          <button
-            @click="editor.chain().focus().toggleStrike().run()"
-            :disabled="!editor.can().chain().focus().toggleStrike().run()"
-            :class="{ 'is-active': editor.isActive('strike') }"
-          >
-            <span class="iconfont icon-strikethrough"></span>
-          </button>
-          <button
-            @click="editor.chain().focus().toggleCode().run()"
-            :disabled="!editor.can().chain().focus().toggleCode().run()"
-            :class="{ 'is-active': editor.isActive('code') }"
-          >
-            <span class="iconfont icon-code-view"></span>
-          </button>
-          <button
-            @click="editor.chain().focus().setParagraph().run()"
-            :class="{ 'is-active': editor.isActive('paragraph') }"
-          >
-            <span class="iconfont icon-duanla"></span>
-          </button>
-          <button
-            @click="editor.chain().focus().toggleHeading({ level: 1 }).run()"
-            :class="{ 'is-active': editor.isActive('heading', { level: 1 }) }"
-          >
-            <span class="iconfont icon-13biaoti1"></span>
-          </button>
-          <button
-            @click="editor.chain().focus().toggleHeading({ level: 2 }).run()"
-            :class="{ 'is-active': editor.isActive('heading', { level: 2 }) }"
-          >
-            <span class="iconfont icon-14biaoti2"></span>
-          </button>
-          <button
-            @click="editor.chain().focus().toggleHeading({ level: 3 }).run()"
-            :class="{ 'is-active': editor.isActive('heading', { level: 3 }) }"
-          >
-            <span class="iconfont icon-15biaoti3"></span>
-          </button>
-          <button
-            @click="editor.chain().focus().toggleHeading({ level: 4 }).run()"
-            :class="{ 'is-active': editor.isActive('heading', { level: 4 }) }"
-          >
-            <span class="iconfont icon-16biaoti4"></span>
-          </button>
-          <button
-            @click="editor.chain().focus().toggleHeading({ level: 5 }).run()"
-            :class="{ 'is-active': editor.isActive('heading', { level: 5 }) }"
-          >
-            <span class="iconfont icon-17biaoti5"></span>
-          </button>
-          <button
-            @click="editor.chain().focus().toggleHeading({ level: 6 }).run()"
-            :class="{ 'is-active': editor.isActive('heading', { level: 6 }) }"
-          >
-            <span class="iconfont icon-18biaoti6"></span>
-          </button>
-          <button
-            @click="editor.chain().focus().toggleBulletList().run()"
-            :class="{ 'is-active': editor.isActive('bulletList') }"
-          >
-            <span class="iconfont icon-list-unordered"></span>
-          </button>
-          <button
-            @click="editor.chain().focus().toggleOrderedList().run()"
-            :class="{ 'is-active': editor.isActive('orderedList') }"
-          >
-            <span class="iconfont icon-list-ordered"></span>
-          </button>
-          <button
-            @click="editor.chain().focus().toggleCodeBlock().run()"
-            :class="{ 'is-active': editor.isActive('codeBlock') }"
-          >
-            <span class="iconfont icon-daimakuaicodeblock"></span>
-          </button>
-          <button
-            @click="editor.chain().focus().toggleBlockquote().run()"
-            :class="{ 'is-active': editor.isActive('blockquote') }"
-          >
-            <span class="iconfont icon-double-quotes-l"></span>
-          </button>
-          <button @click="editor.chain().focus().setHorizontalRule().run()">
-            <span class="iconfont icon-split-cells-vertical"></span>
-          </button>
-          <button @click="editor.chain().focus().setHardBreak().run()">
-            <span class="iconfont icon-text-wrap"></span>
-          </button>
-          <button
-            @click="editor.chain().focus().setTextAlign('left').run()"
-            :class="{ 'is-active': editor.isActive({ textAlign: 'left' }) }"
-          >
-            <span class="iconfont icon-align-left"></span>
-          </button>
-          <button
-            @click="editor.chain().focus().setTextAlign('center').run()"
-            :class="{ 'is-active': editor.isActive({ textAlign: 'center' }) }"
-          >
-            <span class="iconfont icon-align-center"></span>
-          </button>
-          <button
-            @click="editor.chain().focus().setTextAlign('right').run()"
-            :class="{ 'is-active': editor.isActive({ textAlign: 'right' }) }"
-          >
-            <span class="iconfont icon-align-right"></span>
-          </button>
-          <button
-            @click="editor.chain().focus().setTextAlign('justify').run()"
-            :class="{ 'is-active': editor.isActive({ textAlign: 'justify' }) }"
-          >
-            <span class="iconfont icon-align-justify"></span>
-          </button>
-          <button
-            @click="setLink"
-            :class="{ 'is-active': editor.isActive('link') }"
-          >
-            <span class="iconfont icon-link"></span>
-          </button>
-          <button
-            @click="editor.chain().focus().unsetLink().run()"
-            :disabled="!editor.isActive('link')"
-          >
-            <span class="iconfont icon-link-unlink"></span>
-          </button>
-          <button
-            @click="editor.chain().focus().toggleUnderline().run()"
-            :class="{ 'is-active': editor.isActive('underline') }"
-          >
-            <span class="iconfont icon-font-color"></span>
-          </button>
-          <el-dropdown placement="top-end" size="small">
-            <button>
-              <span class="iconfont icon-24zitiyanse"></span>
-            </button>
-            <template #dropdown>
-              <el-dropdown-menu>
-                <el-dropdown-item>
-                  <button
-                    @click="editor.chain().focus().unsetColor().run()"
-                    class="color-picker"
-                    :style="{ backgroundColor: '#2D2D2D' }"
-                  ></button>
-                </el-dropdown-item>
-                <el-dropdown-item v-for="color in fontColors" :key="color">
-                  <button
-                    @click="editor.chain().focus().setColor(color).run()"
-                    class="color-picker"
-                    :style="{ backgroundColor: color }"
-                  ></button>
-                </el-dropdown-item>
-              </el-dropdown-menu>
-            </template>
-          </el-dropdown>
-          <el-dropdown placement="top-end" size="small">
-            <button>
-              <span class="iconfont icon-19beijingyanse"></span>
-            </button>
-            <template #dropdown>
-              <el-dropdown-menu>
-                <el-dropdown-item v-for="color in highlightColors" :key="color">
-                  <button
-                    :style="{ backgroundColor: color }"
-                    @click="editor.chain().focus().setHighlight({ color }).run()"
-                    class="color-picker"
-                  ></button>
-                </el-dropdown-item>
-                <el-dropdown-item>
-                  <button
-                    :style="{ backgroundColor: '#ffffff' }"
-                    @click="editor.chain().focus().unsetHighlight().run()"
-                    class="color-picker"
-                  ></button>
-                </el-dropdown-item>
-              </el-dropdown-menu>
-            </template>
-          </el-dropdown>
-          <el-dropdown placement="top-end" size="small">
-            <button>
-              <el-icon size="18" style="padding-top: 6px"><ChatSquare /></el-icon>
-            </button>
-            <template #dropdown>
-              <el-dropdown-menu>
-                <el-dropdown-item @click="addComment"> 添加评论 </el-dropdown-item>
-                <el-dropdown-item @click="dialogVisible = true">
-                  清空评论
-                </el-dropdown-item>
-              </el-dropdown-menu>
-            </template>
-          </el-dropdown>
-          
-          <!-- 搜索按钮 -->
-          <button
-            @click="openSearchPanel"
-            :class="{ 'is-active': showSearchPanel }"
-          >
-          <el-icon size="16" style="padding-top: 6px"><ZoomIn /></el-icon>
-          </button>
-          
-          <el-dropdown placement="top-end" size="small">
-            <button>
-              <el-icon size="18" style="padding-top: 6px"><MoreFilled /></el-icon>
-            </button>
-            <template #dropdown>
-              <el-dropdown-menu>
-                <el-dropdown-item @click="exportPdf">导出为pdf</el-dropdown-item>
-                <el-dropdown-item @click="uploadDocx">导入docx
-                  <input
-                  type="file"
-                  @change="handleWordUpload"
-                  ref="uploadFile"
-                  style="display: none"
-                  />
-                </el-dropdown-item>
-              </el-dropdown-menu>
-            </template>
-          </el-dropdown>
-          <!-- 搜索面板 -->
-          <SearchPanel 
-            :visible="showSearchPanel"
-            :editor="editor"
-            @close="closeSearchPanel"
-          />
-        </div>
-        <el-dialog
-          v-model="dialogVisible"
-          title="Tips"
-          width="500"
-        >
-          <span>确定要清空该标记的评论区吗</span>
-          <template #footer>
-            <div class="dialog-footer">
-              <el-button @click="dialogVisible = false">取消</el-button>
-              <el-button type="primary" @click="removeComment">
-                确定
-              </el-button>
-            </div>
-          </template>
-        </el-dialog>
+  <div v-if="editor" class="container">
+    <div class="button-group">
+      <button
+        @click="editor.chain().focus().undo().run()"
+        :disabled="!editor.can().chain().focus().undo().run()"
+      >
+        <span class="iconfont icon-25chehui"></span>
+      </button>
+      <button
+        @click="editor.chain().focus().redo().run()"
+        :disabled="!editor.can().chain().focus().redo().run()"
+      >
+        <span class="iconfont icon-26quxiaochehui"></span>
+      </button>
+      <button
+        @click="editor.chain().focus().toggleBold().run()"
+        :disabled="!editor.can().chain().focus().toggleBold().run()"
+        :class="{ 'is-active': editor.isActive('bold') }"
+      >
+        <span class="iconfont icon-bold"></span>
+      </button>
+      <button
+        @click="editor.chain().focus().toggleItalic().run()"
+        :disabled="!editor.can().chain().focus().toggleItalic().run()"
+        :class="{ 'is-active': editor.isActive('italic') }"
+      >
+        <span class="iconfont icon-italic"></span>
+      </button>
+      <button
+        @click="editor.chain().focus().toggleStrike().run()"
+        :disabled="!editor.can().chain().focus().toggleStrike().run()"
+        :class="{ 'is-active': editor.isActive('strike') }"
+      >
+        <span class="iconfont icon-strikethrough"></span>
+      </button>
+      <button
+        @click="editor.chain().focus().toggleCode().run()"
+        :disabled="!editor.can().chain().focus().toggleCode().run()"
+        :class="{ 'is-active': editor.isActive('code') }"
+      >
+        <span class="iconfont icon-code-view"></span>
+      </button>
+      <button
+        @click="editor.chain().focus().setParagraph().run()"
+        :class="{ 'is-active': editor.isActive('paragraph') }"
+      >
+        <span class="iconfont icon-duanla"></span>
+      </button>
+      <button
+        @click="editor.chain().focus().toggleHeading({ level: 1 }).run()"
+        :class="{ 'is-active': editor.isActive('heading', { level: 1 }) }"
+      >
+        <span class="iconfont icon-13biaoti1"></span>
+      </button>
+      <button
+        @click="editor.chain().focus().toggleHeading({ level: 2 }).run()"
+        :class="{ 'is-active': editor.isActive('heading', { level: 2 }) }"
+      >
+        <span class="iconfont icon-14biaoti2"></span>
+      </button>
+      <button
+        @click="editor.chain().focus().toggleHeading({ level: 3 }).run()"
+        :class="{ 'is-active': editor.isActive('heading', { level: 3 }) }"
+      >
+        <span class="iconfont icon-15biaoti3"></span>
+      </button>
+      <button
+        @click="editor.chain().focus().toggleHeading({ level: 4 }).run()"
+        :class="{ 'is-active': editor.isActive('heading', { level: 4 }) }"
+      >
+        <span class="iconfont icon-16biaoti4"></span>
+      </button>
+      <button
+        @click="editor.chain().focus().toggleHeading({ level: 5 }).run()"
+        :class="{ 'is-active': editor.isActive('heading', { level: 5 }) }"
+      >
+        <span class="iconfont icon-17biaoti5"></span>
+      </button>
+      <button
+        @click="editor.chain().focus().toggleHeading({ level: 6 }).run()"
+        :class="{ 'is-active': editor.isActive('heading', { level: 6 }) }"
+      >
+        <span class="iconfont icon-18biaoti6"></span>
+      </button>
+      <button
+        @click="editor.chain().focus().toggleBulletList().run()"
+        :class="{ 'is-active': editor.isActive('bulletList') }"
+      >
+        <span class="iconfont icon-list-unordered"></span>
+      </button>
+      <button
+        @click="editor.chain().focus().toggleOrderedList().run()"
+        :class="{ 'is-active': editor.isActive('orderedList') }"
+      >
+        <span class="iconfont icon-list-ordered"></span>
+      </button>
+      <button
+        @click="editor.chain().focus().toggleCodeBlock().run()"
+        :class="{ 'is-active': editor.isActive('codeBlock') }"
+      >
+        <span class="iconfont icon-daimakuaicodeblock"></span>
+      </button>
+      <button
+        @click="editor.chain().focus().toggleBlockquote().run()"
+        :class="{ 'is-active': editor.isActive('blockquote') }"
+      >
+        <span class="iconfont icon-double-quotes-l"></span>
+      </button>
+      <button @click="editor.chain().focus().setHorizontalRule().run()">
+        <span class="iconfont icon-split-cells-vertical"></span>
+      </button>
+      <button @click="editor.chain().focus().setHardBreak().run()">
+        <span class="iconfont icon-text-wrap"></span>
+      </button>
+      <button
+        @click="editor.chain().focus().setTextAlign('left').run()"
+        :class="{ 'is-active': editor.isActive({ textAlign: 'left' }) }"
+      >
+        <span class="iconfont icon-align-left"></span>
+      </button>
+      <button
+        @click="editor.chain().focus().setTextAlign('center').run()"
+        :class="{ 'is-active': editor.isActive({ textAlign: 'center' }) }"
+      >
+        <span class="iconfont icon-align-center"></span>
+      </button>
+      <button
+        @click="editor.chain().focus().setTextAlign('right').run()"
+        :class="{ 'is-active': editor.isActive({ textAlign: 'right' }) }"
+      >
+        <span class="iconfont icon-align-right"></span>
+      </button>
+      <button
+        @click="editor.chain().focus().setTextAlign('justify').run()"
+        :class="{ 'is-active': editor.isActive({ textAlign: 'justify' }) }"
+      >
+        <span class="iconfont icon-align-justify"></span>
+      </button>
+      <button
+        @click="setLink"
+        :class="{ 'is-active': editor.isActive('link') }"
+      >
+        <span class="iconfont icon-link"></span>
+      </button>
+      <button
+        @click="editor.chain().focus().unsetLink().run()"
+        :disabled="!editor.isActive('link')"
+      >
+        <span class="iconfont icon-link-unlink"></span>
+      </button>
+      <button
+        @click="editor.chain().focus().toggleUnderline().run()"
+        :class="{ 'is-active': editor.isActive('underline') }"
+      >
+        <span class="iconfont icon-font-color"></span>
+      </button>
+      <el-dropdown placement="top-end" size="small">
+        <button>
+          <span class="iconfont icon-24zitiyanse"></span>
+        </button>
+        <template #dropdown>
+          <el-dropdown-menu>
+            <el-dropdown-item>
+              <button
+                @click="editor.chain().focus().unsetColor().run()"
+                class="color-picker"
+                :style="{ backgroundColor: '#2D2D2D' }"
+              ></button>
+            </el-dropdown-item>
+            <el-dropdown-item v-for="color in fontColors" :key="color">
+              <button
+                @click="editor.chain().focus().setColor(color).run()"
+                class="color-picker"
+                :style="{ backgroundColor: color }"
+              ></button>
+            </el-dropdown-item>
+          </el-dropdown-menu>
+        </template>
+      </el-dropdown>
+      <el-dropdown placement="top-end" size="small">
+        <button>
+          <span class="iconfont icon-19beijingyanse"></span>
+        </button>
+        <template #dropdown>
+          <el-dropdown-menu>
+            <el-dropdown-item v-for="color in highlightColors" :key="color">
+              <button
+                :style="{ backgroundColor: color }"
+                @click="editor.chain().focus().setHighlight({ color }).run()"
+                class="color-picker"
+              ></button>
+            </el-dropdown-item>
+            <el-dropdown-item>
+              <button
+                :style="{ backgroundColor: '#ffffff' }"
+                @click="editor.chain().focus().unsetHighlight().run()"
+                class="color-picker"
+              ></button>
+            </el-dropdown-item>
+          </el-dropdown-menu>
+        </template>
+      </el-dropdown>
+      <el-dropdown placement="top-end" size="small">
+        <button>
+          <el-icon size="18" style="padding-top: 6px"><ChatSquare /></el-icon>
+        </button>
+        <template #dropdown>
+          <el-dropdown-menu>
+            <el-dropdown-item @click="addComment"> 添加评论 </el-dropdown-item>
+            <el-dropdown-item @click="dialogVisible = true">
+              清空评论
+            </el-dropdown-item>
+          </el-dropdown-menu>
+        </template>
+      </el-dropdown>
+
+      <!-- 搜索按钮 -->
+      <button
+        @click="openSearchPanel"
+        :class="{ 'is-active': showSearchPanel }"
+      >
+        <el-icon size="16" style="padding-top: 6px"><ZoomIn /></el-icon>
+      </button>
+
+      <el-dropdown placement="top-end" size="small">
+        <button>
+          <el-icon size="18" style="padding-top: 6px"><MoreFilled /></el-icon>
+        </button>
+        <template #dropdown>
+          <el-dropdown-menu>
+            <el-dropdown-item @click="exportPdf">导出为pdf</el-dropdown-item>
+            <el-dropdown-item @click="uploadDocx"
+              >导入docx
+              <input
+                type="file"
+                @change="handleWordUpload"
+                ref="uploadFile"
+                style="display: none"
+              />
+            </el-dropdown-item>
+          </el-dropdown-menu>
+        </template>
+      </el-dropdown>
+      <!-- 搜索面板 -->
+      <SearchPanel
+        :visible="showSearchPanel"
+        :editor="editor"
+        @close="closeSearchPanel"
+      />
     </div>
-    
+    <el-dialog v-model="dialogVisible" title="Tips" width="500">
+      <span>确定要清空该标记的评论区吗</span>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="dialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="removeComment"> 确定 </el-button>
+        </div>
+      </template>
+    </el-dialog>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -282,7 +276,7 @@ import { Editor as EditorType } from "@tiptap/vue-3";
 import { onBeforeUnmount, ref, computed, onMounted } from "vue";
 import type { ComputedRef } from "vue";
 import { nanoid } from "nanoid";
-import { ChatSquare, MoreFilled,ZoomIn } from "@element-plus/icons-vue";
+import { ChatSquare, MoreFilled, ZoomIn } from "@element-plus/icons-vue";
 import EventBus from "../utils/event-bus";
 import { generatePDF } from "../utils/export-pdf";
 import { debounce } from "../utils/debounce";
@@ -295,7 +289,7 @@ import { saveDocumentContent } from "../api/document";
 // Props 类型声明
 interface EditorProps {
   externalEditor?: EditorType | null;
-  docId?:number;
+  docId?: number;
   docTitle?: string;
 }
 
@@ -305,7 +299,7 @@ const debouncedSubmit = debounce(generatePDF, 5000, true);
 
 const props = defineProps<EditorProps>();
 
-const dialogVisible = ref<boolean>(false)
+const dialogVisible = ref<boolean>(false);
 
 // 颜色列表
 const highlightColors = ref<string[]>([
@@ -327,7 +321,7 @@ const fontColors = ref<string[]>([
 const uploadFile = ref<HTMLInputElement | null>(null);
 
 // 搜索相关状态
-const showSearchPanel = ref<boolean>(false)
+const showSearchPanel = ref<boolean>(false);
 
 let selectedRange: { from: number; to: number } | null = null;
 
@@ -357,13 +351,12 @@ const editor: ComputedRef<EditorType | null> = computed(() => {
   return props.externalEditor ?? null;
 });
 
-
 // 建立链接
 const setLink = () => {
   const previousUrl = editor.value?.getAttributes("link").href;
-  let url = '';
-  if (typeof window !== 'undefined') {
-    url = window.prompt("URL", previousUrl) || '';
+  let url = "";
+  if (typeof window !== "undefined") {
+    url = window.prompt("URL", previousUrl) || "";
   }
   if (url === null) return;
   if (url === "") {
@@ -381,12 +374,12 @@ const setLink = () => {
 // 搜索相关方法
 // 打开搜索面板
 const openSearchPanel = () => {
-  showSearchPanel.value = true
-}
+  showSearchPanel.value = true;
+};
 // 关闭搜索面板
 const closeSearchPanel = () => {
-  showSearchPanel.value = false
-}
+  showSearchPanel.value = false;
+};
 
 // 键盘快捷键处理
 const handleKeydown = (event: KeyboardEvent) => {
@@ -394,14 +387,14 @@ const handleKeydown = (event: KeyboardEvent) => {
     if (event.key === "f") {
       event.preventDefault();
       openSearchPanel();
-    } 
+    }
   } else if (event.key === "Escape" && showSearchPanel.value) {
     closeSearchPanel();
   }
 };
 
 // 监听全局搜索打开事件
-if (typeof window !== 'undefined') {
+if (typeof window !== "undefined") {
   window.addEventListener("search:open", () => {
     openSearchPanel();
   });
@@ -411,7 +404,7 @@ if (typeof window !== 'undefined') {
 
 // 导出pdf
 const exportPdf = () => {
-  if (typeof document !== 'undefined') {
+  if (typeof document !== "undefined") {
     debouncedSubmit({
       element: document.querySelector(".tiptap") as HTMLElement,
       filename: `${props.docTitle}.pdf`,
@@ -494,7 +487,7 @@ const addComment = () => {
   });
 
   console.log(markInfo);
-  
+
   if (markInfo.length === 1 && markInfo[0]?.text.length === to - from) {
     markInfo[0].marks.forEach((mark) => {
       if (mark.name === "comment") {
@@ -508,7 +501,7 @@ const addComment = () => {
 };
 
 // 确认评论（保存到编辑器）
-const confirmComment = async(comment:string) => {
+const confirmComment = async (comment: string) => {
   const attributes = {
     id: text_id || nanoid(),
   };
@@ -516,10 +509,10 @@ const confirmComment = async(comment:string) => {
   //保存评论接口
   const res = await createCommentApi(attributes.id, comment, props.docId ?? 0);
   const saveCode = await saveDocument();
-  if(res.code === 200 && saveCode === 200){
-    ElMessage.success('评论成功');
-  }else{
-    ElMessage.error('评论失败');
+  if (res.code === 200 && saveCode === 200) {
+    ElMessage.success("评论成功");
+  } else {
+    ElMessage.error("评论失败");
   }
   selectedRange = null;
 };
@@ -547,22 +540,20 @@ EventBus.on("confirmComment", (val: unknown) => {
 });
 
 // 删除当前选中范围的评论
-const removeComment = async() => {
+const removeComment = async () => {
   editor.value?.chain().focus().unsetMark("comment").run();
   dialogVisible.value = false;
   const saveCode = await saveDocument();
-  if(saveCode === 200){
-    ElMessage.success('清空成功！');
+  if (saveCode === 200) {
+    ElMessage.success("清空成功！");
   }
 };
 
 onBeforeUnmount(() => {
   editor.value?.destroy();
   EventBus.all.clear();
-  window.removeEventListener("keydown", handleKeydown)
+  window.removeEventListener("keydown", handleKeydown);
 });
-
-
 </script>
 
 <style lang="scss">
@@ -613,13 +604,13 @@ onBeforeUnmount(() => {
 /* Basic editor styles */
 .tiptap {
   outline: none;
-  h1{
+  h1 {
     font-size: 30px;
   }
-  hr{
+  hr {
     margin: 15px 0;
   }
-  li{
+  li {
     margin-left: 20px;
   }
   code {
@@ -675,7 +666,7 @@ onBeforeUnmount(() => {
     background-color: #958df1;
     color: #ffffff;
   }
-  
+
   ::-moz-selection {
     background-color: #958df1;
     color: #ffffff;
