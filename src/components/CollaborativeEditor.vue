@@ -376,20 +376,14 @@ function formatTime(timeStr: string) {
     .padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}`;
 }
 
-let oldContent = "";
+let oldContent =
+  '{"type":"doc","content":[{"type":"paragraph","attrs":{"textAlign":null}}]}';
 
 const documentTitle = ref<string>();
 
 const documentUpdateTime = ref<string>("");
 const hydrated = ref(false);
-onMounted(async () => {
-  const res = await getDocumentContent(props.docId);
-  documentUpdateTime.value = formatTime(res.data.updatedAt);
-  documentTitle.value = res.data.title;
-  const content = res.data.content === "" ? "" : JSON.parse(res.data.content);
-  editor.value?.commands.setContent(content);
-  hydrated.value = true;
-});
+
 // 控制刷新历史版本
 const versionDrawerRef = ref();
 const saveDocument = async () => {
@@ -621,9 +615,16 @@ onMounted(async () => {
   const res = await getDocumentContent(props.docId);
   documentUpdateTime.value = formatTime(res.data.updatedAt);
   documentTitle.value = res.data.title;
-  oldContent = res.data.content;
   const content = res.data.content === "" ? "" : JSON.parse(res.data.content);
+  oldContent =
+    res.data.content === ""
+      ? JSON.stringify({
+          type: "doc",
+          content: [{ type: "paragraph", attrs: { textAlign: null } }],
+        })
+      : res.data.content;
   editor.value?.commands.setContent(content);
+  hydrated.value = true;
   if (typeof window !== "undefined") {
     // 监听页面卸载事件
     window.addEventListener("beforeunload", handleBeforeUnload);
@@ -632,6 +633,7 @@ onMounted(async () => {
 });
 
 onBeforeUnmount(() => {
+  console.log(JSON.stringify(editor.value?.getJSON()), oldContent);
   if (JSON.stringify(editor.value?.getJSON()) !== oldContent) {
     saveDocument();
   }

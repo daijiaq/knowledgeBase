@@ -80,9 +80,6 @@ const selectCurrentDoc = (id: number) => {
   } else {
     knowledgeBaseStore.selectDocType("document");
     knowledgeBaseStore.selectDoc(id);
-    if (knowledgeBaseId) {
-      router.replace(`/knowledgeBase/${knowledgeBaseId.value}/${id}`);
-    }
   }
 };
 const showEditDialog = ref(false);
