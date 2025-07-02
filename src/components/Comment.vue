@@ -98,6 +98,8 @@ onMounted(async() => {
 }),
 
 onBeforeUnmount(()=>{
+    showCommentInput.value = false;
+    showCommentContent.value = false;
     //取消全部监听
     EventBus.all.clear();
 })

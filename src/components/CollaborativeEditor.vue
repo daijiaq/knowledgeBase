@@ -130,18 +130,6 @@ import VersionDrawer from "../components/VersionDrawer.vue";
 import { getDocumentContent, saveDocumentContent } from "../api/document";
 import EditorTool from "./EditorTool.vue";
 
-const showVersionDrawer = ref(false);
-const openDrawer = () => {
-  showVersionDrawer.value = true;
-};
-async function handleRestore() {
-  // 重新获取当前文档内容
-  if (typeof props.docId !== "undefined") {
-    const res = await getDocumentContent(props.docId);
-    const content = res.data.content === "" ? "" : JSON.parse(res.data.content);
-    editor.value?.commands.setContent(content);
-  }
-}
 
 // ai
 const aiText = ref("");
@@ -169,7 +157,7 @@ const props = withDefaults(defineProps<Props>(), {
   websocketUrl: "ws://localhost:1234",
   // websocketUrl: "ws://192.168.31.119:1234",
   roomId: "collaborative-document",
-  userName: "匿名用户",
+  userName: '用户',
   docId: 1,
 });
 
@@ -331,6 +319,20 @@ const editor = useEditor({
   },
 });
 
+
+const showVersionDrawer = ref(false);
+const openDrawer = () => {
+  showVersionDrawer.value = true;
+};
+async function handleRestore() {
+  // 重新获取当前文档内容
+  if (typeof props.docId !== "undefined") {
+    const res = await getDocumentContent(props.docId);
+    const content = res.data.content === "" ? "" : JSON.parse(res.data.content);
+    editor.value?.commands.setContent(content);
+  }
+}
+
 /**
  * 更换用户光标颜色
  */
@@ -363,17 +365,12 @@ const editor = useEditor({
   return `${date.getFullYear()}-${(date.getMonth()+1).toString().padStart(2,'0')}-${date.getDate().toString().padStart(2,'0')} ${date.getHours().toString().padStart(2,'0')}:${date.getMinutes().toString().padStart(2,'0')}`
 }
 
+let oldContent = '';
+
 const documentTitle = ref<string>()
 
 const documentUpdateTime = ref<string>('')
 
-onMounted(async()=>{
-  const res = await getDocumentContent(props.docId);
-  documentUpdateTime.value = formatTime(res.data.updatedAt);
-  documentTitle.value = res.data.title;
-  const content = res.data.content === "" ? "" : JSON.parse(res.data.content);
-  editor.value?.commands.setContent(content);
-})
 // 控制刷新历史版本
 const versionDrawerRef = ref()
 const saveDocument = async () => {
@@ -389,6 +386,7 @@ const saveDocument = async () => {
   if (res.code === 200) {
     ElMessage.success("保存成功");
     versionDrawerRef.value?.refreshHistory() // 刷新历史版本
+    oldContent = JSON.stringify(newContent);
   } else {
     ElMessage.error("保存失败");
   }
@@ -599,8 +597,14 @@ const aiClickSummary = async (documentText: string) => {
 };
 
 // 生命周期钩子
-onMounted(() => {
+onMounted(async() => {
   console.log("协同编辑器已挂载");
+  const res = await getDocumentContent(props.docId);
+  documentUpdateTime.value = formatTime(res.data.updatedAt);
+  documentTitle.value = res.data.title;
+  oldContent = res.data.content;
+  const content = res.data.content === "" ? "" : JSON.parse(res.data.content);
+  editor.value?.commands.setContent(content);
   if (typeof window !== "undefined") {
     // 监听页面卸载事件
     window.addEventListener("beforeunload", handleBeforeUnload);
@@ -609,6 +613,9 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
+  if(JSON.stringify(editor.value?.getJSON()) !== oldContent){
+    saveDocument();
+  }
   console.log("销毁协同编辑器...");
   if (typeof window !== "undefined") {
     // 移除事件监听器
