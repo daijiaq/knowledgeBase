@@ -42,19 +42,36 @@ export const generateSummary = (
   let abortController = new AbortController();
 
   const fetchSSE = async () => {
+    //  try {
+    //   // 使用fetch发送请求，可以添加自定义请求头
+    //   const response = await fetch(
+    //     `http://localhost:3300/api/folders/summary?documentText=${encodeURIComponent(
+    //       documentText
+    //     )}`,
+    //     {
+    //       method: "GET",
+    //       headers: {
+    //         Accept: "text/event-stream",
+    //         "Cache-Control": "no-cache",
+    //         ...(userToken && { Authorization: `Bearer ${userToken}` }), // 添加token到请求头
+    //       },
+    //       signal: abortController.signal,
+    //     }
+    //   );
+
     try {
-      // 使用fetch发送请求，可以添加自定义请求头
+      // 使用fetch发送POST请求，将documentText放在请求体中
       const response = await fetch(
-        `http://localhost:3300/api/folders/summary?documentText=${encodeURIComponent(
-          documentText
-        )}`,
+        "http://localhost:3300/api/folders/summary",
         {
-          method: "GET",
+          method: "POST",
           headers: {
             Accept: "text/event-stream",
             "Cache-Control": "no-cache",
+            "Content-Type": "application/json",
             ...(userToken && { Authorization: `Bearer ${userToken}` }), // 添加token到请求头
           },
+          body: JSON.stringify({ documentText }),
           signal: abortController.signal,
         }
       );
