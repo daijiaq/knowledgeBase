@@ -4,7 +4,7 @@
       <div 
       class="doc-item"
       @click="selectFolder(item.id)"
-      :class="{ active: currentDocId === item.id &&currentDocType === 'folder' }"
+      :class="{ active: currentDocumentId === item.id &&currentDocType === 'folder' }"
       >
         <!-- 展开/收起箭头 -->
         <span class="arrow-icon" @click.stop="selectFolder(item.id)">
@@ -59,7 +59,7 @@ import { ref,defineOptions, reactive,watch } from 'vue';
   import { ElMessage,ElMessageBox } from 'element-plus';
   import EditNameDialog from './EditNameDialog.vue';
   const knowledgeBaseStore = useKnowledgeBaseStore()
-  const {currentDocId,currentDocType} = storeToRefs(knowledgeBaseStore)
+  const {currentDocumentId,currentDocType} = storeToRefs(knowledgeBaseStore)
   const {selectDoc,getFolderContent,selectDocType} = knowledgeBaseStore
   import DocumentItem from './DocumentItem.vue';
   const children = reactive({

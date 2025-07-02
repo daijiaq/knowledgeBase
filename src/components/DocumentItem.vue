@@ -3,7 +3,7 @@
     class="doc-item"
     @click="selectCurrentDoc(item.id)"
     :class="{
-      active: currentDocId === item.id && currentDocType === 'document',
+      active: currentDocumentId === item.id && currentDocType === 'document',
     }"
   >
     <div class="doc-icon">
@@ -63,17 +63,16 @@ import { useKnowledgeBaseStore } from "../stores/useKnowledgeBaseStore";
 import EditNameDialog from "./EditNameDialog.vue";
 import * as documentApi from "../api/document";
 import { clearDocumentIdsCache } from "../utils/route-guard";
-// import { getKBsAllDocumentIdsApi } from "../api/knowledgeBase";
 const router = useRouter();
 const knowledgeBaseStore = useKnowledgeBaseStore();
-const { currentDocId, currentDocType } = storeToRefs(knowledgeBaseStore);
+const { currentDocumentId, currentDocType } = storeToRefs(knowledgeBaseStore);
 const { selectDoc, selectDocType } = knowledgeBaseStore;
 import type { Ref } from "vue";
 const knowledgeBaseId = inject<Ref<string | number> | undefined>(
   "knowledgeBaseId"
 );
 const props = defineProps(["item", "getKBsContent", "onSelectDoc"]);
-const selectCurrentDoc = async (id: number) => {
+const selectCurrentDoc = (id: number) => {
   if (props.onSelectDoc) {
     props.onSelectDoc(id);
     // const data = await getKBsAllDocumentIdsApi(39);
@@ -93,14 +92,14 @@ const editDocName = async (name: string) => {
   props.getKBsContent();
 };
 //删除文件夹
-async function deleteDoc(docId: number) {
+async function deleteDoc(documentId: number) {
   ElMessageBox.confirm("确定要删除该文档吗？此操作不可恢复", "警告", {
     confirmButtonText: "确定",
     cancelButtonText: "取消",
     type: "warning",
   }).then(async () => {
     try {
-      await documentApi.deleteDocument(docId);
+      await documentApi.deleteDocument(documentId);
       ElMessage.success("删除文档成功");
       // 清除缓存，确保权限验证使用最新数据
       if (knowledgeBaseId) {
