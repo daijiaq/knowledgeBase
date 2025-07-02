@@ -1,4 +1,5 @@
 // src/entry-server.ts
+import 'element-plus/dist/index.css'
 import { renderToString } from '@vue/server-renderer'
 import { createApp } from './main'
 import { useKnowledgeBaseStore } from './stores/useKnowledgeBaseStore'

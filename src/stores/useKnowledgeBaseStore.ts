@@ -41,29 +41,29 @@ export const useKnowledgeBaseStore = defineStore('knowledgeBase', () => {
   }
 
   //当前选中的文档或文件夹
-  const currentDocId = ref<null|number>(null)
-  const selectDocId = ref<null|number>(null)//展示文档
+  const currentDocumentId = ref<null|number>(null)
+  const selectDocumentId = ref<null|number>(null)//展示文档
   const currentDocType = ref<'document'|'folder'>('folder')
   let storageId: string | null = null
   let storageType: string | null = null
   if (typeof window !== 'undefined') {
-    storageId = sessionStorage.getItem('currentDocId')
+    storageId = sessionStorage.getItem('currentDocumentId')
     storageType = sessionStorage.getItem('currentDocType')
-    if(storageType==='document' && storageId!=null){selectDocId.value = Number(storageId)}
+    if(storageType==='document' && storageId!=null){selectDocumentId.value = Number(storageId)}
   }
-  currentDocId.value = storageId!=undefined&&storageId!='null'?Number(storageId):null
+  currentDocumentId.value = storageId!=undefined&&storageId!='null'?Number(storageId):null
   currentDocType.value = storageType=='folder'||storageType=='document'?storageType:'folder'
 
   //更新当前选中的文档
-  const selectDoc = (docId:number|null)=>{
-    currentDocId.value = docId
+  const selectDoc = (documentId:number|null)=>{
+    currentDocumentId.value = documentId
     if (typeof window !== 'undefined') {
-      sessionStorage.setItem('currentDocId',String(currentDocId.value))
+      sessionStorage.setItem('currentDocumentId',String(currentDocumentId.value))
     }
-    if(currentDocType.value === 'document'){selectDocId.value = docId}  
+    if(currentDocType.value === 'document'){selectDocumentId.value = documentId}  
   }
   const changKBs = ()=>{
-    selectDocId.value = null
+    selectDocumentId.value = null
     selectDocType('folder')
     selectDoc(null)
   }
@@ -87,13 +87,13 @@ export const useKnowledgeBaseStore = defineStore('knowledgeBase', () => {
   function setState(state: Partial<{
     knowledgeBaseList: allKnowledgeBase[]
     recentKBsList: allKnowledgeBase[]
-    currentDocId: number | null
+    currentDocumentId: number | null
     currentDocType: 'document' | 'folder' | undefined
     knowledgeBaseContent: any // SSR 注入知识库页面内容
   }>) {
     if (state.knowledgeBaseList) knowledgeBaseList.value = state.knowledgeBaseList
     if (state.recentKBsList) recentKBsList.value = state.recentKBsList
-    if (state.currentDocId !== undefined) currentDocId.value = state.currentDocId
+    if (state.currentDocumentId !== undefined) currentDocumentId.value = state.currentDocumentId
     if (state.currentDocType !== undefined) currentDocType.value = state.currentDocType
     if (state.knowledgeBaseContent !== undefined) knowledgeBaseContent.value = state.knowledgeBaseContent
   }
@@ -107,9 +107,9 @@ export const useKnowledgeBaseStore = defineStore('knowledgeBase', () => {
     createKBs,
     getAllKBs,
     getRecentKBs,
-    currentDocId,
+    currentDocumentId,
     changKBs,
-    selectDocId,
+    selectDocumentId,
     currentDocType,
     selectDoc,
     selectDocType,

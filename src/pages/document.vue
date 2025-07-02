@@ -142,9 +142,12 @@
     </div>
 
     <!-- 主内容区 -->
-    <template v-if="selectDocId!==null">
-      <router-view></router-view>
-    </template>
+     <div v-if="route.params.documentId && currentDocType === 'document'">
+      <div v-if="!hydrated" class="main-loading">
+        <el-skeleton :rows="8" animated />
+      </div>
+      <router-view v-else />
+    </div>
     <div v-else style="width: 890px;padding: 20px;
     border: 1px solid #e5e7eb;
     border-radius: 8px;
@@ -243,7 +246,7 @@ const knowledgeBaseId = ref(Number(route.params.knowledgeBaseId));
 provide('knowledgeBaseId', knowledgeBaseId);
 
 const knowledgeBaseStore = useKnowledgeBaseStore()
-const { knowledgeBaseContent, currentDocId, currentDocType, selectDocId } = storeToRefs(knowledgeBaseStore)
+const { knowledgeBaseContent, currentDocumentId, currentDocType, selectDocumentId } = storeToRefs(knowledgeBaseStore)
 const { selectDoc, selectDocType } = knowledgeBaseStore
 
 const rootFolders = ref<FolderInfo[]>()
@@ -256,20 +259,17 @@ const showNewDocDialog = ref(false);
 const showShareDialog = ref(false);
 //双击空白位置将parentId设置为null
 const isClickDouble = ref(true)
-
+const hydrated = ref(false)
 // 只在客户端请求数据，不再消费 SSR 注入的数据
 onMounted(() => {
+  hydrated.value = true
   knowledgeBaseStore.getAllKBs();
   knowledgeBaseStore.getRecentKBs(5);
   getKBsContent();
-  if (route.params.docId) {
-    if (String(route.params.docId).startsWith('folder-')) {
-      selectDocType('folder');
-      selectDoc(Number(String(route.params.docId).replace('folder-', '')));
-    } else {
-      selectDocType('document');
-      selectDoc(Number(route.params.docId));
-    }
+  // 保证刷新/SSR时根据路由高亮文档
+  if (route.params.documentId) {
+    selectDocType('document');
+    selectDoc(Number(route.params.documentId));
   }
 });
 
@@ -282,17 +282,13 @@ watch(
   }
 );
 
+// 路由变化时自动高亮文档
 watch(
-  () => route.params.docId,
-  (newDocId) => {
-    if (newDocId) {
-      if (String(newDocId).startsWith('folder-')) {
-        selectDocType('folder');
-        selectDoc(Number(String(newDocId).replace('folder-', '')));
-      } else {
-        selectDocType('document');
-        selectDoc(Number(newDocId));
-      }
+  () => route.params.documentId,
+  (newId) => {
+    if (newId) {
+      selectDocType('document');
+      selectDoc(Number(newId));
     }
   }
 );
@@ -392,7 +388,7 @@ const createNewDoc = async() => {
       const {data} = await documentApi.createDocument(
         knowledgeBaseId.value,
         newDocForm.name,
-        currentDocId.value,
+        currentDocumentId.value,
         currentDocType.value
       );
       //创建后选中文档
@@ -402,11 +398,11 @@ const createNewDoc = async() => {
       await folderApi.createFolderApi(
         knowledgeBaseId.value,
         newDocForm.name,
-        currentDocId.value,
+        currentDocumentId.value,
         currentDocType.value
       );
     }
-    expandFolder.value = currentDocId.value
+    expandFolder.value = currentDocumentId.value
     showNewDocDialog.value = false;
     newDocForm.name = "";
     newDocForm.type = "document";
@@ -458,11 +454,10 @@ const handleSelectDoc = (id:number) => {
   selectDoc(id);
   router.push({ path: `/knowledgeBase/${knowledgeBaseId.value}/${id}` });
 };
-// 文件夹点击事件，选中文件夹并同步路由
+// 文件夹点击事件
 const handleSelectFolder = (id:number) => {
   selectDocType('folder');
   selectDoc(id);
-  router.push({ path: `/knowledgeBase/${knowledgeBaseId.value}/folder-${id}` });
 };
 </script>
 

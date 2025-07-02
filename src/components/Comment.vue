@@ -1,31 +1,35 @@
 <template>
-    <Transition name="comment-slide">
-        <!-- 评论输入弹窗（简化示例，实际可使用模态框） -->
-        <div v-show="showCommentInput" class="comment-input">
-            <h3>Total</h3>
-            <el-input v-model="commentContent" placeholder="输入评论内容" style="margin-top: 10px;" resize="none" :rows="3"
-                type="textarea" />
-            <el-button @click="confirmComment" style="margin-top: 10px;">确认</el-button>
-            <el-button @click="cancelComment" style="margin-top: 10px;">取消</el-button>
-        </div>
-    </Transition>
-    <Transition name="comment-slide">
-        <div v-show="showCommentContent" class="comments">
-            <div class="del" @click="removeCommentBox">
-                <el-icon>
-                    <CloseBold />
-                </el-icon>
+   <div v-if="!hydrated" class="main-loading">
+        <el-skeleton :rows="3" animated />
+    </div>
+    <template v-else>
+        <Transition name="comment-slide">
+            <!-- 评论输入弹窗（简化示例，实际可使用模态框） -->
+            <div v-show="showCommentInput" class="comment-input">
+                <h3>Total</h3>
+                <el-input v-model="commentContent" placeholder="输入评论内容" style="margin-top: 10px;" resize="none" :rows="3"
+                    type="textarea" />
+                <el-button @click="confirmComment" style="margin-top: 10px;">确认</el-button>
+                <el-button @click="cancelComment" style="margin-top: 10px;">取消</el-button>
             </div>
-            <div class="comment-content" v-for="(comment,index) of getCommentContent" :key="index">
-                <div class="user">
-                    <span class="username">{{ comment.username }}</span><span class="del-comment" v-if="userId === comment.userId"><el-icon @click="deleteComment(comment.id)"><Delete /></el-icon></span>
+        </Transition>
+        <Transition name="comment-slide">
+            <div v-show="showCommentContent" class="comments">
+                <div class="del" @click="removeCommentBox">
+                    <el-icon>
+                        <CloseBold />
+                    </el-icon>
                 </div>
-                <div class="text">{{ text }}</div>
-                <div class="content">{{ comment.comment }}</div>
+                <div class="comment-content" v-for="(comment,index) of getCommentContent" :key="index">
+                    <div class="user">
+                        <span class="username">{{ comment.username }}</span><span class="del-comment" v-if="userId === comment.userId"><el-icon @click="deleteComment(comment.id)"><Delete /></el-icon></span>
+                    </div>
+                    <div class="text">{{ text }}</div>
+                    <div class="content">{{ comment.comment }}</div>
+                </div>
             </div>
-        </div>
-    </Transition>
-
+        </Transition>
+    </template>
 </template>
 <script lang="ts" setup>
 import { ref , onBeforeUnmount , onMounted } from 'vue'
@@ -49,7 +53,7 @@ const showCommentContent = ref<boolean>(false);
 const getCommentContent = ref<CommentItem[]>([])
 const userId = ref<number>(0)
 const text = ref<string>('')
-
+const hydrated = ref(false)
 EventBus.on('showCommentInput', ((val: boolean) => {
     showCommentInput.value = val;
     showCommentContent.value = false;
@@ -91,6 +95,7 @@ const deleteComment = async(id:number) =>{
 }
 
 onMounted(async() => {
+     hydrated.value = true
     //获取我的个人信息
     const res = await getUserInfo();
     userId.value = res.data.id;

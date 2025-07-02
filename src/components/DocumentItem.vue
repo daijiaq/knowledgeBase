@@ -2,7 +2,7 @@
     <div 
       class="doc-item"
       @click="selectCurrentDoc(item.id)"
-      :class="{ active: currentDocId === item.id&&currentDocType === 'document' }"
+      :class="{ active: currentDocumentId === item.id&&currentDocType === 'document' }"
       >
         <div class="doc-icon">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -46,7 +46,7 @@ import EditNameDialog from './EditNameDialog.vue';
 import * as documentApi from '../api/document';
 const router = useRouter()
 const knowledgeBaseStore = useKnowledgeBaseStore()
-const {currentDocId,currentDocType} = storeToRefs(knowledgeBaseStore)
+const {currentDocumentId,currentDocType} = storeToRefs(knowledgeBaseStore)
 const {selectDoc,selectDocType} = knowledgeBaseStore
 import type { Ref } from 'vue';
 const knowledgeBaseId = inject<Ref<string | number> | undefined>('knowledgeBaseId');
@@ -69,14 +69,14 @@ const editDocName = async(name: string) => {
   props.getKBsContent()
 }
 //删除文件夹
-async function deleteDoc(docId:number){
+async function deleteDoc(documentId:number){
     ElMessageBox.confirm("确定要删除该文档吗？此操作不可恢复", "警告", {
     confirmButtonText: "确定",
     cancelButtonText: "取消",
     type: "warning",
   }).then(async () => {
       try {
-        await documentApi.deleteDocument(docId)
+        await documentApi.deleteDocument(documentId)
         ElMessage.success("删除文档成功")
         props.getKBsContent()
         selectDocType('folder')

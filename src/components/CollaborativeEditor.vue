@@ -1,5 +1,8 @@
 <template>
-  <div class="collaborative-editor">
+   <div v-if="!hydrated" class="main-loading">
+    <el-skeleton :rows="8" animated />
+  </div>
+  <div v-else class="collaborative-editor">
     <div class="connection-status">
       <div class="status-indicator">
         <span
@@ -366,13 +369,14 @@ const editor = useEditor({
 const documentTitle = ref<string>()
 
 const documentUpdateTime = ref<string>('')
-
+const hydrated = ref(false)
 onMounted(async()=>{
   const res = await getDocumentContent(props.docId);
   documentUpdateTime.value = formatTime(res.data.updatedAt);
   documentTitle.value = res.data.title;
   const content = res.data.content === "" ? "" : JSON.parse(res.data.content);
   editor.value?.commands.setContent(content);
+  hydrated.value = true;
 })
 // 控制刷新历史版本
 const versionDrawerRef = ref()
