@@ -29,7 +29,7 @@
             <h3>{{ currentKnowledgeBaseInfo?.name }}</h3>
           </div>
         </div>
-        <el-button @click="toggleSidebar"class="collapse-btn">
+        <el-button @click="toggleSidebar" class="collapse-btn">
           <svg
             width="16"
             height="16"
@@ -134,34 +134,64 @@
         </div>
 
         <!-- 文档树 -->
-          <div class="doc-tree" @click.stop>
-            <FolderItem v-for="item in filterFolders" :item="item" :key="item.id" :getKBsContent="getKBsContent" :onSelectFolder="handleSelectFolder" :onSelectDoc="handleSelectDoc" />
-            <DocumentItem v-for="doc in filterDocs" :key="doc.id" :item="doc" :getKBsContent="getKBsContent" :onSelectDoc="handleSelectDoc"/>
-          </div>
+        <div class="doc-tree" @click.stop>
+          <FolderItem
+            v-for="item in filterFolders"
+            :item="item"
+            :key="item.id"
+            :getKBsContent="getKBsContent"
+            :onSelectFolder="handleSelectFolder"
+            :onSelectDoc="handleSelectDoc"
+          />
+          <DocumentItem
+            v-for="doc in filterDocs"
+            :key="doc.id"
+            :item="doc"
+            :getKBsContent="getKBsContent"
+            :onSelectDoc="handleSelectDoc"
+          />
+        </div>
       </div>
     </div>
 
     <!-- 主内容区 -->
-    <template v-if="selectDocId!==null">
+    <template v-if="selectDocId !== null">
       <router-view></router-view>
     </template>
-    <div v-else style="width: 890px;padding: 20px;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    background-color: white;">
-      <div style="display: flex;justify-content: space-between;">
+    <div
+      v-else
+      style="
+        width: 890px;
+        padding: 20px;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        background-color: white;
+      "
+    >
+      <div style="display: flex; justify-content: space-between">
         <h1>{{ currentKnowledgeBaseInfo?.name }}</h1>
         <el-button @click="shareDoc">分享</el-button>
       </div>
-      <p style="margin-top: 20px; font-size: 18px;">👋 欢迎来到知识库</p>
-    </div> 
+      <p style="margin-top: 20px; font-size: 18px">👋 欢迎来到知识库</p>
+    </div>
 
     <!-- 新建文档对话框 -->
-    <el-dialog v-model="showNewDocDialog" :title="newDocForm.type==='document'?'新建文档':'新建文件夹'" width="400px">
+    <el-dialog
+      v-model="showNewDocDialog"
+      :title="newDocForm.type === 'document' ? '新建文档' : '新建文件夹'"
+      width="400px"
+    >
       <el-form v-model="newDocForm" label-width="80px">
         <el-form-item label="名称">
-          <el-input v-model="newDocForm.name" :placeholder="newDocForm.type==='document'?'请输入文档名称':'请输入文件夹名称'" />
+          <el-input
+            v-model="newDocForm.name"
+            :placeholder="
+              newDocForm.type === 'document'
+                ? '请输入文档名称'
+                : '请输入文件夹名称'
+            "
+          />
         </el-form-item>
         <el-form-item label="类型">
           <el-radio-group v-model="newDocForm.type">
@@ -228,47 +258,51 @@ import { ElMessage } from "element-plus";
 import CollaborativeEditor from "../components/CollaborativeEditor.vue";
 import { userSearch } from "../api/user";
 import * as KBsApi from "../api/knowledgeBase";
-import * as folderApi from '../api/folder'
-import * as documentApi from '../api/document'
-import type { userInfo,searchItem } from "../types/user";
-import type{ FolderInfo } from "../types/knowledgeBase";
+import * as folderApi from "../api/folder";
+import * as documentApi from "../api/document";
+import type { userInfo, searchItem } from "../types/user";
+import type { FolderInfo } from "../types/knowledgeBase";
 import FolderItem from "../components/FolderItem.vue";
-import DocumentItem from "../components/DocumentItem.vue"
+import DocumentItem from "../components/DocumentItem.vue";
 import { useKnowledgeBaseStore } from "../stores/useKnowledgeBaseStore";
 import { storeToRefs } from "pinia";
+import { clearDocumentIdsCache } from "../utils/route-guard";
 
 const router = useRouter();
 const route = useRoute();
 const knowledgeBaseId = ref(Number(route.params.knowledgeBaseId));
-provide('knowledgeBaseId', knowledgeBaseId);
+provide("knowledgeBaseId", knowledgeBaseId);
 
-const knowledgeBaseStore = useKnowledgeBaseStore()
-const { knowledgeBaseContent, currentDocId, currentDocType, selectDocId } = storeToRefs(knowledgeBaseStore)
-const { selectDoc, selectDocType } = knowledgeBaseStore
+const knowledgeBaseStore = useKnowledgeBaseStore();
+const { knowledgeBaseContent, currentDocId, currentDocType, selectDocId } =
+  storeToRefs(knowledgeBaseStore);
+const { selectDoc, selectDocType } = knowledgeBaseStore;
 
-const rootFolders = ref<FolderInfo[]>()
-const rootDoc = ref()
-const currentKnowledgeBaseInfo = ref()
+const rootFolders = ref<FolderInfo[]>();
+const rootDoc = ref();
+const currentKnowledgeBaseInfo = ref();
 
 const sidebarCollapsed = ref(false);
 const searchQuery = ref("");
 const showNewDocDialog = ref(false);
 const showShareDialog = ref(false);
 //双击空白位置将parentId设置为null
-const isClickDouble = ref(true)
+const isClickDouble = ref(true);
 
 // 只在客户端请求数据，不再消费 SSR 注入的数据
 onMounted(() => {
   knowledgeBaseStore.getAllKBs();
   knowledgeBaseStore.getRecentKBs(5);
   getKBsContent();
-  if (route.params.docId) {
-    if (String(route.params.docId).startsWith('folder-')) {
-      selectDocType('folder');
-      selectDoc(Number(String(route.params.docId).replace('folder-', '')));
+
+  // 处理初始路由参数，确保页面加载时正确显示文档
+  if (route.params.documentId) {
+    if (String(route.params.documentId).startsWith("folder-")) {
+      selectDocType("folder");
+      selectDoc(Number(String(route.params.documentId).replace("folder-", "")));
     } else {
-      selectDocType('document');
-      selectDoc(Number(route.params.docId));
+      selectDocType("document");
+      selectDoc(Number(route.params.documentId));
     }
   }
 });
@@ -276,32 +310,46 @@ onMounted(() => {
 // 路由变化自动请求
 watch(
   () => route.params.knowledgeBaseId,
-  (newValue) => {
-    knowledgeBaseId.value = Number(newValue);
+  (newValue, oldValue) => {
+    const newKBId = Number(newValue);
+    knowledgeBaseId.value = newKBId;
+
+    // 切换知识库时清除该知识库的文档ID缓存，确保权限验证使用最新数据
+    if (oldValue && oldValue !== newValue) {
+      clearDocumentIdsCache(Number(oldValue));
+      clearDocumentIdsCache(newKBId);
+    }
+
     getKBsContent();
   }
 );
 
 watch(
-  () => route.params.docId,
+  () => route.params.documentId,
   (newDocId) => {
     if (newDocId) {
-      if (String(newDocId).startsWith('folder-')) {
-        selectDocType('folder');
-        selectDoc(Number(String(newDocId).replace('folder-', '')));
+      if (String(newDocId).startsWith("folder-")) {
+        selectDocType("folder");
+        selectDoc(Number(String(newDocId).replace("folder-", "")));
       } else {
-        selectDocType('document');
+        // 访问文档时更新侧边栏状态并渲染文档内容
+        selectDocType("document");
         selectDoc(Number(newDocId));
       }
+    } else {
+      // 如果没有文档ID，清除选中状态
+      selectDocType("folder");
+      selectDoc(null);
     }
-  }
+  },
+  { immediate: true }
 );
 
-function initParentId(){
-  isClickDouble.value = !isClickDouble.value
-  if(isClickDouble.value===true){
-    selectDocType('folder')
-    selectDoc(null)
+function initParentId() {
+  isClickDouble.value = !isClickDouble.value;
+  if (isClickDouble.value === true) {
+    selectDocType("folder");
+    selectDoc(null);
   }
 }
 
@@ -355,7 +403,7 @@ const getKBsContent = async () => {
     console.log("根据知识库id获取内容失败");
     ElMessage.error("无法获取知识库");
   }
-}
+};
 
 // 搜索过滤
 const filterFolders = computed(() => {
@@ -364,40 +412,40 @@ const filterFolders = computed(() => {
     doc.name.toLowerCase().includes(searchQuery.value.toLowerCase())
   );
 });
-const filterDocs = computed(()=>{
+const filterDocs = computed(() => {
   if (!searchQuery.value) return rootDoc.value;
-  return rootDoc.value?.filter((doc:any) =>
+  return rootDoc.value?.filter((doc: any) =>
     doc.name.toLowerCase().includes(searchQuery.value.toLowerCase())
   );
-})
+});
 
 // 折叠侧边栏
 const toggleSidebar = () => {
   sidebarCollapsed.value = !sidebarCollapsed.value;
 };
 
-const expandFolder = ref<null|number>(null)
+const expandFolder = ref<null | number>(null);
 import type FolderItemComponent from "../components/FolderItem.vue";
-const folderItem = ref<InstanceType<typeof FolderItemComponent>[]>([])
-const createNewDoc = async() => {
-  try{
+const folderItem = ref<InstanceType<typeof FolderItemComponent>[]>([]);
+const createNewDoc = async () => {
+  try {
     if (!newDocForm.name.trim()) {
       ElMessage.error("请输入文档名称");
       return;
     }
 
-    let selectId = null
+    let selectId = null;
     if (newDocForm.type === "document") {
       //创建文档
-      const {data} = await documentApi.createDocument(
+      const { data } = await documentApi.createDocument(
         knowledgeBaseId.value,
         newDocForm.name,
         currentDocId.value,
         currentDocType.value
       );
       //创建后选中文档
-      selectId = data.id
-    }else{
+      selectId = data.id;
+    } else {
       //创建文件夹
       await folderApi.createFolderApi(
         knowledgeBaseId.value,
@@ -406,42 +454,48 @@ const createNewDoc = async() => {
         currentDocType.value
       );
     }
-    expandFolder.value = currentDocId.value
+    expandFolder.value = currentDocId.value;
     showNewDocDialog.value = false;
     newDocForm.name = "";
     newDocForm.type = "document";
     newDocForm.parentId = null;
     ElMessage.success("创建成功");
-    getKBsContent()
-    if(folderItem.value){
-      for(let i=0;i<folderItem.value.length;i++){
-        folderItem.value[i].getKBsContent()
+    // 清除缓存，确保权限验证使用最新数据
+    clearDocumentIdsCache(knowledgeBaseId.value);
+    getKBsContent();
+    if (folderItem.value) {
+      for (let i = 0; i < folderItem.value.length; i++) {
+        folderItem.value[i].getKBsContent();
       }
     }
-    if(selectId!=null){
+    if (selectId != null) {
       //创建完后选中文档
-      selectDocType('document');
+      selectDocType("document");
       selectDoc(selectId);
     }
-  }catch(error){
-    console.log('创建文档或文件夹失败',error);
-    ElMessage.error('创建失败')
+  } catch (error) {
+    console.log("创建文档或文件夹失败", error);
+    ElMessage.error("创建失败");
   }
 };
 
 const sendInvite = async () => {
-  try{
-    const checkedUser:number[] = []
-    search_list.value.filter(item=>item.checked===true).forEach((ele:searchItem)=>{
-      checkedUser.push(ele.id)
-    })
-    if(checkedUser.length===0){
+  try {
+    const checkedUser: number[] = [];
+    search_list.value
+      .filter((item) => item.checked === true)
+      .forEach((ele: searchItem) => {
+        checkedUser.push(ele.id);
+      });
+    if (checkedUser.length === 0) {
       ElMessage.error("请选择协作人");
       return;
     }
-    await Promise.all(checkedUser.map((id:number)=>{
-      return KBsApi.inviteKBsCollaborator(id,knowledgeBaseId.value)//第二个参数是知识库id
-    }))
+    await Promise.all(
+      checkedUser.map((id: number) => {
+        return KBsApi.inviteKBsCollaborator(id, knowledgeBaseId.value); //第二个参数是知识库id
+      })
+    );
     ElMessage.success("邀请成功");
     inviteEmail.value = "";
     searchInviteUser(inviteEmail.value);
@@ -453,14 +507,22 @@ const sendInvite = async () => {
 };
 
 // 文档树点击事件，选中文档并同步路由
-const handleSelectDoc = (id:number) => {
-  selectDocType('document');
+const handleSelectDoc = (id: number) => {
+  // 先更新状态，确保侧边栏正确高亮
+  selectDocType("document");
   selectDoc(id);
-  router.push({ path: `/knowledgeBase/${knowledgeBaseId.value}/${id}` });
+
+  // 路由跳转（会触发路由守卫进行权限验证）
+  router
+    .push({ path: `/knowledgeBase/${knowledgeBaseId.value}/${id}` })
+    .catch((error) => {
+      // 处理路由跳转可能的错误
+      console.error("路由跳转失败:", error);
+    });
 };
 // 文件夹点击事件，选中文件夹并同步路由
-const handleSelectFolder = (id:number) => {
-  selectDocType('folder');
+const handleSelectFolder = (id: number) => {
+  selectDocType("folder");
   selectDoc(id);
 };
 </script>
