@@ -462,7 +462,6 @@ const handleSelectDoc = (id:number) => {
 const handleSelectFolder = (id:number) => {
   selectDocType('folder');
   selectDoc(id);
-  router.push({ path: `/knowledgeBase/${knowledgeBaseId.value}/folder-${id}` });
 };
 </script>
 

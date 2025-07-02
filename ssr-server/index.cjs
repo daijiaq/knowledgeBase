@@ -1,7 +1,6 @@
 const express = require('express')
 const fs = require('fs')
 const path = require('path')
-const { render } = require('../dist-ssr/entry-server.js')
 
 const app = express()
 
@@ -22,6 +21,7 @@ try {
 // 3. SSR 路由处理
 app.get('*', async (req, res) => {
   try {
+    const { render } = await import('../dist-ssr/entry-server.js')
     const url = req.originalUrl
     const appHtml = await render(url, req.headers.cookie)
 
