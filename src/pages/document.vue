@@ -408,7 +408,7 @@ const filterFolders = computed(() => {
 const filterDocs = computed(() => {
   if (!searchQuery.value) return rootDoc.value;
   return rootDoc.value?.filter((doc: any) =>
-    doc.name.toLowerCase().includes(searchQuery.value.toLowerCase())
+    doc.title.toLowerCase().includes(searchQuery.value.toLowerCase())
   );
 });
 
