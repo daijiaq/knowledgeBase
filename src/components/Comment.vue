@@ -20,7 +20,10 @@
                         <CloseBold />
                     </el-icon>
                 </div>
-                <div class="comment-content" v-for="(comment,index) of getCommentContent" :key="index">
+                <div v-if="getCommentContent.length === 0" class="comment-empty"><el-icon size="30"><MessageBox /></el-icon>
+                    <div style="font-size: 12px;">评论区空空如也~</div>
+                </div>
+                <div class="comment-content" v-for="(comment,index) of getCommentContent" :key="index" v-else>
                     <div class="user">
                         <span class="username">{{ comment.username }}</span><span class="del-comment" v-if="userId === comment.userId"><el-icon @click="deleteComment(comment.id)"><Delete /></el-icon></span>
                     </div>
@@ -34,7 +37,7 @@
 <script lang="ts" setup>
 import { ref , onBeforeUnmount , onMounted } from 'vue'
 import EventBus from '../utils/event-bus'
-import { CloseBold, Delete } from '@element-plus/icons-vue'
+import { CloseBold, Delete, MessageBox } from '@element-plus/icons-vue'
 import { getCommentApi, removeCommentApi } from '../api/comment'
 import { getUserInfo } from '../api/user'
  
@@ -152,6 +155,14 @@ onBeforeUnmount(()=>{
         top: 2px;
         right: 4px;
         cursor: pointer;
+    }
+    .comment-empty {
+        width: 300px;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
     }
     .comment-content {
         background-color: #ffffff;

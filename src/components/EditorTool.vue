@@ -208,8 +208,8 @@
         <template #dropdown>
           <el-dropdown-menu>
             <el-dropdown-item @click="addComment"> 添加评论 </el-dropdown-item>
-            <el-dropdown-item @click="dialogVisible = true">
-              清空评论
+            <el-dropdown-item @click="removeTip">
+              取消标记
             </el-dropdown-item>
           </el-dropdown-menu>
         </template>
@@ -250,11 +250,11 @@
       />
     </div>
     <el-dialog v-model="dialogVisible" title="Tips" width="500">
-      <span>确定要清空该标记的评论区吗</span>
+      <span>确定要取消该标记吗</span>
       <template #footer>
         <div class="dialog-footer">
           <el-button @click="dialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="removeComment"> 确定 </el-button>
+          <el-button type="primary" @click="removeComment">确定</el-button>
         </div>
       </template>
     </el-dialog>
@@ -283,8 +283,9 @@ import { debounce } from "../utils/debounce";
 import * as mammoth from "mammoth";
 import { ElMessage } from "element-plus";
 import SearchPanel from "./SearchPanel.vue";
-import { createCommentApi } from "../api/comment";
+import { createCommentApi, getCommentApi } from "../api/comment";
 import { saveDocumentContent } from "../api/document";
+
 
 // Props 类型声明
 interface EditorProps {
@@ -325,26 +326,6 @@ const showSearchPanel = ref<boolean>(false);
 
 let selectedRange: { from: number; to: number } | null = null;
 
-/* const internalEditor = useEditor({
-  extensions: [
-    Color.configure({ types: [TextStyle.name, ListItem.name] }),
-    TextStyle,
-    Highlight.configure({ multicolor: true }),
-    TextAlign.configure({ types: ["heading", "paragraph"] }),
-    Link.configure({ openOnClick: false, defaultProtocol: "https" }),
-    StarterKit,
-    Underline,
-    Comment,
-    Search.configure({
-      highlightClass: "search-highlight",
-      currentHighlightClass: "search-highlight-current",
-      caseSensitive: false,
-      wholeWord: false,
-      regex: false,
-    }),
-  ],
-  content: ``,
-}); */
 
 // 计算属性决定使用哪个编辑器实例
 const editor: ComputedRef<EditorType | null> = computed(() => {
@@ -451,9 +432,10 @@ const uploadDocx = () => {
 
 let text_id: string | null = null;
 
-// 添加评论按钮点击事件
-const addComment = () => {
-  const { from, to } = editor.value!.state.selection;
+//选中文本函数
+function selectTextGetCommentId() {
+  // @ts-ignore
+  const { from, to } = editor.value?.state.selection;
   if (from === to) {
     // @ts-ignore
     ElMessage.info("未选中文本！");
@@ -485,18 +467,20 @@ const addComment = () => {
       }
     }
   });
-
-  console.log(markInfo);
-
-  if (markInfo.length === 1 && markInfo[0]?.text.length === to - from) {
-    markInfo[0].marks.forEach((mark) => {
+  if (markInfo?.length === 1 && markInfo[0]?.text.length === to - from) {
+    markInfo[0].marks.forEach((mark:any) => {
       if (mark.name === "comment") {
         text_id = mark.attrs.id;
       }
     });
   }
-
   selectedRange = { from, to };
+  return text_id;
+}
+
+// 添加评论按钮点击事件
+const addComment = () => {
+  selectTextGetCommentId();
   EventBus.emit("showCommentInput", true);
 };
 
@@ -539,13 +523,31 @@ EventBus.on("confirmComment", (val: unknown) => {
   }
 });
 
+const removeTip = () => {
+  // @ts-ignore
+  const { from, to } = editor.value?.state.selection;
+  if(from === to){
+    editor.value?.chain().focus().unsetMark("comment").run();
+  }else{
+    dialogVisible.value = true;
+  }
+}
+
 // 删除当前选中范围的评论
 const removeComment = async () => {
+  const commentId = selectTextGetCommentId();
+  console.log(commentId);
+  const res = await getCommentApi(commentId ?? "");
+  if(res.data.length !== 0 || res.code !== 200){
+    dialogVisible.value = false;
+    ElMessage.info('此处还有评论，不能取消标记！');
+    return;
+  }
   editor.value?.chain().focus().unsetMark("comment").run();
   dialogVisible.value = false;
   const saveCode = await saveDocument();
   if (saveCode === 200) {
-    ElMessage.success("清空成功！");
+    ElMessage.success("取消标记成功！");
   }
 };
 
