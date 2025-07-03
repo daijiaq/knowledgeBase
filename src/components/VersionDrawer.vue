@@ -1,16 +1,21 @@
 <template>
   <el-drawer
     v-model="drawerVisible"
-    size="100%"
+    size="90%"
     direction="rtl"
     :with-header="true"
     custom-class="full-drawer"
+    :show-close="false"
   >
-    <template #header>
+    <template #header="{ close}">
       <div class="drawer-header-flex">
         <span>历史记录</span>
         <div class="drawer-header-actions">
           <el-button size="large" type="primary" @click="restoreVersion">恢复此记录</el-button>
+          <el-button type="danger" size='large' @click="close">
+          <el-icon class="el-icon--left"><CircleCloseFilled /></el-icon>
+          Close
+        </el-button>
         </div>
       </div>
     </template>
@@ -34,7 +39,7 @@
               <div class="version-time">{{ formatTime(item.savedAt) }}</div>
               <div class="version-desc">版本号：{{item.versionNumber}}</div>
             </div>
-            <span @click.stop="deleteVersion(item)">
+            <span  class="deleted-label" @click.stop="deleteVersion(item)">
             删除
             </span>
           </div>
@@ -73,6 +78,8 @@
 </template>
 
 <script setup lang="ts">
+
+import { CircleCloseFilled } from '@element-plus/icons-vue'
 import { ref, computed, onMounted } from 'vue'
 import { getHistoryVersion, getVersionContent } from '../api/version'
 import { ElMessageBox, ElMessage } from 'element-plus'
@@ -147,8 +154,8 @@ function compare() {
     ElMessage.error('无法找到对应的版本进行对比')
     return
   }
-
-  compareVersions(props.docId!, Number(selectedVersion), Number(compareVersion))
+ console.log('对比版本:', selectedVersion, compareVersion)
+  compareVersions(props.docId!,  Number(compareVersion),Number(selectedVersion))
     .then(res => {
       selectedContent.value = res.data?.tiptap || ''
       ElMessage.success('对比成功')
@@ -175,7 +182,6 @@ async function restoreVersion() {
       if (versionList.value.length > 0) {
         selectVersion(versionList.value[0])
       }
-      drawerVisible.value = false
     }
   } catch (e) {
     console.error('回退失败:', e)
@@ -282,5 +288,18 @@ function formatTime(timeStr: string) {
 .drawer-header-actions {
   display: flex;
   gap: 8px;
+}
+.deleted-label {
+  background: #ffeaea;
+  color: #e53935;
+  border: 1px solid #ffd6d6;
+  border-radius: 4px;
+  padding: 2px 10px;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: line-through;
+  box-shadow: 0 1px 2px rgba(229,57,53,0.04);
+  letter-spacing: 1px;
+  display: inline-block;
 }
 </style>
