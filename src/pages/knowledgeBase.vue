@@ -64,11 +64,11 @@ const logOut = () => {
   ElMessage.success("已退出登录");
   router.replace("/login");
 };
-// 获取所有知识库（获取可访问的知识库）ssR时会调用所以不用onMounted
-onMounted(async () => {
-  await knowledgeBaseStore.getAllKBs();
-  await knowledgeBaseStore.getRecentKBs(5);
-});
+// // 获取所有知识库（获取可访问的知识库）ssR时会调用所以不用onMounted
+//  onMounted(async()=>{
+//    await knowledgeBaseStore.getAllKBs()
+//    await knowledgeBaseStore.getRecentKBs(5)
+//  })
 
 const dialogFormVisible = ref(false);
 const editingId = ref<number | null>(null);

@@ -325,12 +325,12 @@ const editor = useEditor({
     }
   },
 });
-
 const showVersionDrawer = ref(false);
 const openDrawer = () => {
   showVersionDrawer.value = true;
 };
 async function handleRestore() {
+  showVersionDrawer.value = false;
   // 重新获取当前文档内容
   if (typeof props.docId !== "undefined") {
     const res = await getDocumentContent(props.docId);
