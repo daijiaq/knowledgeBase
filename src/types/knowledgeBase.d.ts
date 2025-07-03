@@ -69,7 +69,7 @@ export interface allKnowledgeBase {
  * 文件夹信息
  */
 export interface FolderInfo {
-  id: string;
+  id: number;
   name: string;
 }
 

@@ -285,8 +285,8 @@ const {
 } = storeToRefs(knowledgeBaseStore);
 const { selectDoc, selectDocType } = knowledgeBaseStore;
 
-const rootFolders = ref<FolderInfo[]>();
-const rootDoc = ref();
+const rootFolders = ref<FolderInfo[]>([]);
+const rootDocs = ref();
 const currentKnowledgeBaseInfo = ref();
 
 const sidebarCollapsed = ref(false);
@@ -390,7 +390,7 @@ const getKBsContent = async () => {
       data: { documents, folders, knowledgeBaseInfo },
     } = await KBsApi.getKBsContentApi(knowledgeBaseId.value);
     rootFolders.value = folders;
-    rootDoc.value = documents;
+    rootDocs.value = documents;
     currentKnowledgeBaseInfo.value = knowledgeBaseInfo;
   } catch (error) {
     console.log("根据知识库id获取内容失败");
@@ -399,18 +399,38 @@ const getKBsContent = async () => {
 };
 
 // 搜索过滤
-const filterFolders = computed(() => {
-  if (!searchQuery.value) return rootFolders.value;
-  return rootFolders.value?.filter((doc) =>
-    doc.name.toLowerCase().includes(searchQuery.value.toLowerCase())
-  );
-});
-const filterDocs = computed(() => {
-  if (!searchQuery.value) return rootDoc.value;
-  return rootDoc.value?.filter((doc: any) =>
-    doc.title.toLowerCase().includes(searchQuery.value.toLowerCase())
-  );
-});
+const filterFolders = ref(rootFolders.value);
+const filterDocs = ref(rootDocs.value);
+watch(()=>searchQuery.value,async newValue=>{
+  if(newValue===''){
+    filterFolders.value = rootFolders.value;
+    filterDocs.value = rootDocs.value;
+  }else{
+    const {data} = await KBsApi.searchKnowledgeBaseContent(
+      knowledgeBaseId.value,
+      newValue
+    );
+    filterDocs.value = data.documents || [];
+    filterFolders.value = data.folders || [];
+  }
+})
+// const filterFolders = computed(() => {
+//   if (!searchQuery.value) return rootFolders.value;
+//   console.log(KBsApi.searchKnowledgeBaseContent(
+//     knowledgeBaseId.value,
+//     searchQuery.value
+//   ));
+  
+//   return rootFolders.value?.filter((doc) =>
+//     doc.name.toLowerCase().includes(searchQuery.value.toLowerCase())
+//   );
+// });
+// const filterDocs = computed(() => {
+//   if (!searchQuery.value) return rootDocs.value;
+//   return rootDocs.value?.filter((doc: any) =>
+//     doc.title.toLowerCase().includes(searchQuery.value.toLowerCase())
+//   );
+// });
 
 // 折叠侧边栏
 const toggleSidebar = () => {

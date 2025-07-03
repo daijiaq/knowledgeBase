@@ -103,3 +103,14 @@ export const getKBsAllDocumentIdsApi = (
     method: "GET",
   });
 };
+
+// 知识库内的文档文件夹搜索
+export const searchKnowledgeBaseContent = (
+  knowledgeBaseId: number,
+  searchQuery: string
+): Promise<{data:{ folders: { id: number; name: string }[]; documents: { id: number; title: string }[] }}> => {
+  return request({
+    url: `/knowledgeBase/search/${knowledgeBaseId}/${encodeURIComponent(searchQuery)}`,
+    method: "GET",
+  });
+};
