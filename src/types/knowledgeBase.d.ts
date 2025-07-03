@@ -74,7 +74,7 @@ export interface FolderInfo {
 }
 
 export interface DocumentInfo {
-  id: string;
+  id: number;
   title: string;
 }
 

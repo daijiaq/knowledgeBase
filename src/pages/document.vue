@@ -264,7 +264,7 @@ import * as KBsApi from "../api/knowledgeBase";
 import * as folderApi from "../api/folder";
 import * as documentApi from "../api/document";
 import type { userInfo, searchItem } from "../types/user";
-import type { FolderInfo } from "../types/knowledgeBase";
+import type { FolderInfo,DocumentInfo } from "../types/knowledgeBase";
 import FolderItem from "../components/FolderItem.vue";
 import DocumentItem from "../components/DocumentItem.vue";
 import { useKnowledgeBaseStore } from "../stores/useKnowledgeBaseStore";
@@ -286,7 +286,7 @@ const {
 const { selectDoc, selectDocType } = knowledgeBaseStore;
 
 const rootFolders = ref<FolderInfo[]>([]);
-const rootDocs = ref();
+const rootDocs = ref<DocumentInfo[]>([]);
 const currentKnowledgeBaseInfo = ref();
 
 const sidebarCollapsed = ref(false);
@@ -391,6 +391,9 @@ const getKBsContent = async () => {
     } = await KBsApi.getKBsContentApi(knowledgeBaseId.value);
     rootFolders.value = folders;
     rootDocs.value = documents;
+    //初始化展示列表
+    filterDocs.value = documents || [];
+    filterFolders.value = folders || [];
     currentKnowledgeBaseInfo.value = knowledgeBaseInfo;
   } catch (error) {
     console.log("根据知识库id获取内容失败");
@@ -401,6 +404,7 @@ const getKBsContent = async () => {
 // 搜索过滤
 const filterFolders = ref(rootFolders.value);
 const filterDocs = ref(rootDocs.value);
+
 watch(()=>searchQuery.value,async newValue=>{
   if(newValue===''){
     filterFolders.value = rootFolders.value;
@@ -414,23 +418,6 @@ watch(()=>searchQuery.value,async newValue=>{
     filterFolders.value = data.folders || [];
   }
 })
-// const filterFolders = computed(() => {
-//   if (!searchQuery.value) return rootFolders.value;
-//   console.log(KBsApi.searchKnowledgeBaseContent(
-//     knowledgeBaseId.value,
-//     searchQuery.value
-//   ));
-  
-//   return rootFolders.value?.filter((doc) =>
-//     doc.name.toLowerCase().includes(searchQuery.value.toLowerCase())
-//   );
-// });
-// const filterDocs = computed(() => {
-//   if (!searchQuery.value) return rootDocs.value;
-//   return rootDocs.value?.filter((doc: any) =>
-//     doc.title.toLowerCase().includes(searchQuery.value.toLowerCase())
-//   );
-// });
 
 // 折叠侧边栏
 const toggleSidebar = () => {
