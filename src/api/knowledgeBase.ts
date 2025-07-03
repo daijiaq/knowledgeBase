@@ -114,3 +114,24 @@ export const searchKnowledgeBaseContent = (
     method: "GET",
   });
 };
+
+//获取知识库的所有权限用户信息
+export const getKnowledgeBasePermissions = (
+  knowledgeBaseId: number
+): Promise<{ data:{owner:{userId:number,username:string,email:string,permission:string},collaborators:{userId:number,username:string,email:string,permission:string}[]}}> => {
+  return request({
+    url: `/knowledgeBase/${knowledgeBaseId}/permissions`,
+    method: "GET",
+  });
+};
+
+// 知识库拥有者删除指定知识库的指定权限用户
+export const removeKnowledgeBaseCollaborator = (
+  knowledgeBaseId: number,
+  userId: number
+): Promise<{message:string}> => {
+  return request({
+    url: `/knowledgeBase/permissions/${knowledgeBaseId}/${userId}`,
+    method: "DELETE",
+  });
+};

@@ -127,7 +127,7 @@
             </el-button>
             <template #dropdown>
               <el-dropdown-menu>
-                <el-dropdown-item @click="shareDoc">添加协作</el-dropdown-item>
+                <el-dropdown-item @click="shareDoc">协作</el-dropdown-item>
               </el-dropdown-menu>
             </template>
           </el-dropdown>
@@ -210,7 +210,7 @@
     </el-dialog>
 
     <!-- 分享对话框 -->
-    <el-dialog v-model="showShareDialog" title="分享知识库" width="400px">
+    <el-dialog v-model="showShareDialog" title="知识库协作" width="400px">
       <div class="share-content">
         <div class="share-section">
           <h4>邀请协作者</h4>
@@ -230,9 +230,10 @@
                     :class="{ checked: item.checked }"
                     @click="item.checked = !item.checked"
                   >
-                    <span class="user-name" :title="item.username">{{
-                      item.username
-                    }}</span>
+                    <div class="invite-user-info" :style="{display: 'flex', flexDirection: 'column' }">
+                      <span class="user-name" :title="item.username">{{ item.username }}</span>
+                      <span class="user-email" :title="item.email">{{ item.email }}</span>
+                    </div>
                     <el-check-tag :checked="item.checked">{{
                       item.checked ? "已选" : "选择"
                     }}</el-check-tag>
@@ -249,20 +250,44 @@
             >
           </div>
         </div>
+        <div class="share-section">
+          <h4>知识库权限信息</h4>
+          <div class="permission-list">
+            <template v-if="permissionsList.length">
+              <div
+                v-for="item in permissionsList"
+                :key="item.userId"
+                class="permission-user-item"
+              >
+                <div class="permission-user-info" :style="{display: 'flex', flexDirection: 'column' }">
+                  <span class="user-name" :title="item.username">{{ item.username }}</span>
+                  <span class="user-email" :title="item.email">{{ item.email }}</span>
+                </div>
+                <!-- 如果是知识库管理者则可以删除其他协作者 -->
+                <el-button type="danger" plain v-if="isOwner&&item.userId!=userId" @click="removeCollaborator(item.username,item.userId)">删除</el-button>
+                <!-- 展示权限信息 -->
+                <el-button v-else-if="item.userId===userId" type="primary">{{ item.permission==='owner'?'管理者':'可编辑' }} | 我</el-button>
+                <el-button type="primary" plain v-else-if="item.permission==='owner'">管理者</el-button>
+                <el-button type="primary" plain v-else="item.permission==='writer'">可编辑</el-button>
+              </div>
+            </template>
+            <div v-if="!permissionsList.length" class="no-user">暂无协作者</div>
+          </div>
+        </div>
       </div>
     </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, reactive, onMounted, provide } from "vue";
+import { ref, watch, reactive, onMounted,provide } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { ElMessage } from "element-plus";
-import CollaborativeEditor from "../components/CollaborativeEditor.vue";
 import { userSearch } from "../api/user";
 import * as KBsApi from "../api/knowledgeBase";
 import * as folderApi from "../api/folder";
 import * as documentApi from "../api/document";
+import {getUserInfo} from '../api/user';
 import type { userInfo, searchItem } from "../types/user";
 import type { FolderInfo,DocumentInfo } from "../types/knowledgeBase";
 import FolderItem from "../components/FolderItem.vue";
@@ -270,6 +295,17 @@ import DocumentItem from "../components/DocumentItem.vue";
 import { useKnowledgeBaseStore } from "../stores/useKnowledgeBaseStore";
 import { storeToRefs } from "pinia";
 import { clearDocumentIdsCache } from "../utils/route-guard";
+
+const userId = ref(-1)
+onMounted(()=>{
+  //获取个人信息
+  getUserInfo().then((res) => {
+    userId.value = res.data.id;
+  }).catch((error) => {
+    console.error("获取用户信息失败:", error);
+    ElMessage.error("无法获取用户信息");
+  })
+})
 
 const router = useRouter();
 const route = useRoute();
@@ -525,6 +561,43 @@ const handleSelectFolder = (id: number) => {
   selectDocType("folder");
   selectDoc(id);
 };
+
+// 知识库权限信息
+const permissionsList = ref<{userId:number,username:string,email:string,permission:string}[]>([]);
+const isOwner = ref(false)
+
+const fetchPermissions = async () => {
+  try {
+    const { data:{owner,collaborators}} = await KBsApi.getKnowledgeBasePermissions(knowledgeBaseId.value);
+    isOwner.value = owner.userId === userId.value; // 判断当前用户是否为知识库拥有者
+    permissionsList.value = [owner,...collaborators]
+  } catch (e) {
+    permissionsList.value = [];
+    console.error("获取知识库权限失败", e);
+    ElMessage.error("无法获取知识库用户权限信息");
+  }
+};
+
+const removeCollaborator = async (username:string,userId: number) => {
+  ElMessageBox.confirm(`确定要删除协作者${username}吗？此操作不可恢复`, "警告", {
+    confirmButtonText: "确定",
+    cancelButtonText: "取消",
+    type: "warning",
+  }).then(async () => {
+    try {
+      await KBsApi.removeKnowledgeBaseCollaborator(knowledgeBaseId.value,userId);
+      ElMessage.success("移除成功");
+      fetchPermissions();
+    } catch (error: any) {
+      ElMessage.error("移除失败");
+    }
+  }) 
+};
+
+// 弹窗打开时拉取权限信息
+watch(showShareDialog, v => {
+  if (v) fetchPermissions();
+});
 </script>
 
 <style scoped lang="scss">
@@ -732,14 +805,12 @@ const handleSelectFolder = (id: number) => {
 .share-content {
   .share-section {
     margin-bottom: 24px;
-
     h4 {
       margin: 0 0 12px;
       font-size: 14px;
       font-weight: 600;
       color: var(--text-color);
     }
-
     .invite-form {
       display: flex;
       align-items: flex-start;
@@ -769,6 +840,53 @@ const handleSelectFolder = (id: number) => {
   width: 100%;
 
   .invite-user-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    background: #f7f8fa;
+    transition: background 0.2s;
+    border: 1px solid transparent;
+
+    &:hover {
+      background: #fff;
+      border-color: #409eff;
+    }
+    &.checked {
+      border-color: #409eff;
+      background-color: #fff;
+    }
+
+    .user-name {
+      flex: 1;
+      font-size: 14px;
+      color: #333;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      margin-right: 10px;
+    }
+  }
+  .no-user {
+    color: #aaa;
+    text-align: center;
+    padding: 10px 0;
+    font-size: 13px;
+  }
+}
+
+.permission-list{
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 10px 0 0 0;
+  width: 100%;
+  max-height: 150px;
+  overflow-y: auto;
+
+  .permission-user-item {
     display: flex;
     align-items: center;
     justify-content: space-between;
