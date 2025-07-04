@@ -15,7 +15,6 @@ declare module 'vue' {
     EditNameDialog: typeof import('./components/EditNameDialog.vue')['default']
     EditorTool: typeof import('./components/EditorTool.vue')['default']
     ElAside: typeof import('element-plus/es')['ElAside']
-    ElButt: typeof import('element-plus/es')['ElButt']
     ElButton: typeof import('element-plus/es')['ElButton']
     ElCheckbox: typeof import('element-plus/es')['ElCheckbox']
     ElCheckTag: typeof import('element-plus/es')['ElCheckTag']
