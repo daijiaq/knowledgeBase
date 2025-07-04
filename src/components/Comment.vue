@@ -17,7 +17,7 @@
                     </el-dropdown-menu>
                     </template>
                 </el-dropdown>
-                <el-input v-model="commentContent" placeholder="输入评论内容" style="margin-top: 10px;" resize="none" :rows="3"
+                <el-input v-model="commentContent" :placeholder="placeholder" style="margin-top: 10px;" resize="none" :rows="3"
                     type="textarea" />
                 <el-button @click="confirmComment" style="margin-top: 10px;">确认</el-button>
                 <el-button @click="cancelComment" style="margin-top: 10px;">取消</el-button>
@@ -34,11 +34,7 @@
                     <div style="font-size: 12px;">评论区空空如也~</div>
                 </div>
                 <div class="comment-content" v-for="(comment,index) of getCommentContent" :key="index" v-else>
-                    <div class="user">
-                        <span class="username">{{ comment.username }}</span><span class="del-comment" v-if="userId === comment.userId"><el-icon @click="deleteComment(comment.id)"><Delete /></el-icon></span>
-                    </div>
-                    <div class="text">{{ text }}</div>
-                    <div class="content">{{ comment.comment }}</div>
+                    <CommentContent :comment="comment" :userId="userId" @delete="deleteComment" @reply="replyComment"/>
                 </div>
             </div>
         </Transition>
@@ -47,13 +43,12 @@
 <script lang="ts" setup>
 import { ref , onBeforeUnmount , onMounted } from 'vue'
 import EventBus from '../utils/event-bus'
-import { CloseBold, Delete, MessageBox } from '@element-plus/icons-vue'
+import { CloseBold, MessageBox } from '@element-plus/icons-vue'
 import { getCommentApi, removeCommentApi } from '../api/comment'
 import { getUserInfo } from '../api/user'
  
 interface CommentItem {
     username: string;
-    text: string;
     comment: string;
     userId:number;
     id: number;
@@ -67,18 +62,21 @@ const showCommentContent = ref<boolean>(false);
 const getCommentContent = ref<CommentItem[]>([])
 const userName = ref<string>("")
 const userId = ref<number>(0)
-const text = ref<string>('')
-const hydrated = ref(false)
+const hydrated = ref<boolean>(false)
+const placeholder = ref<string>('请输入评论内容')
+const commentReplyId = ref<number>(0)
+//false -> 表示对文本评论
+//true-> 回复评论
+const replyType = ref<boolean>(false)
 EventBus.on('showCommentInput', ((val: boolean) => {
-    showCommentInput.value = val;
     showCommentContent.value = false;
+    showCommentInput.value = val;
 } ) as any);
 
 EventBus.on('getComment', (async(val: any) => {
     showCommentInput.value = false;
     showCommentContent.value = true;
     const res = await getCommentApi(val.text_id);
-    text.value = val.text;
     getCommentContent.value = res.data;
 }))
 
@@ -88,9 +86,16 @@ const addEmoji = (emoji:string) => {
 
 const confirmComment = async() => {
     if (!commentContent.value.trim()) return;
-    EventBus.emit('confirmComment',commentContent.value.trim())
+    if(!replyType.value){
+        EventBus.emit('confirmComment',commentContent.value.trim())
+    }else{
+        //调用回复评论函数
+        //commentId -> 回复目标id
+        console.log(commentReplyId.value,'我要被回复');
+    }
     showCommentInput.value = false;
     commentContent.value = '';
+    replyType.value = false;
 }
 
 const cancelComment = () => {
@@ -103,14 +108,23 @@ const removeCommentBox = () =>{
     showCommentContent.value = false;
 }
 
-const deleteComment = async(id:number) =>{
-    const res = await removeCommentApi(id);
+const deleteComment = async(id:number|string) =>{
+    let CommentId = Number(id);
+    const res = await removeCommentApi(CommentId);
     if(res.code === 200){
         getCommentContent.value = getCommentContent.value.filter(comment => comment.id !== id);
         ElMessage.success('删除成功');
     }else{
         ElMessage.error('删除失败');
     }
+}
+const replyComment = async(targetName:string,commentId:number) => {
+    replyType.value = true;
+    showCommentContent.value = false;
+    showCommentInput.value = true;
+    placeholder.value = `回复${targetName}`;
+    commentReplyId.value = commentId;
+
 }
 
 onMounted(async() => {
@@ -168,7 +182,6 @@ onBeforeUnmount(()=>{
     overflow: scroll;
     scrollbar-width: none;
     padding-top: 15px;
-    background-color: pink;
     background-color: #ffffff;
     margin-top: 150px;
     .del{
@@ -194,11 +207,14 @@ onBeforeUnmount(()=>{
         padding: 10px;
         border: 1px solid #dddddd;
         // max-height: 10em;
-        max-width: 300px;
+        width: 290px;
+        word-break: break-all;
+        white-space: normal;
+        overflow-wrap: break-word;
         box-shadow: 2px 2px 0px 0px rgba(138, 43, 226, 0.3);
         cursor: pointer;
 
-        .text {
+        /* .text {
             width: 300px;
             border-left: 3px solid #dddddd;
             padding-left: 8px;
@@ -208,7 +224,7 @@ onBeforeUnmount(()=>{
             white-space: nowrap;
             text-overflow: ellipsis;
             color: #808080;
-        }
+        } */
 
         .content {
             padding: 3px 5px;
@@ -220,7 +236,12 @@ onBeforeUnmount(()=>{
         .del-comment{
             float: right;
         }
+        .comment-unfold{
+            font-size: 13px;
+            color: #7a72e0;
+        }
     }
+    
 }
 /* 进入动画：激活状态（贯穿整个进入过程） */
 .comment-slide-enter-active {

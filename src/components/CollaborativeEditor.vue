@@ -450,7 +450,6 @@ const getComment = (event: any) => {
   console.log(target.textContent);
   EventBus.emit("getComment", {
     text_id: textId,
-    text: target.textContent,
   });
 };
 

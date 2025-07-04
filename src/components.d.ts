@@ -10,10 +10,12 @@ declare module 'vue' {
   export interface GlobalComponents {
     CollaborativeEditor: typeof import('./components/CollaborativeEditor.vue')['default']
     Comment: typeof import('./components/Comment.vue')['default']
+    CommentContent: typeof import('./components/CommentContent.vue')['default']
     DocumentItem: typeof import('./components/DocumentItem.vue')['default']
     EditNameDialog: typeof import('./components/EditNameDialog.vue')['default']
     EditorTool: typeof import('./components/EditorTool.vue')['default']
     ElAside: typeof import('element-plus/es')['ElAside']
+    ElButt: typeof import('element-plus/es')['ElButt']
     ElButton: typeof import('element-plus/es')['ElButton']
     ElCheckTag: typeof import('element-plus/es')['ElCheckTag']
     ElContainer: typeof import('element-plus/es')['ElContainer']
