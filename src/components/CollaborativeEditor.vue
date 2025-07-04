@@ -455,6 +455,9 @@ const getComment = (event: any) => {
 
 // 页面卸载时清理连接
 const handleBeforeUnload = () => {
+  if (JSON.stringify(editor.value?.getJSON()) !== oldContent) {
+    saveDocument();
+  }
   console.log("页面即将卸载，清理协同编辑连接");
   destroyCollaboration();
 };
