@@ -6,7 +6,17 @@
         <Transition name="comment-slide">
             <!-- 评论输入弹窗（简化示例，实际可使用模态框） -->
             <div v-show="showCommentInput" class="comment-input">
-                <h3>Total</h3>
+                <span style="font-weight: 600;font-size: 20px;">{{ userName }}</span>
+                <el-dropdown  style="float: right;font-size: 20px;" placement="top">
+                    <span class="emoji">&#127773;</span>
+                    <template #dropdown>
+                    <el-dropdown-menu style="width: 300px;">
+                        <span v-for="emoji of emojis" class="emoji" @click="addEmoji(emoji)">
+                            {{ emoji }}
+                        </span>
+                    </el-dropdown-menu>
+                    </template>
+                </el-dropdown>
                 <el-input v-model="commentContent" placeholder="输入评论内容" style="margin-top: 10px;" resize="none" :rows="3"
                     type="textarea" />
                 <el-button @click="confirmComment" style="margin-top: 10px;">确认</el-button>
@@ -49,11 +59,13 @@ interface CommentItem {
     id: number;
 }
 
+const emojis = ["😀", "😁", "😂", "😃", "😄", "😅", "😆", "😇", "😈", "😉", "😊", "😋", "😌", "😍", "😎", "😏", "😐", "😑", "😒", "😓", "😔", "😕", "😖", "😗", "😘", "😙", "😚", "😛", "😜", "😝", "😞", "😟", "😠", "😡", "😢", "😣", "😤", "😥", "😦", "😧", "😨", "😩", "😪", "😫", "😬", "😭", "😮", "😯", "😰", "😱", "😲", "😳", "😴", "😵", "😶", "😷", "🙁", "🙂", "🙃", "🙄", "🤐", "🤑", "🤒", "🤓", "🤔", "🤕", "🤠", "🤡", "🤢", "🤣", "🤤", "🤥", "🤧", "🤨", "🤩", "🤪", "🤫", "🤬", "🤭", "🤮", "🤯", "🧐"]
 
 const commentContent = ref<string>('')
 const showCommentInput = ref<boolean>(false);
 const showCommentContent = ref<boolean>(false);
 const getCommentContent = ref<CommentItem[]>([])
+const userName = ref<string>("")
 const userId = ref<number>(0)
 const text = ref<string>('')
 const hydrated = ref(false)
@@ -69,6 +81,10 @@ EventBus.on('getComment', (async(val: any) => {
     text.value = val.text;
     getCommentContent.value = res.data;
 }))
+
+const addEmoji = (emoji:string) => {
+    commentContent.value = commentContent.value + emoji;
+}
 
 const confirmComment = async() => {
     if (!commentContent.value.trim()) return;
@@ -102,7 +118,7 @@ onMounted(async() => {
     //获取我的个人信息
     const res = await getUserInfo();
     userId.value = res.data.id;
-    
+    userName.value = res.data.username;
 }),
 
 onBeforeUnmount(()=>{
@@ -138,6 +154,11 @@ onBeforeUnmount(()=>{
     :deep(el-input){
         height: auto;
     }
+}
+
+.emoji {
+    font-size: 20px;
+    cursor: pointer;
 }
 .comments{
     display: flex;
