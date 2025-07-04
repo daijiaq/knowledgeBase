@@ -23,27 +23,33 @@
     <div class="version-drawer-main">
       <!-- 左侧历史记录列表 -->
       <div class="version-list">
-        <div class="version-list-header">
-
-        全部记录
+        <div class="version-list-header" style="display:flex; justify-content:space-between; align-items:center;">
+          <span>全部记录</span>
+        <el-button size="small" type="danger" :disabled="checkedIds.length===0" @click="batchDelete">
+          批量删除
+        </el-button>
+        <el-checkbox
+        v-model="checkAll"
+        @change="handleCheckAll"
+        style="margin-left:10px;">
+        全选
+        </el-checkbox>
         </div>
-        <el-scrollbar class="version-list-scroll">
-          <div
-            v-for="item in filteredList"
-            :key="item.id"
-            :class="['version-item', { active: item.id === selectedId }]"
-            @click="selectVersion(item)"
-            style="display: flex; align-items: center; justify-content: space-between;"
-          >
-            <div>
-              <div class="version-time">{{ formatTime(item.savedAt) }}</div>
-              <div class="version-desc">版本号：{{item.versionNumber}}</div>
-            </div>
-            <span  class="deleted-label" @click.stop="deleteVersion(item)">
-            删除
-            </span>
-          </div>
-        </el-scrollbar>
+    <el-scrollbar class="version-list-scroll">
+      <div
+        v-for="item in filteredList"
+        :key="item.versionNumber"
+        :class="['version-item', { active: item.versionNumber === selectedId }]"
+        style="display: flex; align-items: center; justify-content: space-between;"
+      >
+        <el-checkbox v-model="checkedIds" :label="item.versionNumber" @click.stop />
+        <div @click="selectVersion(item)" style="flex:1; margin-left:8px;">
+          <div class="version-time">{{ formatTime(item.savedAt) }}</div>
+          <div class="version-desc">版本号：{{ item.versionNumber }}</div>
+        </div>
+        <span class="deleted-label" @click.stop="deleteVersion(item)">删除</span>
+      </div>
+    </el-scrollbar>
       </div>
       <!-- 右侧内容区 -->
       <div class="version-content">
@@ -80,7 +86,7 @@
 <script setup lang="ts">
 
 import { CircleCloseFilled } from '@element-plus/icons-vue'
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { getHistoryVersion, getVersionContent } from '../api/version'
 import { ElMessageBox, ElMessage } from 'element-plus'
 import { deleteVersion as apiDeleteVersion,revertToVersion,compareVersions } from '../api/version' 
@@ -99,16 +105,24 @@ interface VersionItem {
   status?: string
   time?: string
 }
+// 版本列表
 const versionList = ref<VersionItem[]>([])
+// 选择的历史版本id
 const selectedId = ref<string | number | null>(null)
+// 历史版本内容
 const selectedContent = ref('')
+// 对比版本id
 const compareId = ref('')
-
+// 记录勾选的版本ID
+const checkedIds = ref<string[]>([]);
+// 全选状态
+const checkAll = ref(false);
+// 计算属性获取选中版本
 const selected = computed(() => {
   return versionList.value.find(item => item.versionNumber === selectedId.value) || null
 })
 
-// 暴露刷新方法给父组件
+// 暴露刷新历史版本方法给父组件
 defineExpose({
   refreshHistory
 })
@@ -118,9 +132,6 @@ async function refreshHistory() {
   if (props.docId !== undefined) {
     const res = await getHistoryVersion(props.docId!)
     versionList.value = res.data || []
-    if (versionList.value.length > 0) {
-      selectVersion(versionList.value[0])
-    }
   }
 }
 
@@ -136,8 +147,10 @@ const filteredList = computed(() => {
 
 // 选择版本
 async function selectVersion(item: VersionItem) {
+  console.log(item.versionNumber)
   selectedId.value = item.versionNumber ?? ''
   if (props.docId !== undefined) {
+    // 获取选中版本的内容
     const res = await getVersionContent(props.docId, Number(item.versionNumber))
     selectedContent.value = res.data?.content || ''
   }
@@ -154,7 +167,6 @@ function compare() {
     ElMessage.error('无法找到对应的版本进行对比')
     return
   }
- console.log('对比版本:', selectedVersion, compareVersion)
   compareVersions(props.docId!,  Number(compareVersion),Number(selectedVersion))
     .then(res => {
       selectedContent.value = res.data?.tiptap || ''
@@ -184,7 +196,6 @@ async function restoreVersion() {
       }
     }
   } catch (e) {
-    console.error('回退失败:', e)
     ElMessage.error('回退失败，请稍后重试')
   }
 }
@@ -210,10 +221,47 @@ async function deleteVersion(item: VersionItem) {
     }
   } catch (e) {
     // 用户取消或接口报错
-    console.error('删除失败:', e)
     ElMessage.error('删除失败，请稍后重试')
   }
 }
+// 批量删除
+async function batchDelete() {
+  try {
+    await ElMessageBox.confirm(`确定要批量删除这 ${checkedIds.value.length} 个版本吗？`, '提示', { type: 'warning' })
+    for (const id of checkedIds.value) {
+      await apiDeleteVersion(Number(props.docId), Number(id))
+    }
+    // 删除后刷新
+    versionList.value = versionList.value.filter(v => !checkedIds.value.includes(v.versionNumber!))
+    checkedIds.value = []
+    ElMessage.success('批量删除成功')
+    // 如果当前选中被删除了，重置
+    if (!versionList.value.find(v => v.versionNumber === selectedId.value)) {
+      if (versionList.value.length > 0) {
+        selectVersion(versionList.value[0])
+      } else {
+        selectedId.value = null
+        selectedContent.value = ''
+      }
+    }
+  } catch (e) {
+    ElMessage.error('批量删除失败')
+  }
+}
+
+
+// 全选删除
+function handleCheckAll(val: boolean) {
+  if (val) {
+    checkedIds.value = versionList.value.map(v => v.versionNumber!)
+  } else {
+    checkedIds.value = []
+  }
+}
+watch(checkedIds, (val) => {
+  checkAll.value = val.length === versionList.value.length
+})
+
  // 时间转换
 function formatTime(timeStr: string) {
   const date = new Date(timeStr)

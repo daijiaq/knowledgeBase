@@ -398,7 +398,7 @@ const saveDocument = async () => {
     JSON.stringify(newContent)
   );
   if (res.code === 200) {
-    ElMessage.success("自动保存成功");
+    ElMessage.success("保存成功");
     versionDrawerRef.value?.refreshHistory(); // 刷新历史版本
     oldContent = JSON.stringify(newContent);
   } else {
