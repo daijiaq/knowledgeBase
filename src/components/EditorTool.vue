@@ -4,18 +4,21 @@
       <button
         @click="editor.chain().focus().undo().run()"
         :disabled="!editor.can().chain().focus().undo().run()"
+        title="撤回"
       >
         <span class="iconfont icon-25chehui"></span>
       </button>
       <button
         @click="editor.chain().focus().redo().run()"
         :disabled="!editor.can().chain().focus().redo().run()"
+        title="取消撤回"
       >
         <span class="iconfont icon-26quxiaochehui"></span>
       </button>
       <button
         @click="editor.chain().focus().toggleBold().run()"
         :disabled="!editor.can().chain().focus().toggleBold().run()"
+        title="加粗"
         :class="{ 'is-active': editor.isActive('bold') }"
       >
         <span class="iconfont icon-bold"></span>
@@ -23,6 +26,7 @@
       <button
         @click="editor.chain().focus().toggleItalic().run()"
         :disabled="!editor.can().chain().focus().toggleItalic().run()"
+        title="斜体"
         :class="{ 'is-active': editor.isActive('italic') }"
       >
         <span class="iconfont icon-italic"></span>
@@ -30,6 +34,7 @@
       <button
         @click="editor.chain().focus().toggleStrike().run()"
         :disabled="!editor.can().chain().focus().toggleStrike().run()"
+        title="删除线"
         :class="{ 'is-active': editor.isActive('strike') }"
       >
         <span class="iconfont icon-strikethrough"></span>
@@ -37,126 +42,145 @@
       <button
         @click="editor.chain().focus().toggleCode().run()"
         :disabled="!editor.can().chain().focus().toggleCode().run()"
+        title="代码"
         :class="{ 'is-active': editor.isActive('code') }"
       >
         <span class="iconfont icon-code-view"></span>
       </button>
       <button
         @click="editor.chain().focus().setParagraph().run()"
+        title="段落"
         :class="{ 'is-active': editor.isActive('paragraph') }"
       >
         <span class="iconfont icon-duanla"></span>
       </button>
       <button
         @click="editor.chain().focus().toggleHeading({ level: 1 }).run()"
+        title="标题1"
         :class="{ 'is-active': editor.isActive('heading', { level: 1 }) }"
       >
         <span class="iconfont icon-13biaoti1"></span>
       </button>
       <button
         @click="editor.chain().focus().toggleHeading({ level: 2 }).run()"
+        title="标题2"
         :class="{ 'is-active': editor.isActive('heading', { level: 2 }) }"
       >
         <span class="iconfont icon-14biaoti2"></span>
       </button>
       <button
         @click="editor.chain().focus().toggleHeading({ level: 3 }).run()"
+        title="标题3"
         :class="{ 'is-active': editor.isActive('heading', { level: 3 }) }"
       >
         <span class="iconfont icon-15biaoti3"></span>
       </button>
       <button
         @click="editor.chain().focus().toggleHeading({ level: 4 }).run()"
+        title="标题4"
         :class="{ 'is-active': editor.isActive('heading', { level: 4 }) }"
       >
         <span class="iconfont icon-16biaoti4"></span>
       </button>
       <button
         @click="editor.chain().focus().toggleHeading({ level: 5 }).run()"
+        title="标题5"
         :class="{ 'is-active': editor.isActive('heading', { level: 5 }) }"
       >
         <span class="iconfont icon-17biaoti5"></span>
       </button>
       <button
         @click="editor.chain().focus().toggleHeading({ level: 6 }).run()"
+        title="标题6"
         :class="{ 'is-active': editor.isActive('heading', { level: 6 }) }"
       >
         <span class="iconfont icon-18biaoti6"></span>
       </button>
       <button
         @click="editor.chain().focus().toggleBulletList().run()"
+        title="无序列表"
         :class="{ 'is-active': editor.isActive('bulletList') }"
       >
         <span class="iconfont icon-list-unordered"></span>
       </button>
       <button
         @click="editor.chain().focus().toggleOrderedList().run()"
+        title="有序列表"
         :class="{ 'is-active': editor.isActive('orderedList') }"
       >
         <span class="iconfont icon-list-ordered"></span>
       </button>
       <button
         @click="editor.chain().focus().toggleCodeBlock().run()"
+        title="代码块"
         :class="{ 'is-active': editor.isActive('codeBlock') }"
       >
         <span class="iconfont icon-daimakuaicodeblock"></span>
       </button>
       <button
         @click="editor.chain().focus().toggleBlockquote().run()"
+        title="引用"
         :class="{ 'is-active': editor.isActive('blockquote') }"
       >
         <span class="iconfont icon-double-quotes-l"></span>
       </button>
-      <button @click="editor.chain().focus().setHorizontalRule().run()">
+      <button @click="editor.chain().focus().setHorizontalRule().run()" title="分割">
         <span class="iconfont icon-split-cells-vertical"></span>
       </button>
-      <button @click="editor.chain().focus().setHardBreak().run()">
+      <button @click="editor.chain().focus().setHardBreak().run()" title="换行">
         <span class="iconfont icon-text-wrap"></span>
       </button>
       <button
         @click="editor.chain().focus().setTextAlign('left').run()"
+        title="左对齐"
         :class="{ 'is-active': editor.isActive({ textAlign: 'left' }) }"
       >
         <span class="iconfont icon-align-left"></span>
       </button>
       <button
         @click="editor.chain().focus().setTextAlign('center').run()"
+        title="居中"
         :class="{ 'is-active': editor.isActive({ textAlign: 'center' }) }"
       >
         <span class="iconfont icon-align-center"></span>
       </button>
       <button
         @click="editor.chain().focus().setTextAlign('right').run()"
+        title="右对齐"
         :class="{ 'is-active': editor.isActive({ textAlign: 'right' }) }"
       >
         <span class="iconfont icon-align-right"></span>
       </button>
       <button
         @click="editor.chain().focus().setTextAlign('justify').run()"
+        title="水平对齐"
         :class="{ 'is-active': editor.isActive({ textAlign: 'justify' }) }"
       >
         <span class="iconfont icon-align-justify"></span>
       </button>
       <button
         @click="setLink"
+        title="链接"
         :class="{ 'is-active': editor.isActive('link') }"
       >
         <span class="iconfont icon-link"></span>
       </button>
       <button
         @click="editor.chain().focus().unsetLink().run()"
+        title="取消链接"
         :disabled="!editor.isActive('link')"
       >
         <span class="iconfont icon-link-unlink"></span>
       </button>
       <button
         @click="editor.chain().focus().toggleUnderline().run()"
+        title="下划线"
         :class="{ 'is-active': editor.isActive('underline') }"
       >
         <span class="iconfont icon-font-color"></span>
       </button>
       <el-dropdown placement="top-end" size="small">
-        <button>
+        <button title="字体颜色">
           <span class="iconfont icon-24zitiyanse"></span>
         </button>
         <template #dropdown>
@@ -179,7 +203,7 @@
         </template>
       </el-dropdown>
       <el-dropdown placement="top-end" size="small">
-        <button>
+        <button title="背景颜色">
           <span class="iconfont icon-19beijingyanse"></span>
         </button>
         <template #dropdown>

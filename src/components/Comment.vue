@@ -36,22 +36,25 @@
                 <div class="comment-content" v-for="(comment,index) of getCommentContent" :key="index" v-else>
                     <CommentContent :comment="comment" :userId="userId" @delete="deleteComment" @reply="replyComment"/>
                 </div>
+                <div v-if="page*2 < total" style="margin-left: 10px;color:#7a72e0;cursor: pointer;" @click="page++">展开剩余{{ total - page * pageSize }}条父评论</div>
             </div>
         </Transition>
     </template>
 </template>
 <script lang="ts" setup>
-import { ref , onBeforeUnmount , onMounted } from 'vue'
+import { ref , onBeforeUnmount , onMounted , watch } from 'vue'
 import EventBus from '../utils/event-bus'
 import { CloseBold, MessageBox } from '@element-plus/icons-vue'
-import { getCommentApi, removeCommentApi } from '../api/comment'
+import { getParentCommentApi, removeCommentApi } from '../api/comment'
 import { getUserInfo } from '../api/user'
+import { createCommentApi } from '../api/comment'
  
 interface CommentItem {
     username: string;
     comment: string;
     userId:number;
     id: number;
+    childCount: number;
 }
 
 const emojis = ["😀", "😁", "😂", "😃", "😄", "😅", "😆", "😇", "😈", "😉", "😊", "😋", "😌", "😍", "😎", "😏", "😐", "😑", "😒", "😓", "😔", "😕", "😖", "😗", "😘", "😙", "😚", "😛", "😜", "😝", "😞", "😟", "😠", "😡", "😢", "😣", "😤", "😥", "😦", "😧", "😨", "😩", "😪", "😫", "😬", "😭", "😮", "😯", "😰", "😱", "😲", "😳", "😴", "😵", "😶", "😷", "🙁", "🙂", "🙃", "🙄", "🤐", "🤑", "🤒", "🤓", "🤔", "🤕", "🤠", "🤡", "🤢", "🤣", "🤤", "🤥", "🤧", "🤨", "🤩", "🤪", "🤫", "🤬", "🤭", "🤮", "🤯", "🧐"]
@@ -65,9 +68,14 @@ const userId = ref<number>(0)
 const hydrated = ref<boolean>(false)
 const placeholder = ref<string>('请输入评论内容')
 const commentReplyId = ref<number>(0)
+const commentNanoid = ref<string>('')
+const page = ref<number>(1);
+const total = ref<number>(0);
 //false -> 表示对文本评论
 //true-> 回复评论
 const replyType = ref<boolean>(false)
+
+const pageSize = 10;
 EventBus.on('showCommentInput', ((val: boolean) => {
     showCommentContent.value = false;
     showCommentInput.value = val;
@@ -76,9 +84,18 @@ EventBus.on('showCommentInput', ((val: boolean) => {
 EventBus.on('getComment', (async(val: any) => {
     showCommentInput.value = false;
     showCommentContent.value = true;
-    const res = await getCommentApi(val.text_id);
+    commentNanoid.value = val.text_id;
+    let res = await getParentCommentApi(val.text_id,1,pageSize);
+    // console.log(res);
     getCommentContent.value = res.data;
+    total.value = res.total;
 }))
+
+watch(()=>page.value,async(newPage)=>{
+    const res = await getParentCommentApi(commentNanoid.value,newPage,pageSize);
+    getCommentContent.value.push(...res.data);
+})
+
 
 const addEmoji = (emoji:string) => {
     commentContent.value = commentContent.value + emoji;
@@ -91,7 +108,13 @@ const confirmComment = async() => {
     }else{
         //调用回复评论函数
         //commentId -> 回复目标id
-        console.log(commentReplyId.value,'我要被回复');
+        // console.log(commentReplyId.value,'我要被回复');
+        const res = await createCommentApi(null,commentContent.value.trim(),null,Number(commentReplyId.value));
+        if(res.code === 200){
+            ElMessage.success('回复评论成功！');
+        }else{
+            ElMessage.error('回复评论失败！')
+        }
     }
     showCommentInput.value = false;
     commentContent.value = '';
@@ -112,7 +135,7 @@ const deleteComment = async(id:number|string) =>{
     let CommentId = Number(id);
     const res = await removeCommentApi(CommentId);
     if(res.code === 200){
-        getCommentContent.value = getCommentContent.value.filter(comment => comment.id !== id);
+        getCommentContent.value = getCommentContent.value.filter(comment => comment.id !== Number(id));
         ElMessage.success('删除成功');
     }else{
         ElMessage.error('删除失败');
