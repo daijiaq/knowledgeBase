@@ -7,7 +7,7 @@
     </div>
     <!-- <div class="text">{{ text }}</div> -->
     <div class="content">{{ props.comment.comment }}<span class="comment-unfold" @click="replyComment" :data-user-name="props.comment.username" :data-comment-id="props.comment.id">回复</span></div>
-    <div class="reply-comment" v-if="showReplyComment" v-for="(childComment,index) of getChildComment" :key="index">
+    <div class="reply-comment" v-if="showReplyComment" v-for="(childComment) of getChildComment" :key="childComment.id">
         <div class="user">
             <span style="font-weight: 600;" v-if="childComment.parentId == props.comment.id">{{childComment.username}}</span>
             <span style="font-weight: 600;" v-else>{{childComment.username}}回复{{ childComment.fatherName }}</span>
