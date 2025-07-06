@@ -481,6 +481,13 @@ const createNewDoc = async () => {
       );
       //创建后选中文档
       selectId = data.id;
+      // 路由跳转（会触发路由守卫进行权限验证）
+      router
+        .push({ path: `/knowledgeBase/${knowledgeBaseId.value}/${selectId}` })
+        .catch((error) => {
+          // 处理路由跳转可能的错误
+          console.error("路由跳转失败:", error);
+        });
     } else {
       //创建文件夹
       await folderApi.createFolderApi(
