@@ -9,6 +9,7 @@ const props = defineProps<{
   description: string;
   docCount?: number;
   updateTime: string;
+  isOwner:boolean
 }>();
 
 const emits = defineEmits(['edit', 'delete'])
@@ -29,6 +30,7 @@ const handleCardClick = () => {
     </div>
     <div class="moreContainer">
       <MoreActions
+        :disabled="!props.isOwner"
         :id="id"
         @edit="emits('edit')"
         @delete="emits('delete')"

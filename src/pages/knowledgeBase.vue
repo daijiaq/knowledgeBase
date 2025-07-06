@@ -13,7 +13,9 @@ interface KnowledgeBaseCard {
   id: number;
   name: string;
   description: string;
+  permission: string; // 角色类型
 }
+
 // 最近访问列表
 const { getRecentKBs, changKBs, getAllKBs } = knowledgeBaseStore;
 const { recentKBsList } = storeToRefs(knowledgeBaseStore) as {
@@ -23,6 +25,7 @@ const { recentKBsList } = storeToRefs(knowledgeBaseStore) as {
 const { knowledgeBaseList } = storeToRefs(knowledgeBaseStore) as {
   knowledgeBaseList: import("vue").Ref<KnowledgeBaseCard[]>;
 };
+console.log(knowledgeBaseStore.knowledgeBaseList);
 const router = useRouter();
 const route = useRoute();
 const userStore = useUserStore();
@@ -229,10 +232,12 @@ const changToKB = (id: number) => {
                 </div>
                 <div style="margin-left: auto" @click.stop>
                   <MoreActions
-                    :id="item.id"
-                    @edit="openEditDialog"
-                    @delete="openDeleteModal"
-                  />
+                  :id="item.id"
+                  :disabled="item.permission === 'write'"
+                  @edit="openEditDialog"
+                  @delete="openDeleteModal"
+                />
+
                 </div>
               </el-menu-item>
             </el-sub-menu>
