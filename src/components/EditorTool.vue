@@ -516,8 +516,7 @@ const confirmComment = async (comment: string) => {
   editor.value?.chain().focus().setMark("comment", attributes).run();
   //保存评论接口
   const res = await createCommentApi(attributes.id, comment, props.docId ?? 0);
-  const saveCode = await saveDocument();
-  if (res.code === 200 && saveCode === 200) {
+  if (res.code === 200) {
     ElMessage.success("评论成功");
   } else {
     ElMessage.error("评论失败");

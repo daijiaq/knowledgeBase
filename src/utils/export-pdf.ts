@@ -1,95 +1,127 @@
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 
-// 将元素转化为canvas元素
-// 通过 放大 提高清晰度
-// width为内容宽度
+// 将元素转化为canvas元素（带清晰度优化）
 async function toCanvas(element: HTMLElement) {
-  if (!element) return { width: 0, height: 0 };
+  if (!element) return { width: 0, height: 0, data: '' };
 
-  // canvas元素
+  // 通过放大提高清晰度（2倍设备像素比）
   const canvas = await html2canvas(element, {
-    scale: window.devicePixelRatio * 2, // 增加清晰度
-    useCORS: true // 允许跨域
+    scale: window.devicePixelRatio * 2,
+    useCORS: true,          // 跨域图片支持
+    backgroundColor: '#fff' // 背景色防透明
   });
 
-  // 获取canvas转化后的宽高
-  const { width: canvasWidth, height: canvasHeight } = canvas;
-
-  // 转化成图片Data
-  const canvasData = canvas.toDataURL('image/jpeg', 1.0);
-
-  return { width: canvasWidth, height: canvasHeight, data: canvasData };
+  return {
+    width: canvas.width,
+    height: canvas.height,
+    data: canvas.toDataURL('image/jpeg', 1.0) // 高质量JPG
+  };
 }
 
 /**
- * 生成pdf(A4多页pdf截断问题， 包括页眉、页脚 和 上下左右留空的护理)
+ * 生成多页PDF（优化分页截断）
+ * @param element 需要转换的DOM元素
+ * @param filename PDF文件名
  */
 export async function generatePDF({
-  /** pdf内容的dom元素 */
   element,
-  /** pdf文件名 */
   filename
 }: {
   element: HTMLElement;
   filename: string;
 }) {
-  if (!(element instanceof HTMLElement)) {
-    return;
-  }
+  if (!(element instanceof HTMLElement)) return;
 
-  const pdf = new jsPDF();
-  const padding = 10; // 页边距
-  const pdfWidth = pdf.internal.pageSize.getWidth();
-  const pdfHeight = pdf.internal.pageSize.getHeight();
-  const contentWidth = pdfWidth - padding * 2;
-  const contentHeight = pdfHeight - padding * 2;
+  // PDF基础配置（A4竖版，毫米单位）
+  const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
+  const padding = 10; // 页边距（毫米）
+  const pageWidth = pdf.internal.pageSize.getWidth();  // A4宽度≈210mm
+  const pageHeight = pdf.internal.pageSize.getHeight(); // A4高度≈297mm
+  const contentWidth = pageWidth - padding * 2;         // 内容可用宽度
+  const contentHeight = pageHeight - padding * 2;       // 内容可用高度
 
-  // 生成canvas和图片
-  const { width: imageWidth, height: imageHeight, data } = await toCanvas(element);
+  // 1. 生成原始内容Canvas
+  const { width: canvasWidth, height: canvasHeight, data: imageData } = await toCanvas(element);
+  if (!imageData) return;
 
-  // 计算缩放比例，保证内容宽度适应PDF
-  const scale = contentWidth / imageWidth;
-  const imgW = imageWidth * scale;
-  const imgH = imageHeight * scale;
+  // 2. 计算内容缩放比例（确保宽度适配PDF）
+  const scaleRatio = contentWidth / canvasWidth;
 
-  // 计算总页数
-  const pageCount = Math.ceil(imgH / contentHeight);
+  // 3. 关键：计算分页点（避免元素跨页截断）
+  const pages: number[] = [0]; // 分页起始坐标数组（基于原始Canvas高度）
+  
+  // 遍历元素节点计算分页点
+  function traverseNodes(nodes: NodeListOf<ChildNode>) {
+    for (let i = 0; i < nodes.length; i++) {
+      const node = nodes[i] as HTMLElement;
+      if (!(node instanceof HTMLElement)) continue;
 
-  for (let i = 0; i < pageCount; i++) {
-    const sY = (contentHeight / scale) * i; // 源图片起始y坐标（像素）
-    const sHeight = Math.min(imageHeight - sY, contentHeight / scale); // 源图片截取高度
+      // 获取元素在原始DOM中的位置和尺寸
+      const rect = node.getBoundingClientRect();
+      const elTop = rect.top + window.scrollY;    // 元素顶部绝对坐标
+      const elHeight = rect.height;               // 元素高度
+      
+      // 转换为Canvas坐标系（基于原始Canvas尺寸）
+      const canvasTop = (elTop / element.offsetWidth) * canvasWidth;
+      const canvasElHeight = (elHeight / element.offsetWidth) * canvasWidth;
 
-    // 创建临时canvas用于每页裁剪
-    const pageCanvas = document.createElement('canvas');
-    pageCanvas.width = imageWidth;
-    pageCanvas.height = sHeight;
-    const ctx = pageCanvas.getContext('2d');
-    const img = new window.Image();
-    img.src = data!;
-    await new Promise(resolve => {
-      img.onload = resolve;
-    });
-    ctx?.drawImage(
-      img,
-      0, sY, imageWidth, sHeight, // 源图
-      0, 0, imageWidth, sHeight  // 目标
-    );
-    const pageData = pageCanvas.toDataURL('image/jpeg', 1.0);
-
-    // 添加到PDF
-    pdf.addImage(
-      pageData,
-      'JPEG',
-      padding,
-      padding,
-      imgW,
-      sHeight * scale
-    );
-    if (i < pageCount - 1) {
-      pdf.addPage();
+      // 计算当前元素在PDF中的显示位置
+      const pdfTop = (canvasTop - pages[pages.length - 1]) * scaleRatio;
+      
+      // 核心逻辑：若元素超出当前页内容区域则新增分页
+      if (pdfTop + canvasElHeight * scaleRatio > contentHeight) {
+        pages.push(canvasTop); // 记录新分页起始点（原始Canvas坐标）
+      }
     }
   }
 
+  // 执行节点遍历计算分页点
+  traverseNodes(element.childNodes);
+  // 补充最后一页（若内容未完全覆盖）
+  if (pages[pages.length - 1] + (contentHeight / scaleRatio) < canvasHeight) {
+    pages.push(pages[pages.length - 1] + (contentHeight / scaleRatio));
+  }
+
+  // 4. 按分页点生成PDF
+  for (let i = 0; i < pages.length; i++) {
+    // 计算当前页截取区域（原始Canvas坐标）
+    const startY = pages[i];
+    const endY = Math.min(pages[i + 1] || canvasHeight, canvasHeight);
+    const pageHeight = endY - startY;
+
+    // 创建临时Canvas裁剪当前页内容
+    const clipCanvas = document.createElement('canvas');
+    clipCanvas.width = canvasWidth;
+    clipCanvas.height = pageHeight;
+    const ctx = clipCanvas.getContext('2d');
+    
+    const img = new Image();
+    img.src = imageData;
+    await new Promise(resolve => img.onload = resolve);
+    
+    ctx?.drawImage(
+      img,
+      0, startY,          // 原始Canvas截取起点
+      canvasWidth, pageHeight, // 原始Canvas截取尺寸
+      0, 0,               // 目标Canvas绘制起点
+      canvasWidth, pageHeight  // 目标Canvas绘制尺寸
+    );
+
+    // 将裁剪后的内容添加到PDF
+    pdf.addImage(
+      clipCanvas.toDataURL('image/jpeg', 1.0),
+      'JPEG',
+      padding,          // PDF X坐标（页边距）
+      padding,          // PDF Y坐标（页边距）
+      contentWidth,     // PDF显示宽度（适配内容区）
+      pageHeight * scaleRatio // PDF显示高度（按比例缩放）
+    );
+
+    // 非末页时新增页面
+    if (i < pages.length - 1) pdf.addPage();
+  }
+
+  // 保存PDF
   return pdf.save(filename);
 }
