@@ -11,7 +11,7 @@
       <div class="drawer-header-flex">
         <span>历史记录</span>
         <div class="drawer-header-actions">
-          <el-button size="large" type="primary" @click="restoreVersion">恢复此记录</el-button>
+          <el-button size="large" type="primary" @click="restoreVersion" class="restore-button">恢复此记录</el-button>
           <el-button type="danger" size='large' @click="close">
           <el-icon class="el-icon--left"><CircleCloseFilled /></el-icon>
           Close
@@ -67,7 +67,7 @@
                 :value="item.versionNumber ?? ''"
               />
             </el-select>
-            <el-button size="small" type="primary" @click="compare">对比</el-button>
+            <el-button size="small" type="primary" @click="compare" class="compare-button">对比</el-button>
           </div>
           <div style="display: flex; align-items: center; gap: 12px;">
             <span style="background:#ffecec; text-decoration:line-through; padding:2px 6px; border-radius:2px; color:#d32f2f;">删除</span>
@@ -282,9 +282,10 @@ function formatTime(timeStr: string) {
   flex-direction: column;
 }
 .version-list-header {
-  font-size:15px;
+  font-size:16px;
   padding: 16px;
   border-bottom: 1px solid #eee;
+  font-weight: bold;
 }
 .version-list-scroll {
   flex: 1;
@@ -349,5 +350,28 @@ function formatTime(timeStr: string) {
   box-shadow: 0 1px 2px rgba(229,57,53,0.04);
   letter-spacing: 1px;
   display: inline-block;
+}
+.compare-button{
+  margin-left: 10px;
+  font-weight: bold;
+  background-color: #908ae9;
+  color: #fff;
+  border-radius: 4px;
+  padding: 6px 12px;
+  transition: background-color 0.2s ease;
+}
+.compare-button :hover {
+  background-color: #6a62c0;
+}
+.restore-button {
+  font-weight: bold;
+  background-color: #9c97e9;
+  color: #fff;
+  border-radius: 4px;
+  padding: 6px 12px;
+  transition: background-color 0.2s ease;
+}
+.restore-button:hover {
+  background-color:#6a62c0;
 }
 </style>
