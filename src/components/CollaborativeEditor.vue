@@ -16,6 +16,16 @@
         <span class="status-text">
           {{ getStatusText() }}
         </span>
+        <!-- 重试按钮 -->
+        <el-button
+          v-if="connectionStatus === 'disconnected' && retryCount >= maxRetries"
+          type="primary"
+          size="small"
+          @click="manualRetry"
+          style="margin-left: 8px"
+        >
+          手动重连
+        </el-button>
       </div>
 
       <!-- 在线用户数量 -->
@@ -131,12 +141,13 @@ import { Comment } from "../utils/comment-extension";
 import { Search } from "../utils/search-extension";
 import EventBus from "../utils/event-bus";
 import { Close } from "@element-plus/icons-vue";
-import { ElMessage, ElSkeleton, ElSkeletonItem } from "element-plus";
+import { ElMessage, ElSkeleton, ElSkeletonItem, ElButton } from "element-plus";
 import { generateSummary } from "../api/aiSummary";
 // 版本回退抽屉
 import VersionDrawer from "../components/VersionDrawer.vue";
 import { getDocumentContent, saveDocumentContent } from "../api/document";
 import EditorTool from "./EditorTool.vue";
+import { debounce } from "../utils/debounce";
 
 // ai
 const aiText = ref("");
@@ -163,7 +174,6 @@ type ConnectionStatus = "connecting" | "connected" | "disconnected";
 const props = withDefaults(defineProps<Props>(), {
   // websocketUrl: "ws://localhost:1234",
   websocketUrl: "ws://localhost:3300",
-  // websocketUrl: "ws://192.168.31.119:1234",
   roomId: "collaborative-document",
   userName: "用户",
   docId: 1,
@@ -175,20 +185,23 @@ const onlineUsers = ref(0);
 const userId = ref<string>("");
 const userColor = ref<string>("");
 
+// 重试相关状态
+const retryCount = ref(0);
+const maxRetries = 3;
+const retryDelay = 2000; // 2秒后重试
+const isManualRetrying = ref(false); // 标记是否正在手动重试
+const isReconnecting = ref(false); // 标记是否正在重连中，防止无限循环
+
 // YJS 文档和提供者
 let ydoc: Y.Doc | null = null;
 let provider: WebsocketProvider | null = null;
 
-/**
- * 生成随机用户ID
- */
+// 生成随机用户ID
 const generateUserId = (): string => {
   return Math.random().toString(36).substring(2, 10);
 };
 
-/**
- * 生成随机颜色
- */
+// 生成随机颜色
 const generateRandomColor = (): string => {
   const colors = [
     "#FF6B6B",
@@ -205,9 +218,7 @@ const generateRandomColor = (): string => {
   return colors[Math.floor(Math.random() * colors.length)];
 };
 
-/**
- * 获取连接状态文本
- */
+// 获取连接状态文本
 const getStatusText = (): string => {
   switch (connectionStatus.value) {
     case "connected":
@@ -221,9 +232,7 @@ const getStatusText = (): string => {
   }
 };
 
-/**
- * 初始化协同编辑基础设置
- */
+// 初始化协同编辑基础设置
 const initializeCollaboration = () => {
   // 生成用户信息
   userId.value = generateUserId();
@@ -241,12 +250,30 @@ const initializeCollaboration = () => {
     switch (event.status) {
       case "connected":
         connectionStatus.value = "connected";
+        retryCount.value = 0; // 连接成功后重置重试计数
+        isReconnecting.value = false; // 重置重连标记
         break;
       case "connecting":
         connectionStatus.value = "connecting";
         break;
       case "disconnected":
         connectionStatus.value = "disconnected";
+        // 重置重连标记
+        isReconnecting.value = false;
+        if (
+          !isManualRetrying.value &&
+          !isReconnecting.value &&
+          retryCount.value < maxRetries
+        ) {
+          retryCount.value++;
+          setTimeout(() => {
+            reconnectWebSocket();
+          }, retryDelay);
+        } else if (!isManualRetrying.value && !isReconnecting.value) {
+          ElMessage.error("连接失败，请检查网络连接或刷新页面重试");
+        }
+        // 重置手动重试标记
+        isManualRetrying.value = false;
         break;
     }
   });
@@ -267,6 +294,13 @@ const initializeCollaboration = () => {
 
 // 初始化协同编辑
 const collaboration = initializeCollaboration();
+
+// 创建防抖的clearSearch函数
+const debouncedClearSearch = debounce((editor: any) => {
+  if (editor && editor.commands.clearSearch) {
+    editor.commands.clearSearch();
+  }
+}, 300); // 300ms 防抖延迟
 
 // 使用 useEditor 创建编辑器实例
 const editor = useEditor({
@@ -320,10 +354,8 @@ const editor = useEditor({
     },
   }, */
   onUpdate: ({ editor }) => {
-    // 编辑器内容变化时，清空搜索结果（可选）
-    if (editor.commands.clearSearch) {
-      editor.commands.clearSearch();
-    }
+    // 编辑器内容变化时，使用防抖清空搜索结果
+    debouncedClearSearch(editor);
   },
 });
 const showVersionDrawer = ref(false);
@@ -340,31 +372,59 @@ async function handleRestore() {
   }
 }
 
-/**
- * 更换用户光标颜色
- */
-// const changeUserColor = () => {
-//   userColor.value = generateRandomColor();
-//   if (provider) {
-//     provider.awareness.setLocalStateField("user", {
-//       name: props.userName,
-//       color: userColor.value,
-//     });
-//   }
-// };
+// 重新连接 WebSocket
+const reconnectWebSocket = () => {
+  if (provider && connectionStatus.value !== "connecting") {
+    console.log(`尝试重新连接 WebSocket (${retryCount.value}/${maxRetries})`);
+    connectionStatus.value = "connecting";
+    isReconnecting.value = true; // 设置重连标记，防止无限循环
 
-/**
- * 重新连接 WebSocket
- */
-// const reconnectWebSocket = () => {
-//   if (provider && connectionStatus.value !== "connecting") {
-//     connectionStatus.value = "connecting";
-//     provider.disconnect();
-//     setTimeout(() => {
-//       provider?.connect();
-//     }, 1000);
-//   }
-// };
+    // 先断开连接
+    provider.disconnect();
+
+    // 等待一段时间后重新连接
+    setTimeout(() => {
+      if (provider) {
+        provider.connect();
+        // 重连成功后重新设置本地用户信息到 awareness
+        setTimeout(() => {
+          if (provider) {
+            provider.awareness.setLocalStateField("user", {
+              name: props.userName,
+              color: userColor.value,
+            });
+          }
+        }, 500); // 等待连接稳定后再设置用户信息
+      }
+    }, 1000);
+  }
+};
+
+// 手动重试连接
+const manualRetry = () => {
+  retryCount.value = 0; // 重置重试计数
+  isManualRetrying.value = true; // 设置手动重试标记
+  isReconnecting.value = true; // 设置重连标记
+  ElMessage.info("正在重新连接...");
+
+  // 手动重试时先断开再重连
+  if (provider) {
+    connectionStatus.value = "connecting";
+    provider.disconnect();
+    setTimeout(() => {
+      provider?.connect();
+      // 重连成功后重新设置本地用户信息到 awareness
+      setTimeout(() => {
+        if (provider) {
+          provider.awareness.setLocalStateField("user", {
+            name: props.userName,
+            color: userColor.value,
+          });
+        }
+      }, 500); // 等待连接稳定后再设置用户信息
+    }, 1000);
+  }
+};
 
 // 时间转换
 function formatTime(timeStr: string) {
@@ -406,9 +466,7 @@ const saveDocument = async () => {
   }
 };
 
-/**
- * 销毁协同编辑器
- */
+// 销毁协同编辑器
 const destroyCollaboration = () => {
   try {
     // 清理awareness状态
@@ -565,7 +623,7 @@ const handleAIClick = () => {
   }
 
   // 调用AI摘要功能
-  aiClickSummary(editorContent);
+  debouncedAiClickSummary(editorContent);
 };
 
 // !!!使用fetch处理SSE流式响应
@@ -609,6 +667,8 @@ const aiClickSummary = async (documentText: string) => {
   }
 };
 
+const debouncedAiClickSummary = debounce(aiClickSummary, 1000); // 1秒防抖
+
 // 生命周期钩子
 onMounted(async () => {
   console.log("协同编辑器已挂载");
@@ -638,6 +698,15 @@ onBeforeUnmount(() => {
     saveDocument();
   }
   console.log("销毁协同编辑器...");
+
+  // 取消防抖函数
+  debouncedClearSearch.cancel();
+  debouncedAiClickSummary.cancel();
+
+  // 重置所有状态标记
+  isManualRetrying.value = false;
+  isReconnecting.value = false;
+
   if (typeof window !== "undefined") {
     // 移除事件监听器
     window.removeEventListener("beforeunload", handleBeforeUnload);
@@ -829,6 +898,7 @@ onBeforeUnmount(() => {
   padding: 2px 6px;
   border-radius: 3px;
   white-space: nowrap;
+  background-color: v-bind(userColor); /* 动态绑定用户颜色 */
 }
 
 /* 编辑器占位符样式 */
