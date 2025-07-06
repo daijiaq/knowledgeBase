@@ -277,8 +277,8 @@
       <span>确定要取消该标记吗</span>
       <template #footer>
         <div class="dialog-footer">
-          <el-button @click="dialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="removeComment">确定</el-button>
+          <el-button @click="dialogVisible = false" class="cancelDialog">取消</el-button>
+          <el-button type="primary" @click="removeComment" style="background-color: #958Df1;">确定</el-button>
         </div>
       </template>
     </el-dialog>
@@ -516,8 +516,7 @@ const confirmComment = async (comment: string) => {
   editor.value?.chain().focus().setMark("comment", attributes).run();
   //保存评论接口
   const res = await createCommentApi(attributes.id, comment, props.docId ?? 0);
-  const saveCode = await saveDocument();
-  if (res.code === 200 && saveCode === 200) {
+  if (res.code === 200) {
     ElMessage.success("评论成功");
   } else {
     ElMessage.error("评论失败");
@@ -717,5 +716,10 @@ onBeforeUnmount(() => {
   border: 1px solid #ffb300;
   border-radius: 2px;
   padding: 0 2px;
+}
+
+.cancelDialog:hover{
+  border:1px solid #958df1;
+  color: #958df1;
 }
 </style>
