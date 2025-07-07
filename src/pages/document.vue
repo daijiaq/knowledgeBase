@@ -142,6 +142,9 @@
             :getKBsContent="getKBsContent"
             :onSelectFolder="handleSelectFolder"
             :onSelectDoc="handleSelectDoc"
+            :expandFolder="expandFolder"
+            :updateFolder="updateFolder"
+            :setUpdateFolder="setUpdateFolder"
           />
           <DocumentItem
             v-for="doc in filterDocs"
@@ -461,9 +464,14 @@ const toggleSidebar = () => {
 };
 
 const expandFolder = ref<null | number>(null);
+const updateFolder = ref<Boolean>(false);
+const setUpdateFolder = (value: Boolean) => {
+  updateFolder.value = value;
+};
 import type FolderItemComponent from "../components/FolderItem.vue";
 const folderItem = ref<InstanceType<typeof FolderItemComponent>[]>([]);
 const createNewDoc = async () => {
+  setUpdateFolder(false); // 重置更新状态
   try {
     if (!newDocForm.name.trim()) {
       ElMessage.error("请输入文档名称");
@@ -498,6 +506,7 @@ const createNewDoc = async () => {
       );
     }
     expandFolder.value = currentDocumentId.value;
+    updateFolder.value = true; // 刷新文件夹状态
     showNewDocDialog.value = false;
     newDocForm.name = "";
     newDocForm.type = "document";
