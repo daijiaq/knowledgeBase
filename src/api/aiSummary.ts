@@ -75,42 +75,32 @@ export const generateSummary = (
           signal: abortController.signal,
         }
       );
-
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-
       if (!response.body) {
         throw new Error("响应体为空");
       }
-
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
-
       // 处理流式响应
       while (true) {
         const { done, value } = await reader.read();
-
         if (done) {
           break;
         }
-
         // 解码数据块
         const chunk = decoder.decode(value, { stream: true });
         buffer += chunk;
-
         // 按行分割处理SSE数据
         const lines = buffer.split("\n");
         buffer = lines.pop() || ""; // 保留最后一个不完整的行
-
         for (const line of lines) {
           const trimmedLine = line.trim();
-
           // 处理SSE数据行
           if (trimmedLine.startsWith("data: ")) {
             const content = trimmedLine.slice(6); // 去掉 "data: " 前缀
-
             if (content) {
               onData(content);
             }
@@ -120,7 +110,6 @@ export const generateSummary = (
             onComplete();
             return;
           }
-          // 忽略心跳和其他行
         }
       }
 
@@ -128,19 +117,15 @@ export const generateSummary = (
       onComplete();
     } catch (error: any) {
       console.error("fetch SSE请求失败:", error);
-
       if (error.name === "AbortError") {
         console.log("请求被取消");
         return;
       }
-
       onError(error);
     }
   };
-
   // 启动请求
   fetchSSE();
-
   // 返回取消函数
   return () => {
     abortController.abort();

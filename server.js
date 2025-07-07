@@ -23,7 +23,6 @@ function getYDoc(docname) {
   if (!doc) {
     doc = new Y.Doc();
     docs.set(docname, doc);
-
     // 为每个文档创建awareness
     const awareness = new Awareness(doc);
     awarenessMap.set(docname, awareness);
@@ -39,7 +38,6 @@ function getAwareness(docname) {
 server.on("connection", (ws, req) => {
   const clientId = Date.now() + "-" + Math.random().toString(36).substr(2, 9);
   console.log(`新的客户端连接: ${clientId}`);
-
   // 解析房间名称
   const url = new URL(req.url, `http://${req.headers.host}`);
   const roomname = url.searchParams.get("room") || "collaborative-document";
@@ -198,7 +196,6 @@ const heartbeatInterval = setInterval(() => {
       clients.delete(ws);
       return ws.terminate();
     }
-
     ws.isAlive = false;
     ws.ping();
   });
