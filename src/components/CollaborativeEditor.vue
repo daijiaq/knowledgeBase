@@ -18,13 +18,15 @@
         </span>
         <!-- 重试按钮 -->
         <el-button
-          v-if="connectionStatus === 'disconnected' && retryCount >= maxRetries"
+          v-if="connectionStatus === 'disconnected'"
           type="primary"
           size="small"
           @click="manualRetry"
+          :loading="isManualRetrying"
+          :disabled="isManualRetrying"
           style="margin-left: 8px"
         >
-          手动重连
+          {{ isManualRetrying ? "重连中..." : "手动重连" }}
         </el-button>
       </div>
 
@@ -186,11 +188,7 @@ const userId = ref<string>("");
 const userColor = ref<string>("");
 
 // 重试相关状态
-const retryCount = ref(0);
-const maxRetries = 3;
-const retryDelay = 2000; // 2秒后重试
 const isManualRetrying = ref(false); // 标记是否正在手动重试
-const isReconnecting = ref(false); // 标记是否正在重连中，防止无限循环
 
 // YJS 文档和提供者
 let ydoc: Y.Doc | null = null;
@@ -250,30 +248,18 @@ const initializeCollaboration = () => {
     switch (event.status) {
       case "connected":
         connectionStatus.value = "connected";
-        retryCount.value = 0; // 连接成功后重置重试计数
-        isReconnecting.value = false; // 重置重连标记
+        isManualRetrying.value = false; // 重置手动重试标记
         break;
       case "connecting":
         connectionStatus.value = "connecting";
         break;
       case "disconnected":
         connectionStatus.value = "disconnected";
-        // 重置重连标记
-        isReconnecting.value = false;
-        if (
-          !isManualRetrying.value &&
-          !isReconnecting.value &&
-          retryCount.value < maxRetries
-        ) {
-          retryCount.value++;
-          setTimeout(() => {
-            reconnectWebSocket();
-          }, retryDelay);
-        } else if (!isManualRetrying.value && !isReconnecting.value) {
-          ElMessage.error("连接失败，请检查网络连接或刷新页面重试");
-        }
-        // 重置手动重试标记
-        isManualRetrying.value = false;
+        console.log("WebSocket断开连接");
+        // 只有在非手动重试时才显示错误消息
+        // if (!isManualRetrying.value) {
+        //   ElMessage.error("连接失败，请检查网络连接或使用手动重试按钮");
+        // }
         break;
     }
   });
@@ -372,59 +358,48 @@ async function handleRestore() {
   }
 }
 
-// 重新连接 WebSocket
-const reconnectWebSocket = () => {
-  if (provider && connectionStatus.value !== "connecting") {
-    console.log(`尝试重新连接 WebSocket (${retryCount.value}/${maxRetries})`);
-    connectionStatus.value = "connecting";
-    isReconnecting.value = true; // 设置重连标记，防止无限循环
-
-    // 先断开连接
-    provider.disconnect();
-
-    // 等待一段时间后重新连接
-    setTimeout(() => {
-      if (provider) {
-        provider.connect();
-        // 重连成功后重新设置本地用户信息到 awareness
-        setTimeout(() => {
-          if (provider) {
-            provider.awareness.setLocalStateField("user", {
-              name: props.userName,
-              color: userColor.value,
-            });
-          }
-        }, 500); // 等待连接稳定后再设置用户信息
-      }
-    }, 1000);
-  }
-};
-
 // 手动重试连接
-const manualRetry = () => {
-  retryCount.value = 0; // 重置重试计数
+const manualRetryCore = () => {
   isManualRetrying.value = true; // 设置手动重试标记
-  isReconnecting.value = true; // 设置重连标记
   ElMessage.info("正在重新连接...");
+  console.log("手动重试连接");
 
-  // 手动重试时先断开再重连
+  // 手动重试时可以断开再重连，因为这是用户主动操作
   if (provider) {
     connectionStatus.value = "connecting";
-    provider.disconnect();
-    setTimeout(() => {
-      provider?.connect();
-      // 重连成功后重新设置本地用户信息到 awareness
+    try {
+      provider.disconnect();
       setTimeout(() => {
         if (provider) {
-          provider.awareness.setLocalStateField("user", {
-            name: props.userName,
-            color: userColor.value,
-          });
+          provider.connect();
+          // 重连成功后重新设置本地用户信息到 awareness
+          setTimeout(() => {
+            if (provider) {
+              provider.awareness.setLocalStateField("user", {
+                name: props.userName,
+                color: userColor.value,
+              });
+            }
+          }, 500); // 等待连接稳定后再设置用户信息
         }
-      }, 500); // 等待连接稳定后再设置用户信息
-    }, 1000);
+      }, 1000);
+    } catch (error) {
+      console.error("手动重连失败:", error);
+      isManualRetrying.value = false;
+    }
   }
 };
+
+// 创建防抖版本的手动重连函数
+const manualRetry = debounce(() => {
+  // 检查是否已经在重连中
+  if (isManualRetrying.value) {
+    ElMessage.warning("重连正在进行中，请稍等...");
+    return;
+  }
+  // 执行重连逻辑
+  manualRetryCore();
+}, 2000); // 2秒防抖，避免频繁点击
 
 // 时间转换
 function formatTime(timeStr: string) {
@@ -705,10 +680,10 @@ onBeforeUnmount(() => {
   // 取消防抖函数
   debouncedClearSearch.cancel();
   debouncedAiClickSummary.cancel();
+  manualRetry.cancel();
 
   // 重置所有状态标记
   isManualRetrying.value = false;
-  isReconnecting.value = false;
 
   if (typeof window !== "undefined") {
     // 移除事件监听器
