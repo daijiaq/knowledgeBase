@@ -1,43 +1,63 @@
-import { createRouter, createWebHistory } from 'vue-router'
+// src/router/index.ts
+import {
+  createRouter as _createRouter,
+  createWebHistory,
+  createMemoryHistory,
+} from "vue-router";
 
-//定义路由规则
+import Login from "../pages/login.vue";
+import knowledgeBase from "../pages/knowledgeBase.vue";
+import { documentAuthGuard } from "../utils/route-guard";
+
 const routes = [
-    {
-        path: '/', 
-         component: () => import('../pages/register.vue')
-    },
-    {
-        path: '/register',
-         component: () => import('../pages/register.vue')
-    }, 
-    {
-        path: '/login', 
-        component: () => import('../pages/login.vue')
-    }, 
-    {
-        path: '/document',
-         component: () => import('../pages/document.vue')
-    }, 
-    {
-        path: '/knowledgeBase',
-         component: () => import('../pages/knowledgeBase.vue')
-    }
-]
+  {
+    path: "/",
+    component: Login,
+  },
+  {
+    path: "/login",
+    component: Login,
+  },
+  {
+    path: "/knowledgeBase",
+    component: knowledgeBase,
+    meta: { requiresAuth: true },
+    children: [
+      {
+        path: "KnowledgeBaseMain",
+        name: "KnowledgeBaseMain",
+        component: () => import("../components/knowledgeBaseMain.vue"),
+      },
+      {
+        path: ":knowledgeBaseId",
+        component: () => import("../pages/document.vue"),
+        children: [
+          {
+            path: ":documentId",
+            component: () => import("../pages/editor.vue"),
+            beforeEnter: documentAuthGuard,
+          },
+        ],
+      },
+      {
+        path: "",
+        redirect: "/knowledgeBase/KnowledgeBaseMain",
+      },
+    ],
+  },
+  {
+    path: "/:pathMatch(.*)*",
+    redirect: "/knowledgeBase/KnowledgeBaseMain",
+  },
+];
 
-// 3. 创建路由实例
-const router = createRouter({
-    history: createWebHistory(), // 使用 HTML5 History 模式
+// SSR 支持：通过传参动态选择 history 模式
+export function createRouter(url = "/") {
+  return _createRouter({
+    history:
+      typeof window === "undefined"
+        ? createMemoryHistory(url)
+        : createWebHistory(),
     routes,
-})
-
-// 全局前置守卫
-router.beforeEach((to, from, next) => {
-  const isAuthenticated = localStorage.getItem('token') // 例：检查登录状态
-  if (to.meta.requiresAuth && !isAuthenticated) {
-    next('/login') // 跳转到登录页
-  } else {
-    next() // 放行
-  }
-})
-
-export default router
+  });
+}
