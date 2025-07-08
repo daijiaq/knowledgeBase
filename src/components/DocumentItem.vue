@@ -75,8 +75,6 @@ const props = defineProps(["item", "getKBsContent", "onSelectDoc"]);
 const selectCurrentDoc = (id: number) => {
   if (props.onSelectDoc) {
     props.onSelectDoc(id);
-    // const data = await getKBsAllDocumentIdsApi(39);
-    // console.log(data);
   } else {
     knowledgeBaseStore.selectDocType("document");
     knowledgeBaseStore.selectDoc(id);
@@ -103,8 +101,12 @@ async function deleteDoc(documentId: number) {
         clearDocumentIdsCache(Number(knowledgeBaseId.value));
       }
       props.getKBsContent();
-      selectDocType("folder");
-      selectDoc(null);
+      if(documentId === currentDocumentId.value) {
+        selectDocType("folder");
+        selectDoc(null);
+        router.replace(`/knowledgeBase/${knowledgeBaseId?.value}`) // 跳转到知识库首页
+      }
+      // 如果删除的不是当前选中的文档，则不需要跳转
     } catch (error: any) {
       ElMessage.error(error.message);
       console.error("删除文档失败:", error);

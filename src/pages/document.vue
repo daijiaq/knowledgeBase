@@ -444,7 +444,7 @@ const getKBsContent = async () => {
 const filterFolders = ref(rootFolders.value);
 const filterDocs = ref(rootDocs.value);
 
-watch(()=>searchQuery.value,async newValue=>{
+watch(()=>searchQuery.value,_.debounce(async newValue=>{
   if(newValue===''){
     filterFolders.value = rootFolders.value;
     filterDocs.value = rootDocs.value;
@@ -456,7 +456,7 @@ watch(()=>searchQuery.value,async newValue=>{
     filterDocs.value = data.documents || [];
     filterFolders.value = data.folders || [];
   }
-})
+}, 100))
 
 // 折叠侧边栏
 const toggleSidebar = () => {
@@ -469,6 +469,7 @@ const setUpdateFolder = (value: Boolean) => {
   updateFolder.value = value;
 };
 import type FolderItemComponent from "../components/FolderItem.vue";
+import _ from "lodash";
 const folderItem = ref<InstanceType<typeof FolderItemComponent>[]>([]);
 const createNewDoc = async () => {
   setUpdateFolder(false); // 重置更新状态

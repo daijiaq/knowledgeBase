@@ -53,6 +53,7 @@
     
 <script lang='ts' setup name='FolderItem'>
 import { ref,defineOptions, reactive,watch } from 'vue';
+import { useRoute,useRouter } from 'vue-router';
   import { useKnowledgeBaseStore } from '../stores/useKnowledgeBaseStore';
   import { storeToRefs } from 'pinia';
   import { deleteFolderApi,editFolderApi } from '../api/folder';
@@ -62,6 +63,9 @@ import { ref,defineOptions, reactive,watch } from 'vue';
   const {currentDocumentId,currentDocType} = storeToRefs(knowledgeBaseStore)
   const {selectDoc,getFolderContent,selectDocType} = knowledgeBaseStore
   import DocumentItem from './DocumentItem.vue';
+  const route = useRoute()
+  const router = useRouter()
+  const knowledgeBaseId = route.params.knowledgeBaseId as string | number
   const children = reactive({
     folders:[],
     documents:[]
@@ -118,8 +122,12 @@ import { ref,defineOptions, reactive,watch } from 'vue';
         await deleteFolderApi(folderId)
         ElMessage.success("删除文件夹成功")
         props.getKBsContent()
-        selectDocType('folder')
-        selectDoc(null)
+        if(folderId === currentDocumentId.value) {
+        selectDocType("folder");
+        selectDoc(null);
+        router.replace(`/knowledgeBase/${knowledgeBaseId}`) // 跳转到知识库首页
+      }
+      // 如果删除的不是当前选中的文档，则不需要跳转
       } catch (error: any) {
         ElMessage.error(error.message)
         console.error("删除文件夹失败:", error) 
