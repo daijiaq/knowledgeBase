@@ -42,7 +42,7 @@
       </div>
       <!-- 子列表 -->
       <div class="children" v-if="showDetail" style="padding-left: 10px;">
-        <FolderItem v-for="item in children.folders" :item="item" :getKBsContent="getKBsContent2" ref="folderItem" :key="item.id" :expandFolder="expandFolder" :onSelectFolder="props.onSelectFolder" :onSelectDoc="props.onSelectDoc"/>
+        <FolderItem v-for="item in children.folders" :item="item" :getKBsContent="getKBsContent2" ref="folderItem" :key="item.id" :expandFolder="expandFolder" :onSelectFolder="props.onSelectFolder" :onSelectDoc="props.onSelectDoc" :updateFolder="props.updateFolder":setUpdateFolder="props.setUpdateFolder"/>
         <DocumentItem v-for="item in children.documents" :item="item" :getKBsContent="getKBsContent2" :key="item.id" ref="docItem" :onSelectDoc="props.onSelectDoc"/>
       </div>
     </div>
@@ -53,6 +53,7 @@
     
 <script lang='ts' setup name='FolderItem'>
 import { ref,defineOptions, reactive,watch } from 'vue';
+import { useRoute,useRouter } from 'vue-router';
   import { useKnowledgeBaseStore } from '../stores/useKnowledgeBaseStore';
   import { storeToRefs } from 'pinia';
   import { deleteFolderApi,editFolderApi } from '../api/folder';
@@ -62,11 +63,14 @@ import { ref,defineOptions, reactive,watch } from 'vue';
   const {currentDocumentId,currentDocType} = storeToRefs(knowledgeBaseStore)
   const {selectDoc,getFolderContent,selectDocType} = knowledgeBaseStore
   import DocumentItem from './DocumentItem.vue';
+  const route = useRoute()
+  const router = useRouter()
+  const knowledgeBaseId = route.params.knowledgeBaseId as string | number
   const children = reactive({
     folders:[],
     documents:[]
   })
-  const props = defineProps(['item','getKBsContent','expandFolder','onSelectFolder','onSelectDoc'])
+  const props = defineProps(['item','getKBsContent','expandFolder','onSelectFolder','onSelectDoc','updateFolder','setUpdateFolder'])
   
     //获取文件夹里面的内容
   const showDetail = ref(true)
@@ -96,14 +100,16 @@ import { ref,defineOptions, reactive,watch } from 'vue';
       return
     }
   }
-  //如果刚创建则把这个文件夹打开
-  watch(()=>props.expandFolder,(newValue)=>{
-    if(newValue===props.item.id&&showDetail.value===false){
-      showDetail.value = true
-      getFolderChildren(props.item.id) //获取当前文件夹内容
+  //如果父组件要求子组件展开则展开
+  watch(()=>props.updateFolder,async(newValue)=>{
+    if(newValue===true){
+      if(props.expandFolder===props.item.id){
+        showDetail.value = true
+        await getFolderChildren(props.item.id)
+        props.setUpdateFolder(false) //重置更新状态
+      }
     }
-  })
-  
+  },{immediate:true})
 
   //删除文件夹
   async function deleteFolder(folderId:number){
@@ -116,8 +122,12 @@ import { ref,defineOptions, reactive,watch } from 'vue';
         await deleteFolderApi(folderId)
         ElMessage.success("删除文件夹成功")
         props.getKBsContent()
-        selectDocType('folder')
-        selectDoc(null)
+        if(folderId === currentDocumentId.value) {
+        selectDocType("folder");
+        selectDoc(null);
+        router.replace(`/knowledgeBase/${knowledgeBaseId}`) // 跳转到知识库首页
+      }
+      // 如果删除的不是当前选中的文档，则不需要跳转
       } catch (error: any) {
         ElMessage.error(error.message)
         console.error("删除文件夹失败:", error) 

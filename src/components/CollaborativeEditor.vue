@@ -18,7 +18,7 @@
         </span>
         <!-- 重试按钮 -->
         <el-button
-          v-if="connectionStatus === 'disconnected'"
+          v-if="showManualRetryButton"
           type="primary"
           size="small"
           @click="manualRetry"
@@ -86,7 +86,11 @@
               class="aiSummarize"
               color="#7a72e0"
               @click="handleAIClick()"
-              >AI总结全文</el-button
+              :loading="isAISummaryLoading && aiClick"
+              :disabled="isAISummaryLoading && aiClick"
+              >{{
+                isAISummaryLoading && aiClick ? "AI总结中..." : "AI总结全文"
+              }}</el-button
             >
             <el-button type="success" color="#7a72e0" @click="saveDocument"
               >保存</el-button
@@ -98,14 +102,7 @@
   </div>
   <el-aside width="300px" v-if="aiClick">
     <div class="aiContent">
-      <el-icon
-        class="aiClose"
-        color="#7a72e0"
-        @click="
-          aiClick = false;
-          isAISummaryLoading = true;
-        "
-      >
+      <el-icon class="aiClose" color="#7a72e0" @click="closeAIPanel">
         <Close />
       </el-icon>
       <p class="aiTitle">AI总结:</p>
@@ -157,13 +154,16 @@ const isAISummaryLoading = ref(true);
 
 let aiClick = ref(false);
 
+// 存储当前AI请求的取消函数
+let currentAICancelRequest: (() => void) | null = null;
+
 // 定义组件的 props
 interface Props {
-  /** WebSocket 服务器地址 */
+  // WebSocket 服务器地址
   websocketUrl?: string;
-  /** 协同文档房间ID */
+  // 协同文档房间ID
   roomId?: string;
-  /** 用户名称 */
+  // 用户名称
   userName?: string;
   // 文档id
   docId?: number;
@@ -189,6 +189,8 @@ const userColor = ref<string>("");
 
 // 重试相关状态
 const isManualRetrying = ref(false); // 标记是否正在手动重试
+const showManualRetryButton = ref(false); // 控制手动重试按钮的显示
+let retryButtonTimer: ReturnType<typeof setTimeout> | null = null; // 延迟显示按钮的定时器
 
 // YJS 文档和提供者
 let ydoc: Y.Doc | null = null;
@@ -249,6 +251,12 @@ const initializeCollaboration = () => {
       case "connected":
         connectionStatus.value = "connected";
         isManualRetrying.value = false; // 重置手动重试标记
+        showManualRetryButton.value = false; // 隐藏手动重试按钮
+        // 清除延迟显示按钮的定时器
+        if (retryButtonTimer) {
+          clearTimeout(retryButtonTimer);
+          retryButtonTimer = null;
+        }
         break;
       case "connecting":
         connectionStatus.value = "connecting";
@@ -256,10 +264,20 @@ const initializeCollaboration = () => {
       case "disconnected":
         connectionStatus.value = "disconnected";
         console.log("WebSocket断开连接");
-        // 只有在非手动重试时才显示错误消息
-        // if (!isManualRetrying.value) {
-        //   ElMessage.error("连接失败，请检查网络连接或使用手动重试按钮");
-        // }
+
+        // 清除之前的定时器 如果有的话
+        if (retryButtonTimer) {
+          clearTimeout(retryButtonTimer);
+          retryButtonTimer = null;
+        }
+        // 2秒后显示手动重试按钮（如果仍然是断开状态）
+        retryButtonTimer = setTimeout(() => {
+          if (connectionStatus.value === "disconnected") {
+            showManualRetryButton.value = true;
+          }
+          retryButtonTimer = null;
+        }, 2000); // 2秒延迟
+
         break;
     }
   });
@@ -361,8 +379,8 @@ async function handleRestore() {
 // 手动重试连接
 const manualRetryCore = () => {
   isManualRetrying.value = true; // 设置手动重试标记
+  showManualRetryButton.value = false; // 隐藏重试按钮
   ElMessage.info("正在重新连接...");
-  console.log("手动重试连接");
 
   // 手动重试时可以断开再重连，因为这是用户主动操作
   if (provider) {
@@ -449,7 +467,6 @@ const destroyCollaboration = () => {
       provider.awareness.setLocalState(null);
       provider.awareness.off("change", () => {});
     }
-
     // 断开并销毁provider
     if (provider) {
       console.log("断开WebSocket连接");
@@ -457,17 +474,14 @@ const destroyCollaboration = () => {
       provider.destroy();
       provider = null;
     }
-
     // 销毁文档
     if (ydoc) {
       ydoc.destroy();
       ydoc = null;
     }
-
     // 重置状态
     connectionStatus.value = "disconnected";
     onlineUsers.value = 0;
-
     console.log("协同编辑器已完全销毁");
   } catch (error) {
     console.error("销毁协同编辑器时出错:", error);
@@ -535,13 +549,10 @@ defineExpose({
 //     // 重置状态
 //     aiText.value = "";
 //     isAISummaryLoading.value = true;
-
 //     // 获取SSE连接URL
 //     const sseUrl = generateSummary(documentText);
-
 //     // 创建 EventSource 实例
 //     eventSource = new EventSource(sseUrl);
-
 //     // 监听消息
 //     eventSource.onmessage = (event) => {
 //       const content = event.data;
@@ -550,7 +561,6 @@ defineExpose({
 //         isAISummaryLoading.value = false;
 //       }
 //     };
-
 //     // 监听错误
 //     eventSource.onerror = (error) => {
 //       console.error("SSE连接错误:", error);
@@ -558,7 +568,6 @@ defineExpose({
 //         eventSource.close();
 //         eventSource = null;
 //       }
-
 //       // 如果还有重试次数，则重试
 //       // if (retryCount < maxRetries) {
 //       //   console.log(`尝试重新连接 (${retryCount + 1}/${maxRetries})`);
@@ -569,7 +578,6 @@ defineExpose({
 //       //   ElMessage.error("摘要生成失败，请稍后重试");
 //       // }
 //     };
-
 //     // 监听关闭事件
 //     eventSource.addEventListener("close", () => {
 //       console.log("SSE连接已关闭");
@@ -579,7 +587,6 @@ defineExpose({
 //       }
 //     });
 //   };
-
 //   try {
 //     createEventSource();
 //   } catch (error) {
@@ -591,15 +598,12 @@ defineExpose({
 
 const handleAIClick = () => {
   aiClick.value = true;
-
   // 获取编辑器内容
   const editorContent = editor.value?.getText() || "";
-
   if (!editorContent.trim()) {
     ElMessage.warning("编辑器内容为空，无法生成摘要");
     return;
   }
-
   // 调用AI摘要功能
   debouncedAiClickSummary(editorContent);
 };
@@ -607,17 +611,18 @@ const handleAIClick = () => {
 // !!!使用fetch处理SSE流式响应
 const aiClickSummary = async (documentText: string) => {
   console.log("点击AI总结，开始生成摘要", documentText);
-
+  // 如果有正在进行的请求，先取消它
+  if (currentAICancelRequest) {
+    console.log("取消之前的AI请求");
+    currentAICancelRequest();
+    currentAICancelRequest = null;
+  }
   // 重置状态
   aiText.value = "";
   isAISummaryLoading.value = true;
-
-  // 存储取消函数
-  let cancelRequest: (() => void) | null = null;
-
   try {
     // 使用新的generateSummary函数
-    cancelRequest = generateSummary(
+    currentAICancelRequest = generateSummary(
       documentText,
       // onData: 处理每个数据块
       (chunk: string) => {
@@ -630,22 +635,38 @@ const aiClickSummary = async (documentText: string) => {
         console.log("AI摘要生成完成");
         isAISummaryLoading.value = false;
         ElMessage.success("摘要生成完成");
+        currentAICancelRequest = null; // 清空取消函数
       },
       // onError: 错误处理
       (error: Error) => {
         console.error("AI摘要生成失败:", error);
         isAISummaryLoading.value = false;
         ElMessage.error(`摘要生成失败: ${error.message}`);
+        currentAICancelRequest = null; // 清空取消函数
       }
     );
   } catch (error) {
     console.error("摘要生成失败：", error);
     isAISummaryLoading.value = false;
     ElMessage.error("摘要生成失败");
+    currentAICancelRequest = null; // 清空取消函数
   }
 };
 
 const debouncedAiClickSummary = debounce(aiClickSummary, 1000); // 1秒防抖
+
+// 关闭AI面板的处理函数
+const closeAIPanel = () => {
+  // 取消正在进行的AI请求
+  if (currentAICancelRequest) {
+    console.log("关闭AI面板时取消AI请求");
+    currentAICancelRequest();
+    currentAICancelRequest = null;
+  }
+  // 关闭AI面板
+  aiClick.value = false;
+  isAISummaryLoading.value = true;
+};
 
 // 生命周期钩子
 onMounted(async () => {
@@ -676,15 +697,24 @@ onBeforeUnmount(() => {
     saveDocument();
   }
   console.log("销毁协同编辑器...");
-
   // 取消防抖函数
   debouncedClearSearch.cancel();
   debouncedAiClickSummary.cancel();
   manualRetry.cancel();
-
+  // 取消正在进行的AI请求
+  if (currentAICancelRequest) {
+    console.log("组件卸载时取消AI请求");
+    currentAICancelRequest();
+    currentAICancelRequest = null;
+  }
   // 重置所有状态标记
   isManualRetrying.value = false;
-
+  showManualRetryButton.value = false;
+  // 清除延迟显示按钮的定时器
+  if (retryButtonTimer) {
+    clearTimeout(retryButtonTimer);
+    retryButtonTimer = null;
+  }
   if (typeof window !== "undefined") {
     // 移除事件监听器
     window.removeEventListener("beforeunload", handleBeforeUnload);

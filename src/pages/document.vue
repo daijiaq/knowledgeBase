@@ -142,6 +142,9 @@
             :getKBsContent="getKBsContent"
             :onSelectFolder="handleSelectFolder"
             :onSelectDoc="handleSelectDoc"
+            :expandFolder="expandFolder"
+            :updateFolder="updateFolder"
+            :setUpdateFolder="setUpdateFolder"
           />
           <DocumentItem
             v-for="doc in filterDocs"
@@ -441,7 +444,7 @@ const getKBsContent = async () => {
 const filterFolders = ref(rootFolders.value);
 const filterDocs = ref(rootDocs.value);
 
-watch(()=>searchQuery.value,async newValue=>{
+watch(()=>searchQuery.value,_.debounce(async newValue=>{
   if(newValue===''){
     filterFolders.value = rootFolders.value;
     filterDocs.value = rootDocs.value;
@@ -453,7 +456,7 @@ watch(()=>searchQuery.value,async newValue=>{
     filterDocs.value = data.documents || [];
     filterFolders.value = data.folders || [];
   }
-})
+}, 100))
 
 // 折叠侧边栏
 const toggleSidebar = () => {
@@ -461,9 +464,15 @@ const toggleSidebar = () => {
 };
 
 const expandFolder = ref<null | number>(null);
+const updateFolder = ref<Boolean>(false);
+const setUpdateFolder = (value: Boolean) => {
+  updateFolder.value = value;
+};
 import type FolderItemComponent from "../components/FolderItem.vue";
+import _ from "lodash";
 const folderItem = ref<InstanceType<typeof FolderItemComponent>[]>([]);
 const createNewDoc = async () => {
+  setUpdateFolder(false); // 重置更新状态
   try {
     if (!newDocForm.name.trim()) {
       ElMessage.error("请输入文档名称");
@@ -498,6 +507,7 @@ const createNewDoc = async () => {
       );
     }
     expandFolder.value = currentDocumentId.value;
+    updateFolder.value = true; // 刷新文件夹状态
     showNewDocDialog.value = false;
     newDocForm.name = "";
     newDocForm.type = "document";
